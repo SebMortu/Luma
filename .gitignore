@@ -1,0 +1,16 @@
+# Dépendances
+node_modules/
+
+# Build
+dist/
+.cache/
+
+# IMPORTANT : ne jamais commiter les clés
+.env
+.env.local
+.env.production
+
+# Divers
+.DS_Store
+*.log
+dev-dist/
