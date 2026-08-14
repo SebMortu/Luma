@@ -1,11 +1,33 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-// PWA temporairement désactivée le temps de stabiliser l'app de base
-// import { VitePWA } from 'vite-plugin-pwa'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   plugins: [
     react(),
-    // VitePWA({ ... }) — on réactivera ça une fois l'app stable
+    VitePWA({
+      registerType: 'autoUpdate',
+      manifest: {
+        name: 'Luma',
+        short_name: 'Luma',
+        description: 'Apprends une langue de façon ludique',
+        theme_color: '#1a1a1a',
+        background_color: '#1a1a1a',
+        display: 'standalone',
+        start_url: '/',
+        icons: [
+          {
+            src: 'icons/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'icons/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      }
+    })
   ]
 })
