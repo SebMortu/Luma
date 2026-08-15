@@ -118,17 +118,18 @@ function TestResult({ raw, max, onClose }) {
 
 function ToeicTest() {
   const { user } = useAuth()
-  const [test, setTest] = useState(null)
+  const [tests, setTests] = useState([])
+  const [selectedTest, setSelectedTest] = useState(null)
   const [history, setHistory] = useState([])
-  const [screen, setScreen] = useState('intro') // intro | running | result
+  const [screen, setScreen] = useState('select') // select | intro | running | result
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
       const { data: settings } = await supabase.from('user_settings').select('active_language_id').eq('user_id', user.id).single()
-      const { data: testData } = await supabase.from('toeic_tests').select('*').eq('language_id', settings.active_language_id).limit(1).single()
-      setTest(testData)
+      const { data: testsData } = await supabase.from('toeic_tests').select('*').eq('language_id', settings.active_language_id).order('title')
+      setTests(testsData || [])
       const { data: attempts } = await supabase.from('user_toeic_attempts').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
       setHistory(attempts || [])
       setLoading(false)
@@ -136,13 +137,18 @@ function ToeicTest() {
     load()
   }, [user.id])
 
+  const chooseTest = (t) => {
+    setSelectedTest(t)
+    setScreen('intro')
+  }
+
   const handleFinish = async (correct, max) => {
     const { estimated, level } = scoreToEstimate(correct, max)
     setResult({ raw: correct, max })
     setScreen('result')
     await supabase.from('user_toeic_attempts').insert({
       user_id: user.id,
-      toeic_test_id: test.id,
+      toeic_test_id: selectedTest.id,
       raw_score: correct,
       max_score: max,
       estimated_score: estimated,
@@ -151,25 +157,52 @@ function ToeicTest() {
   }
 
   if (loading) return <AppLayout><div className="page"><p>Chargement...</p></div></AppLayout>
-  if (!test) return <AppLayout><div className="page"><p>Aucun test disponible pour l'instant.</p></div></AppLayout>
+  if (tests.length === 0) return <AppLayout><div className="page"><p>Aucun test disponible pour l'instant.</p></div></AppLayout>
 
   return (
     <AppLayout>
       <div className="page">
-        {screen === 'intro' && (
+        {screen === 'select' && (
           <>
-            <h1>📝 {test.title}</h1>
+            <h1>📝 Tests type examen</h1>
+            <p className="dashboard-goal">
+              {tests.length} test{tests.length > 1 ? 's' : ''} disponible{tests.length > 1 ? 's' : ''}, avec des questions différentes à chaque fois — choisis-en un.
+            </p>
+            <div className="unit-list">
+              {tests.map((t) => {
+                const testHistory = history.filter((h) => h.toeic_test_id === t.id)
+                const best = testHistory[0]
+                return (
+                  <div key={t.id} className="unit-card clickable" onClick={() => chooseTest(t)}>
+                    <div className="unit-icon">📝</div>
+                    <div>
+                      <p className="unit-title">{t.title}</p>
+                      <p className="unit-status">
+                        {best ? `Meilleur score : ${best.estimated_score} / 990` : `Jamais passé · ${testHistory.length} tentative(s)`}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
+
+        {screen === 'intro' && selectedTest && (
+          <>
+            <button className="lesson-back" onClick={() => setScreen('select')}>← Choisir un autre test</button>
+            <h1>📝 {selectedTest.title}</h1>
             <div className="dashboard-goal">
               <p>60 questions · 45 minutes chronométrées</p>
               <p>30 questions de grammaire/vocabulaire + 30 questions de compréhension écrite (5 textes)</p>
             </div>
             <button className="btn-primary" onClick={() => setScreen('running')}>Commencer le test</button>
 
-            {history.length > 0 && (
+            {history.filter((h) => h.toeic_test_id === selectedTest.id).length > 0 && (
               <>
-                <p className="dashboard-section-title" style={{ marginTop: '2rem' }}>Historique</p>
+                <p className="dashboard-section-title" style={{ marginTop: '2rem' }}>Historique sur ce test</p>
                 <div className="unit-list">
-                  {history.map((h) => (
+                  {history.filter((h) => h.toeic_test_id === selectedTest.id).map((h) => (
                     <div key={h.id} className="unit-card">
                       <div className="unit-icon completed">📝</div>
                       <div>
@@ -184,10 +217,10 @@ function ToeicTest() {
           </>
         )}
 
-        {screen === 'running' && <TestRunner test={test} onFinish={handleFinish} />}
+        {screen === 'running' && selectedTest && <TestRunner test={selectedTest} onFinish={handleFinish} />}
 
         {screen === 'result' && result && (
-          <TestResult raw={result.raw} max={result.max} onClose={() => setScreen('intro')} />
+          <TestResult raw={result.raw} max={result.max} onClose={() => setScreen('select')} />
         )}
       </div>
     </AppLayout>
