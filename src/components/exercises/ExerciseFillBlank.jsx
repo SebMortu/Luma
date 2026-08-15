@@ -34,7 +34,7 @@ function ExerciseFillBlank({ content, onAnswered }) {
         />
         {content.sentence_after}
       </p>
-      <TranslateToggle translation={content.sentence_fr} />
+      <TranslateToggle translation={content.sentence_fr} autoReveal={answered} />
       {error && <p className="feedback incorrect">{error}</p>}
       {!answered && (
         <button className="exercise-submit" onClick={handleSubmit}>Valider</button>

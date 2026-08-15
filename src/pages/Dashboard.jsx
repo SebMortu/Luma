@@ -64,14 +64,6 @@ function Dashboard() {
   if (loading) return <AppLayout><div className="page"><p>Chargement...</p></div></AppLayout>
   if (error) return <AppLayout><div className="page"><p className="feedback incorrect">Erreur : {error}</p></div></AppLayout>
 
-  const statusLabels = {
-    completed: 'Terminée · 80%+ validé',
-    in_progress: 'En cours',
-    not_started: 'À commencer',
-    locked: 'Verrouillée',
-  }
-  const statusIcons = { completed: '✓', in_progress: '📖', not_started: '📖', locked: '🔒' }
-
   const totalLessons = unitStates.reduce((sum, s) => sum + s.lessonCount, 0)
   const totalCompleted = unitStates.reduce((sum, s) => sum + s.completedCount, 0)
   const progressPct = totalLessons > 0 ? Math.round((totalCompleted / totalLessons) * 100) : 0
@@ -134,32 +126,38 @@ function Dashboard() {
           <p className="progress-card-sub">{totalCompleted} / {totalLessons} leçons · {progressPct}%</p>
         </div>
 
-        {groupedByLevel.map((group) => (
-          <div key={group.level}>
-            <p className="cecr-level-header">{CECR_TITLES[group.level] || group.level}</p>
-            <div className="unit-list">
-              {group.units.map(({ unit, status, isLocked, lessonCount, completedCount }) => (
-                <div
-                  key={unit.id}
-                  className={`unit-card ${isLocked ? 'locked' : 'clickable'}`}
-                  onClick={() => !isLocked && navigate(`/unit/${unit.id}`)}
-                >
-                  <div className={`unit-icon ${status}`}>{statusIcons[status]}</div>
-                  <div>
-                    <p className="unit-title">{unit.title}</p>
-                    <p className="unit-status">
-                      {isLocked
-                        ? "Verrouillée · termine l'unité précédente à 80%"
-                        : lessonCount === 0
-                          ? 'Pas encore de contenu'
-                          : `${statusLabels[status]} (${completedCount}/${lessonCount})`}
-                    </p>
-                  </div>
+        <p className="dashboard-section-title">Ton parcours</p>
+        <div className="level-list">
+          {groupedByLevel.map((group) => {
+            const totalInLevel = group.units.reduce((s, u) => s + u.lessonCount, 0)
+            const completedInLevel = group.units.reduce((s, u) => s + u.completedCount, 0)
+            const levelLocked = group.units[0]?.isLocked
+            const levelPct = totalInLevel > 0 ? Math.round((completedInLevel / totalInLevel) * 100) : 0
+            return (
+              <div
+                key={group.level}
+                className={`level-card ${levelLocked ? 'locked' : 'clickable'}`}
+                onClick={() => !levelLocked && navigate(`/level/${group.level}`)}
+              >
+                <div className="level-card-top">
+                  <p className="level-card-title">{CECR_TITLES[group.level] || group.level}</p>
+                  {levelLocked && <span>🔒</span>}
                 </div>
-              ))}
-            </div>
-          </div>
-        ))}
+                {!levelLocked && totalInLevel > 0 && (
+                  <>
+                    <div className="progress-bar-track">
+                      <div className="progress-bar-fill" style={{ width: `${levelPct}%` }} />
+                    </div>
+                    <p className="progress-card-sub">{completedInLevel} / {totalInLevel} leçons</p>
+                  </>
+                )}
+                {!levelLocked && totalInLevel === 0 && (
+                  <p className="progress-card-sub">Pas encore de contenu</p>
+                )}
+              </div>
+            )
+          })}
+        </div>
 
         {nextLesson ? (
           <button className="btn-primary" onClick={() => navigate(`/lesson/${nextLesson.lesson.id}`)}>

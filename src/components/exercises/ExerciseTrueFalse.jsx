@@ -18,7 +18,7 @@ function ExerciseTrueFalse({ content, onAnswered }) {
   return (
     <div className="exercise">
       <p className="exercise-question">{content.statement}</p>
-      <TranslateToggle translation={content.statement_fr} />
+      <TranslateToggle translation={content.statement_fr} autoReveal={answered} />
       <div className="exercise-options">
         <button
           className={`exercise-option ${isCorrectChoice(true) ? 'correct' : ''} ${isWrongChoice(true) ? 'incorrect' : ''}`}

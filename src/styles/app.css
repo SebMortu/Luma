@@ -332,6 +332,137 @@
   font-size: 14px;
 }
 
+/* Cartes de niveau CECR */
+.level-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.level-card {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  padding: 1rem 1.1rem;
+}
+
+.level-card.locked {
+  opacity: 0.55;
+}
+
+.level-card.clickable {
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.level-card.clickable:hover {
+  border-color: var(--accent);
+}
+
+.level-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.level-card-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Parcours en chemin sinueux */
+.path-container {
+  position: relative;
+  padding: 1rem 0 2rem;
+}
+
+.path-line {
+  position: absolute;
+  left: 50%;
+  top: 30px;
+  bottom: 30px;
+  width: 3px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--border) 0,
+    var(--border) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
+.path-node-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 2rem;
+  max-width: 78%;
+}
+
+.path-node-row.align-left {
+  margin-right: auto;
+}
+
+.path-node-row.align-right {
+  margin-left: auto;
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.path-node {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.path-node:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.path-node.completed {
+  background: var(--success-bg);
+  border-color: var(--success-text);
+  color: var(--success-text);
+}
+
+.path-node.current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.path-node.available {
+  background: var(--bg-surface-alt);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.path-node-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.path-node-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
 .dashboard-section-title {
   font-size: 14px;
   font-weight: 600;

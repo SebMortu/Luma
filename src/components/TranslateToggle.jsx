@@ -1,16 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-function TranslateToggle({ translation }) {
+function TranslateToggle({ translation, autoReveal }) {
   const [shown, setShown] = useState(false)
+
+  useEffect(() => {
+    if (autoReveal) setShown(true)
+  }, [autoReveal])
 
   if (!translation) return null
 
   return (
     <div className="translate-toggle">
-      <button className="translate-btn" onClick={() => setShown(!shown)}>
-        🌐 {shown ? 'Masquer la traduction' : 'Traduire'}
-      </button>
-      {shown && <p className="translate-text">{translation}</p>}
+      {!autoReveal && (
+        <button className="translate-btn" onClick={() => setShown(!shown)}>
+          🌐 {shown ? 'Masquer la traduction' : 'Traduire'}
+        </button>
+      )}
+      {shown && <p className="translate-text">🌐 {translation}</p>}
     </div>
   )
 }

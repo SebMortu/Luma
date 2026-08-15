@@ -15,7 +15,7 @@ function ExerciseQCM({ content, onAnswered }) {
   return (
     <div className="exercise">
       <p className="exercise-question">{content.question}</p>
-      <TranslateToggle translation={content.question_fr} />
+      <TranslateToggle translation={content.question_fr} autoReveal={answered} />
       <div className="exercise-options">
         {content.options.map((option, index) => {
           let className = 'exercise-option'
