@@ -23,7 +23,6 @@ function Dashboard() {
   const [nextLesson, setNextLesson] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('luma-notifications') === 'true')
 
   useEffect(() => {
     async function load() {
@@ -52,14 +51,6 @@ function Dashboard() {
     }
     load()
   }, [user.id])
-
-  const toggleNotifications = () => {
-    const newValue = !notifEnabled
-    setNotifEnabled(newValue)
-    localStorage.setItem('luma-notifications', String(newValue))
-    // Note : ceci enregistre seulement la préférence pour l'instant.
-    // Les vraies notifications push seront branchées en V2.
-  }
 
   if (loading) return <AppLayout><div className="page"><p>Chargement...</p></div></AppLayout>
   if (error) return <AppLayout><div className="page"><p className="feedback incorrect">Erreur : {error}</p></div></AppLayout>
@@ -97,9 +88,6 @@ function Dashboard() {
           <div className="dashboard-badges">
             <span className="badge badge-streak">🔥 {settings.current_streak}</span>
             <span className="badge badge-xp">⭐ {settings.total_xp}</span>
-            <button className="bell-btn" onClick={toggleNotifications} title="Notifications">
-              {notifEnabled ? '🔔' : '🔕'}
-            </button>
           </div>
         </div>
 

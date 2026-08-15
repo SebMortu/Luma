@@ -83,7 +83,7 @@ export async function computeUnitStates(userId, languageId, units) {
     return { unit, status, isLocked, passed, lessonCount: lessons.length, completedCount: completions.length }
   })
 }
-export async function recordLessonCompletion({ userId, languageId, unitId, lessonId, score }) {
+export async function recordLessonCompletion({ userId, languageId, unitId, lessonId, score, secondsSpent = 0 }) {
   // 1. Vérifier si cette leçon avait déjà été terminée avant (pour ne pas re-donner d'XP)
   const { data: existing } = await supabase
     .from('user_progress').select('status, best_score')
@@ -137,6 +137,7 @@ export async function recordLessonCompletion({ userId, languageId, unitId, lesso
       current_streak: newStreak,
       longest_streak: newLongest,
       last_activity_date: today,
+      total_learning_seconds: settings.total_learning_seconds + secondsSpent,
       updated_at: new Date().toISOString(),
     })
     .eq('user_id', userId)

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { recordLessonCompletion } from '../lib/progress.js'
@@ -28,6 +28,11 @@ function Lesson() {
   const [xpGained, setXpGained] = useState(null)
   const [newStreak, setNewStreak] = useState(null)
   const [alreadyCompleted, setAlreadyCompleted] = useState(false)
+  const startTimeRef = useRef(Date.now())
+
+  useEffect(() => {
+    startTimeRef.current = Date.now()
+  }, [lessonId])
 
   useEffect(() => {
     async function load() {
@@ -69,12 +74,14 @@ function Lesson() {
       setSaving(true)
       try {
         const score = correctCount / exercises.length
+        const secondsSpent = Math.round((Date.now() - startTimeRef.current) / 1000)
         const result = await recordLessonCompletion({
           userId: user.id,
           languageId: unit.language_id,
           unitId: unit.id,
           lessonId: lesson.id,
           score,
+          secondsSpent,
         })
         setXpGained(result.xpGained)
         setNewStreak(result.newStreak)

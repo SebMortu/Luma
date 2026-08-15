@@ -10,6 +10,7 @@ import UnitDetail from './pages/UnitDetail.jsx'
 import LevelPath from './pages/LevelPath.jsx'
 import Lesson from './pages/Lesson.jsx'
 import Profile from './pages/Profile.jsx'
+import Settings from './pages/Settings.jsx'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="/level/:levelCode" element={<ProtectedRoute><LevelPath /></ProtectedRoute>} />
             <Route path="/lesson/:lessonId" element={<ProtectedRoute><Lesson /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
