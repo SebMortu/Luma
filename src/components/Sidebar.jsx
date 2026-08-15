@@ -5,7 +5,7 @@ const NAV_ITEMS = [
   { path: '/grammar', icon: '📚', label: 'Grammaire', enabled: true },
   { path: '/toeic-test', icon: '📝', label: 'Examen', enabled: true },
   { path: '/verbs', icon: '🔤', label: 'Verbes', enabled: true },
-  { path: '/scenarios', icon: '🎭', label: 'Scénarios', enabled: false },
+  { path: '/scenarios', icon: '🎭', label: 'Scénarios', enabled: true },
   { path: '/profile', icon: '👤', label: 'Profil', enabled: true },
 ]
 

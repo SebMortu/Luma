@@ -15,6 +15,9 @@ import Verbs from './pages/Verbs.jsx'
 import GrammarLibrary from './pages/GrammarLibrary.jsx'
 import GrammarDetail from './pages/GrammarDetail.jsx'
 import ToeicTest from './pages/ToeicTest.jsx'
+import ScenariosLibrary from './pages/ScenariosLibrary.jsx'
+import ScenarioList from './pages/ScenarioList.jsx'
+import ScenarioPlayer from './pages/ScenarioPlayer.jsx'
 
 function App() {
   return (
@@ -35,6 +38,9 @@ function App() {
             <Route path="/grammar" element={<ProtectedRoute><GrammarLibrary /></ProtectedRoute>} />
             <Route path="/grammar/:ficheId" element={<ProtectedRoute><GrammarDetail /></ProtectedRoute>} />
             <Route path="/toeic-test" element={<ProtectedRoute><ToeicTest /></ProtectedRoute>} />
+            <Route path="/scenarios" element={<ProtectedRoute><ScenariosLibrary /></ProtectedRoute>} />
+            <Route path="/scenarios/:themeId" element={<ProtectedRoute><ScenarioList /></ProtectedRoute>} />
+            <Route path="/scenario/:scenarioId" element={<ProtectedRoute><ScenarioPlayer /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
