@@ -54,7 +54,7 @@ function LevelPath() {
 
         <div className="path-container">
           <div className="path-line" />
-          {nodes.map((node, i) => (
+          {[...nodes].reverse().map((node, i) => (
             <div key={node.lesson.id} className={`path-node-row ${i % 2 === 0 ? 'align-left' : 'align-right'}`}>
               <button
                 className={`path-node ${node.status}`}

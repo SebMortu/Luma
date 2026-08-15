@@ -142,7 +142,7 @@ function Lesson() {
           {xpGained !== null && (
             <>
               {alreadyCompleted ? (
-                <p className="feedback correct">Révision enregistrée · Streak : {newStreak} 🔥 (pas d'XP supplémentaire, déjà validée)</p>
+                <p className="feedback correct">Révision enregistrée · Streak : {newStreak} 🔥</p>
               ) : (
                 <p className="feedback correct">+{xpGained} XP · Streak : {newStreak} 🔥</p>
               )}
