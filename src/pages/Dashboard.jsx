@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { getNextLesson } from '../lib/progress.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 
 function Dashboard() {
@@ -9,6 +10,7 @@ function Dashboard() {
   const [settings, setSettings] = useState(null)
   const [units, setUnits] = useState([])
   const [progressByUnit, setProgressByUnit] = useState({})
+  const [nextLesson, setNextLesson] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -36,6 +38,9 @@ function Dashboard() {
         const map = {}
         progressData.forEach((p) => { map[p.unit_id] = p.status })
         setProgressByUnit(map)
+
+        const next = await getNextLesson(user.id, settingsData.active_language_id)
+        setNextLesson(next)
       } catch (err) {
         setError(err.message)
       } finally {
@@ -86,9 +91,15 @@ function Dashboard() {
         })}
       </div>
 
-      <button className="btn-primary" onClick={() => navigate('/lesson-demo')}>
-        Continuer la leçon ↗
-      </button>
+      {nextLesson ? (
+        <button className="btn-primary" onClick={() => navigate(`/lesson/${nextLesson.lesson.id}`)}>
+          Continuer : {nextLesson.lesson.title} ↗
+        </button>
+      ) : (
+        <p className="dashboard-goal">
+          Tu as terminé tout le contenu disponible pour l'instant. Reviens bientôt, on en ajoute régulièrement !
+        </p>
+      )}
 
       <button className="dashboard-signout" onClick={signOut}>Se déconnecter</button>
     </div>
