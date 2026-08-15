@@ -5,6 +5,7 @@ import RootRedirect from './pages/RootRedirect.jsx'
 import Login from './pages/Login.jsx'
 import Onboarding from './pages/Onboarding.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import UnitDetail from './pages/UnitDetail.jsx'
 import Lesson from './pages/Lesson.jsx'
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
           <Route path="/" element={<ProtectedRoute><RootRedirect /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/unit/:unitId" element={<ProtectedRoute><UnitDetail /></ProtectedRoute>} />
           <Route path="/lesson/:lessonId" element={<ProtectedRoute><Lesson /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>

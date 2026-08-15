@@ -76,7 +76,11 @@ function Dashboard() {
           const status = progressByUnit[unit.id] || (index === 0 ? 'in_progress' : 'not_started')
           const isLocked = status === 'not_started' && index !== 0
           return (
-            <div key={unit.id} className={`unit-card ${isLocked ? 'locked' : ''}`}>
+            <div
+              key={unit.id}
+              className={`unit-card ${isLocked ? 'locked' : 'clickable'}`}
+              onClick={() => !isLocked && navigate(`/unit/${unit.id}`)}
+            >
               <div className={`unit-icon ${status}`}>
                 {status === 'completed' ? '✓' : isLocked ? '🔒' : '📖'}
               </div>
