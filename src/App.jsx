@@ -12,6 +12,8 @@ import Lesson from './pages/Lesson.jsx'
 import Profile from './pages/Profile.jsx'
 import Settings from './pages/Settings.jsx'
 import Verbs from './pages/Verbs.jsx'
+import GrammarLibrary from './pages/GrammarLibrary.jsx'
+import GrammarDetail from './pages/GrammarDetail.jsx'
 
 function App() {
   return (
@@ -29,6 +31,8 @@ function App() {
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/verbs" element={<ProtectedRoute><Verbs /></ProtectedRoute>} />
+            <Route path="/grammar" element={<ProtectedRoute><GrammarLibrary /></ProtectedRoute>} />
+            <Route path="/grammar/:ficheId" element={<ProtectedRoute><GrammarDetail /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
