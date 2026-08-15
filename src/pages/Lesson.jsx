@@ -94,6 +94,7 @@ function Lesson() {
 
   return (
     <div className="page">
+      <button className="lesson-back" onClick={() => navigate(-1)}>← Retour</button>
       <h1>{lesson.title}</h1>
 
       <div className="lesson-rule">

@@ -51,3 +51,19 @@
   --danger-bg: #fbe6e6;
   --danger-text: #a13a3a;
 }
+
+/* Thème "Pastel" — couleur de fond au choix parmi 8 teintes, définie dynamiquement en JS */
+[data-theme="pastel"] {
+  --bg-surface: color-mix(in srgb, var(--bg-page) 85%, white 15%);
+  --bg-surface-alt: color-mix(in srgb, var(--bg-page) 70%, white 30%);
+  --text-primary: #24211f;
+  --text-secondary: #6b6660;
+  --accent-contrast: #ffffff;
+  --accent-warm: #c47a2e;
+  --accent-blue: #3a6ea5;
+  --border: color-mix(in srgb, var(--bg-page) 60%, black 12%);
+  --success-bg: #d9f2db;
+  --success-text: #2f6b3f;
+  --danger-bg: #fddede;
+  --danger-text: #a13a3a;
+}

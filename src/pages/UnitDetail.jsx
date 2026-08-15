@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
+import AppLayout from '../components/AppLayout.jsx'
 
 function UnitDetail() {
   const { unitId } = useParams()
@@ -44,10 +45,11 @@ function UnitDetail() {
     load()
   }, [unitId, user.id])
 
-  if (loading) return <div className="page"><p>Chargement...</p></div>
-  if (error) return <div className="page"><p className="feedback incorrect">Erreur : {error}</p></div>
+  if (loading) return <AppLayout><div className="page"><p>Chargement...</p></div></AppLayout>
+  if (error) return <AppLayout><div className="page"><p className="feedback incorrect">Erreur : {error}</p></div></AppLayout>
 
   return (
+    <AppLayout>
     <div className="page">
       <Link to="/dashboard" className="back-link">← Retour au tableau de bord</Link>
       <h1>Unité {unit.position} · {unit.title}</h1>
@@ -78,6 +80,7 @@ function UnitDetail() {
 
       {lessons.length === 0 && <p>Aucune leçon disponible pour cette unité pour l'instant.</p>}
     </div>
+    </AppLayout>
   )
 }
 
