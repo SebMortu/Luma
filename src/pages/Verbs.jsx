@@ -12,6 +12,21 @@ function shuffle(array) {
   return copy
 }
 
+function ListMode({ verbs }) {
+  return (
+    <div className="verb-list-table">
+      {verbs.map((v) => (
+        <div key={v.id} className="verb-list-row">
+          <span className="verb-list-base">{v.base_form}</span>
+          <span className="verb-list-past">{v.past_form}</span>
+          <span className="verb-list-participle">{v.participle_form}</span>
+          <span className="verb-list-fr">{v.translation}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function FlashcardMode({ verbs }) {
   const [deck, setDeck] = useState(() => shuffle(verbs))
   const [index, setIndex] = useState(0)
@@ -172,6 +187,7 @@ function Verbs() {
             </div>
 
             <p className="dashboard-section-title">Mode d'entraînement ({filtered.length} verbes)</p>
+            <button className="btn-primary" onClick={() => setMode('list')} style={{ background: 'var(--bg-surface-alt)', color: 'var(--text-primary)', border: '1.5px solid var(--border)' }}>📋 Réviser la liste</button>
             <button className="btn-primary" onClick={() => setMode('flashcards')}>🃏 Flashcards</button>
             <button className="btn-primary" onClick={() => setMode('quiz')} style={{ background: 'var(--accent-blue)' }}>❓ Quiz (10 questions)</button>
           </>
@@ -180,6 +196,7 @@ function Verbs() {
         {mode && (
           <>
             <button className="lesson-back" onClick={() => setMode(null)}>← Changer de mode</button>
+            {mode === 'list' && <ListMode verbs={filtered} />}
             {mode === 'flashcards' && <FlashcardMode verbs={filtered} />}
             {mode === 'quiz' && <QuizMode verbs={filtered} />}
           </>

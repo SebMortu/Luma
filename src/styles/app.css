@@ -391,6 +391,37 @@
   margin-bottom: 1rem;
 }
 
+.verb-list-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 1.5rem;
+}
+
+.verb-list-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.2fr;
+  gap: 8px;
+  background: var(--bg-surface);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  align-items: center;
+}
+
+.verb-list-base {
+  font-weight: 700;
+}
+
+.verb-list-past, .verb-list-participle {
+  color: var(--text-primary);
+}
+
+.verb-list-fr {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
 .lesson-back {
   background: none;
   border: none;
