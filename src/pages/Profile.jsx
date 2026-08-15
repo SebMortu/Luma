@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { computeUnitStates } from '../lib/progress.js'
 import { computeLevel, xpForNextLevel, formatDuration } from '../lib/level.js'
@@ -17,10 +17,12 @@ const CECR_TITLES = {
 
 function Profile() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [settings, setSettings] = useState(null)
   const [completedCount, setCompletedCount] = useState(0)
   const [avgScore, setAvgScore] = useState(0)
   const [levelProgress, setLevelProgress] = useState([])
+  const [bestToeicScore, setBestToeicScore] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -57,6 +59,9 @@ function Profile() {
           isLocked: g.units[0]?.isLocked,
         }
       }))
+
+      const { data: attempts } = await supabase.from('user_toeic_attempts').select('*').eq('user_id', user.id).order('estimated_score', { ascending: false }).limit(1)
+      if (attempts && attempts.length > 0) setBestToeicScore(attempts[0])
 
       setLoading(false)
     }
@@ -150,11 +155,13 @@ function Profile() {
 
         <p className="dashboard-section-title">🏆 Trophées</p>
         <div className="trophy-list">
-          <div className="trophy-card">
+          <div className="trophy-card clickable" onClick={() => navigate('/toeic-test')} style={{ opacity: 1 }}>
             <span className="trophy-icon">📝</span>
             <div>
               <p className="trophy-title">Meilleur score examen</p>
-              <p className="trophy-value">Pas encore disponible</p>
+              <p className="trophy-value">
+                {bestToeicScore ? `${bestToeicScore.estimated_score} / 990 · ${bestToeicScore.cecr_level_estimate}` : "Aucun test passé — clique pour commencer"}
+              </p>
             </div>
           </div>
           <div className="trophy-card">

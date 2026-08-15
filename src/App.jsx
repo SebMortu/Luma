@@ -14,6 +14,7 @@ import Settings from './pages/Settings.jsx'
 import Verbs from './pages/Verbs.jsx'
 import GrammarLibrary from './pages/GrammarLibrary.jsx'
 import GrammarDetail from './pages/GrammarDetail.jsx'
+import ToeicTest from './pages/ToeicTest.jsx'
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
             <Route path="/verbs" element={<ProtectedRoute><Verbs /></ProtectedRoute>} />
             <Route path="/grammar" element={<ProtectedRoute><GrammarLibrary /></ProtectedRoute>} />
             <Route path="/grammar/:ficheId" element={<ProtectedRoute><GrammarDetail /></ProtectedRoute>} />
+            <Route path="/toeic-test" element={<ProtectedRoute><ToeicTest /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

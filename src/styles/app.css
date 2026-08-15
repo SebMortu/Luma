@@ -504,6 +504,45 @@
   margin-bottom: 4px;
 }
 
+/* Test TOEIC-like */
+.toeic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.toeic-timer {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.toeic-timer.warning {
+  color: var(--danger-text);
+}
+
+.toeic-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.toeic-nav button {
+  flex: 1;
+}
+
+.trophy-card.clickable {
+  cursor: pointer;
+  transition: border-color 0.15s;
+  border: 1.5px solid transparent;
+}
+
+.trophy-card.clickable:hover {
+  border-color: var(--accent);
+}
+
 .lesson-back {
   background: none;
   border: none;
