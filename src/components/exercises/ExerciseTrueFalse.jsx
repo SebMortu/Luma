@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import TranslateToggle from '../TranslateToggle.jsx'
 
 function ExerciseTrueFalse({ content, onAnswered }) {
   const [selected, setSelected] = useState(null)
@@ -17,6 +18,7 @@ function ExerciseTrueFalse({ content, onAnswered }) {
   return (
     <div className="exercise">
       <p className="exercise-question">{content.statement}</p>
+      <TranslateToggle translation={content.statement_fr} />
       <div className="exercise-options">
         <button
           className={`exercise-option ${isCorrectChoice(true) ? 'correct' : ''} ${isWrongChoice(true) ? 'incorrect' : ''}`}

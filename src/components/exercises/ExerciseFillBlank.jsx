@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import TranslateToggle from '../TranslateToggle.jsx'
 
 function ExerciseFillBlank({ content, onAnswered }) {
   const [value, setValue] = useState('')
@@ -33,6 +34,7 @@ function ExerciseFillBlank({ content, onAnswered }) {
         />
         {content.sentence_after}
       </p>
+      <TranslateToggle translation={content.sentence_fr} />
       {error && <p className="feedback incorrect">{error}</p>}
       {!answered && (
         <button className="exercise-submit" onClick={handleSubmit}>Valider</button>

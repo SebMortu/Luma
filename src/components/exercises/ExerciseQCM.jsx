@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import TranslateToggle from '../TranslateToggle.jsx'
 
 function ExerciseQCM({ content, onAnswered }) {
   const [selected, setSelected] = useState(null)
@@ -14,6 +15,7 @@ function ExerciseQCM({ content, onAnswered }) {
   return (
     <div className="exercise">
       <p className="exercise-question">{content.question}</p>
+      <TranslateToggle translation={content.question_fr} />
       <div className="exercise-options">
         {content.options.map((option, index) => {
           let className = 'exercise-option'
