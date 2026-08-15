@@ -15,6 +15,12 @@ function shuffle(array) {
 function ListMode({ verbs }) {
   return (
     <div className="verb-list-table">
+      <div className="verb-list-row verb-list-header">
+        <span>Base</span>
+        <span>Passé</span>
+        <span>Participe</span>
+        <span>Traduction</span>
+      </div>
       {verbs.map((v) => (
         <div key={v.id} className="verb-list-row">
           <span className="verb-list-base">{v.base_form}</span>
@@ -138,6 +144,27 @@ function QuizMode({ verbs }) {
   )
 }
 
+function UsageSheet() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="usage-sheet">
+      <button className="usage-sheet-toggle" onClick={() => setOpen(!open)}>
+        ℹ️ {open ? 'Masquer' : 'Voir'} la fiche : comment utiliser ces 3 formes
+      </button>
+      {open && (
+        <div className="usage-sheet-content">
+          <p><strong>Base</strong> — utilisée au present simple (I/you/we/they) et après les modaux (can, must...).</p>
+          <p className="verb-translation">Ex : I <strong>go</strong> to work. / She can <strong>go</strong>.</p>
+          <p><strong>Passé (past form)</strong> — utilisée seule au past simple, pour une action terminée à un moment précisé.</p>
+          <p className="verb-translation">Ex : I <strong>went</strong> to Paris last year.</p>
+          <p><strong>Participe passé</strong> — utilisé avec have/has (present perfect) ou avec to be (voix passive).</p>
+          <p className="verb-translation">Ex : I have <strong>gone</strong> there before. / The letter was <strong>written</strong> yesterday.</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Verbs() {
   const { user } = useAuth()
   const [verbs, setVerbs] = useState([])
@@ -168,6 +195,7 @@ function Verbs() {
     <AppLayout>
       <div className="page">
         <h1>🔤 Verbes irréguliers</h1>
+        <UsageSheet />
 
         {!mode && (
           <>
