@@ -10,14 +10,14 @@ export const THEMES = [
 ]
 
 export const PASTEL_SWATCHES = [
-  { bg: '#FFADAD', accent: '#E63946', label: 'Corail' },
-  { bg: '#FFD6A5', accent: '#E08E45', label: 'Abricot' },
-  { bg: '#FDFFB6', accent: '#C9A227', label: 'Citron' },
-  { bg: '#CAFFBF', accent: '#3A9152', label: 'Menthe' },
-  { bg: '#9BF6FF', accent: '#1E90A3', label: 'Turquoise' },
-  { bg: '#A0C4FF', accent: '#3A6EA5', label: 'Azur' },
-  { bg: '#BDB2FF', accent: '#6B4FA0', label: 'Lavande' },
-  { bg: '#FFC6FF', accent: '#C2438E', label: 'Magenta' },
+  { bg: '#FFADAD', accent: '#C1121F', label: 'Corail' },
+  { bg: '#FFD6A5', accent: '#B5651D', label: 'Abricot' },
+  { bg: '#FDFFB6', accent: '#8C6D00', label: 'Citron' },
+  { bg: '#CAFFBF', accent: '#2F7D4C', label: 'Menthe' },
+  { bg: '#9BF6FF', accent: '#157A8A', label: 'Turquoise' },
+  { bg: '#A0C4FF', accent: '#2E5C94', label: 'Azur' },
+  { bg: '#BDB2FF', accent: '#5A3E8C', label: 'Lavande' },
+  { bg: '#FFC6FF', accent: '#A32C74', label: 'Magenta' },
 ]
 
 export function ThemeProvider({ children }) {
