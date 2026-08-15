@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
+import TranslateToggle from '../components/TranslateToggle.jsx'
 
 function ScenarioPlayer() {
   const { scenarioId } = useParams()
@@ -26,7 +27,7 @@ function ScenarioPlayer() {
 
   const chooseOption = async (choice) => {
     const node = scenario.content.nodes[currentNodeId]
-    setHistory((h) => [...h, { speaker: node.speaker, text: node.text, chosenReply: choice.text }])
+    setHistory((h) => [...h, { speaker: node.speaker, text: node.text, text_fr: node.text_fr, chosenReply: choice.text }])
     setCurrentNodeId(choice.next)
 
     const nextNode = scenario.content.nodes[choice.next]
@@ -55,6 +56,7 @@ function ScenarioPlayer() {
               <div className="dialogue-bubble npc">
                 <p className="dialogue-speaker">{scenario.content.characters[h.speaker] || h.speaker}</p>
                 <p>{h.text}</p>
+                <TranslateToggle translation={h.text_fr} />
               </div>
               <div className="dialogue-bubble user">
                 <p>{h.chosenReply}</p>
@@ -66,6 +68,7 @@ function ScenarioPlayer() {
         <div className="dialogue-bubble npc current">
           <p className="dialogue-speaker">{speakerName}</p>
           <p>{node.text}</p>
+          <TranslateToggle translation={node.text_fr} />
         </div>
 
         {node.end ? (
