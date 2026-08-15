@@ -37,17 +37,61 @@ export async function getNextLesson(userId, languageId) {
 }
 
 /**
- * Enregistre la complétion d'une leçon : met à jour la progression,
- * l'XP et le streak. Retourne l'XP gagné pour l'affichage.
+ * Calcule, pour chaque unité, son statut d'avancement et si elle est déblocable.
+ * Une unité est débloquée si l'unité précédente est "validée" :
+ * toutes ses leçons terminées avec un score ≥ 80% chacune.
  */
+export async function computeUnitStates(userId, languageId, units) {
+  const { data: allLessons, error: lessonsErr } = await supabase
+    .from('lessons').select('id, unit_id')
+    .in('unit_id', units.map((u) => u.id))
+  if (lessonsErr) throw lessonsErr
+
+  const { data: allProgress, error: progressErr } = await supabase
+    .from('user_progress').select('lesson_id, unit_id, status, best_score')
+    .eq('user_id', userId).eq('language_id', languageId)
+  if (progressErr) throw progressErr
+
+  const lessonsByUnit = {}
+  allLessons.forEach((l) => {
+    if (!lessonsByUnit[l.unit_id]) lessonsByUnit[l.unit_id] = []
+    lessonsByUnit[l.unit_id].push(l)
+  })
+
+  const progressByLesson = {}
+  allProgress.forEach((p) => { progressByLesson[p.lesson_id] = p })
+
+  let previousUnitPassed = true // la première unité est toujours accessible
+
+  return units.map((unit) => {
+    const lessons = lessonsByUnit[unit.id] || []
+    const completions = lessons.map((l) => progressByLesson[l.id]).filter(Boolean)
+    const allCompleted = lessons.length > 0 && completions.length === lessons.length
+    const passed = allCompleted && completions.every((c) => (c.best_score ?? 0) >= 0.8)
+
+    const isLocked = !previousUnitPassed
+    const status = isLocked
+      ? 'locked'
+      : allCompleted
+        ? 'completed'
+        : completions.length > 0
+          ? 'in_progress'
+          : 'not_started'
+
+    previousUnitPassed = passed
+
+    return { unit, status, isLocked, passed, lessonCount: lessons.length, completedCount: completions.length }
+  })
+}
 export async function recordLessonCompletion({ userId, languageId, unitId, lessonId, score }) {
-  // 1. Enregistrer/mettre à jour la progression de cette leçon
+  // 1. Vérifier si cette leçon avait déjà été terminée avant (pour ne pas re-donner d'XP)
   const { data: existing } = await supabase
-    .from('user_progress').select('best_score')
+    .from('user_progress').select('status, best_score')
     .eq('user_id', userId).eq('language_id', languageId)
     .eq('unit_id', unitId).eq('lesson_id', lessonId)
     .maybeSingle()
 
+  const alreadyCompleted = existing?.status === 'completed'
   const bestScore = existing ? Math.max(existing.best_score ?? 0, score) : score
 
   const { error: upsertErr } = await supabase
@@ -81,7 +125,9 @@ export async function recordLessonCompletion({ userId, languageId, unitId, lesso
   }
   const newLongest = Math.max(settings.longest_streak, newStreak)
 
-  const xpGained = score === 1 ? 20 : 10
+  // L'XP n'est attribué qu'à la première réussite d'une leçon — les révisions
+  // gardent le streak actif (bonne pratique) mais ne permettent pas de farmer l'XP
+  const xpGained = alreadyCompleted ? 0 : (score === 1 ? 20 : 10)
   const newTotalXp = settings.total_xp + xpGained
 
   const { error: updateErr } = await supabase
@@ -96,5 +142,5 @@ export async function recordLessonCompletion({ userId, languageId, unitId, lesso
     .eq('user_id', userId)
   if (updateErr) throw updateErr
 
-  return { xpGained, newStreak, newTotalXp }
+  return { xpGained, newStreak, newTotalXp, alreadyCompleted }
 }

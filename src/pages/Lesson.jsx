@@ -27,6 +27,7 @@ function Lesson() {
   const [saving, setSaving] = useState(false)
   const [xpGained, setXpGained] = useState(null)
   const [newStreak, setNewStreak] = useState(null)
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -77,6 +78,7 @@ function Lesson() {
         })
         setXpGained(result.xpGained)
         setNewStreak(result.newStreak)
+        setAlreadyCompleted(result.alreadyCompleted)
       } catch (err) {
         setError(err.message)
       } finally {
@@ -138,7 +140,11 @@ function Lesson() {
           {saving && <p>Enregistrement...</p>}
           {xpGained !== null && (
             <>
-              <p className="feedback correct">+{xpGained} XP · Streak : {newStreak} 🔥</p>
+              {alreadyCompleted ? (
+                <p className="feedback correct">Révision enregistrée · Streak : {newStreak} 🔥 (pas d'XP supplémentaire, déjà validée)</p>
+              ) : (
+                <p className="feedback correct">+{xpGained} XP · Streak : {newStreak} 🔥</p>
+              )}
               <button className="btn-primary" onClick={() => navigate('/dashboard')}>
                 Retour au tableau de bord
               </button>

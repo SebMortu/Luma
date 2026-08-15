@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
-import { getNextLesson } from '../lib/progress.js'
+import { getNextLesson, computeUnitStates } from '../lib/progress.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 
 function Dashboard() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const [settings, setSettings] = useState(null)
-  const [units, setUnits] = useState([])
-  const [progressByUnit, setProgressByUnit] = useState({})
+  const [unitStates, setUnitStates] = useState([])
   const [nextLesson, setNextLesson] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -27,17 +26,9 @@ function Dashboard() {
           .eq('language_id', settingsData.active_language_id)
           .order('position')
         if (unitsErr) throw unitsErr
-        setUnits(unitsData)
 
-        const { data: progressData, error: progressErr } = await supabase
-          .from('user_progress').select('*')
-          .eq('user_id', user.id)
-          .eq('language_id', settingsData.active_language_id)
-        if (progressErr) throw progressErr
-
-        const map = {}
-        progressData.forEach((p) => { map[p.unit_id] = p.status })
-        setProgressByUnit(map)
+        const states = await computeUnitStates(user.id, settingsData.active_language_id, unitsData)
+        setUnitStates(states)
 
         const next = await getNextLesson(user.id, settingsData.active_language_id)
         setNextLesson(next)
@@ -52,6 +43,20 @@ function Dashboard() {
 
   if (loading) return <div className="page"><p>Chargement...</p></div>
   if (error) return <div className="page"><p className="feedback incorrect">Erreur : {error}</p></div>
+
+  const statusLabels = {
+    completed: 'Terminée · 80%+ validé',
+    in_progress: 'En cours',
+    not_started: 'À commencer',
+    locked: 'Verrouillée',
+  }
+
+  const statusIcons = {
+    completed: '✓',
+    in_progress: '📖',
+    not_started: '📖',
+    locked: '🔒',
+  }
 
   return (
     <div className="page">
@@ -72,27 +77,25 @@ function Dashboard() {
 
       <p className="dashboard-section-title">Ton parcours</p>
       <div className="unit-list">
-        {units.map((unit, index) => {
-          const status = progressByUnit[unit.id] || (index === 0 ? 'in_progress' : 'not_started')
-          const isLocked = status === 'not_started' && index !== 0
-          return (
-            <div
-              key={unit.id}
-              className={`unit-card ${isLocked ? 'locked' : 'clickable'}`}
-              onClick={() => !isLocked && navigate(`/unit/${unit.id}`)}
-            >
-              <div className={`unit-icon ${status}`}>
-                {status === 'completed' ? '✓' : isLocked ? '🔒' : '📖'}
-              </div>
-              <div>
-                <p className="unit-title">Unité {unit.position} · {unit.title}</p>
-                <p className="unit-status">
-                  {status === 'completed' ? 'Terminée' : isLocked ? 'Verrouillée' : 'En cours'}
-                </p>
-              </div>
+        {unitStates.map(({ unit, status, isLocked, lessonCount, completedCount }) => (
+          <div
+            key={unit.id}
+            className={`unit-card ${isLocked ? 'locked' : 'clickable'}`}
+            onClick={() => !isLocked && navigate(`/unit/${unit.id}`)}
+          >
+            <div className={`unit-icon ${status}`}>{statusIcons[status]}</div>
+            <div>
+              <p className="unit-title">Unité {unit.position} · {unit.title}</p>
+              <p className="unit-status">
+                {isLocked
+                  ? 'Verrouillée · termine l\'unité précédente à 80% pour débloquer'
+                  : lessonCount === 0
+                    ? 'Pas encore de contenu'
+                    : `${statusLabels[status]} (${completedCount}/${lessonCount} leçons)`}
+              </p>
             </div>
-          )
-        })}
+          </div>
+        ))}
       </div>
 
       {nextLesson ? (
