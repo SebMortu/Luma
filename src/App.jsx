@@ -11,6 +11,7 @@ import LevelPath from './pages/LevelPath.jsx'
 import Lesson from './pages/Lesson.jsx'
 import Profile from './pages/Profile.jsx'
 import Settings from './pages/Settings.jsx'
+import Verbs from './pages/Verbs.jsx'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/lesson/:lessonId" element={<ProtectedRoute><Lesson /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/verbs" element={<ProtectedRoute><Verbs /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

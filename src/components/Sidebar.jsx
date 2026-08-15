@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 const NAV_ITEMS = [
   { path: '/dashboard', icon: '🏠', label: 'Accueil', enabled: true },
   { path: '/grammar', icon: '📚', label: 'Grammaire', enabled: false },
-  { path: '/verbs', icon: '🔤', label: 'Verbes', enabled: false },
+  { path: '/verbs', icon: '🔤', label: 'Verbes', enabled: true },
   { path: '/scenarios', icon: '🎭', label: 'Scénarios', enabled: false },
   { path: '/profile', icon: '👤', label: 'Profil', enabled: true },
 ]
