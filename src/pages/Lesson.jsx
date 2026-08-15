@@ -6,11 +6,15 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import ExerciseQCM from '../components/exercises/ExerciseQCM.jsx'
 import ExerciseFillBlank from '../components/exercises/ExerciseFillBlank.jsx'
 import ExerciseTrueFalse from '../components/exercises/ExerciseTrueFalse.jsx'
+import ExerciseMatching from '../components/exercises/ExerciseMatching.jsx'
+import ExerciseReorder from '../components/exercises/ExerciseReorder.jsx'
 
 const EXERCISE_COMPONENTS = {
   qcm: ExerciseQCM,
   fill_blank: ExerciseFillBlank,
   true_false: ExerciseTrueFalse,
+  matching: ExerciseMatching,
+  reorder: ExerciseReorder,
 }
 
 function Lesson() {
