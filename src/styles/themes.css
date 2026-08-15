@@ -1,0 +1,53 @@
+/* Thème "Nuit" — inspiré de la référence (marine profond + accent citron vert) */
+[data-theme="night"] {
+  --bg-page: #0e1420;
+  --bg-surface: #1a2233;
+  --bg-surface-alt: #232d42;
+  --text-primary: #f2f4f8;
+  --text-secondary: #9aa4b8;
+  --accent: #c9e265;
+  --accent-contrast: #10160f;
+  --accent-warm: #f0a860;
+  --accent-blue: #6fa8e0;
+  --border: #2b3650;
+  --success-bg: #1e2a1f;
+  --success-text: #8fd97f;
+  --danger-bg: #3a1e1e;
+  --danger-text: #e28a8a;
+}
+
+/* Thème "Forêt" — notre thème d'origine, sombre et végétal */
+[data-theme="forest"] {
+  --bg-page: #1a1a1a;
+  --bg-surface: #262625;
+  --bg-surface-alt: #2e2e2c;
+  --text-primary: #f0efec;
+  --text-secondary: #999;
+  --accent: #7fd393;
+  --accent-contrast: #0d1a0f;
+  --accent-warm: #e0a860;
+  --accent-blue: #7fa3d3;
+  --border: #444;
+  --success-bg: #1e2a1f;
+  --success-text: #7fd393;
+  --danger-bg: #2a1e1e;
+  --danger-text: #e28a8a;
+}
+
+/* Thème "Clair" — pour ceux qui préfèrent un fond lumineux */
+[data-theme="light"] {
+  --bg-page: #f7f6f3;
+  --bg-surface: #ffffff;
+  --bg-surface-alt: #eeece7;
+  --text-primary: #1e1e1c;
+  --text-secondary: #6b6b66;
+  --accent: #3a7a4a;
+  --accent-contrast: #ffffff;
+  --accent-warm: #c47a2e;
+  --accent-blue: #3a6ea5;
+  --border: #ddd9d0;
+  --success-bg: #e3f3e5;
+  --success-text: #2f6b3f;
+  --danger-bg: #fbe6e6;
+  --danger-text: #a13a3a;
+}
