@@ -79,6 +79,12 @@ function UnitDetail() {
       </div>
 
       {lessons.length === 0 && <p>Aucune leçon disponible pour cette unité pour l'instant.</p>}
+
+      {lessons.length > 0 && (
+        <button className="btn-primary" style={{ background: 'var(--accent-warm)', marginTop: '1rem' }} onClick={() => navigate(`/unit/${unitId}/test`)}>
+          📝 Passer le test de sortie (80% requis)
+        </button>
+      )}
     </div>
     </AppLayout>
   )
