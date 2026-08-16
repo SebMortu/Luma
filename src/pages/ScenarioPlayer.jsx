@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import TranslateToggle from '../components/TranslateToggle.jsx'
+import { awardProgress } from '../lib/progress.js'
 
 function ScenarioPlayer() {
   const { scenarioId } = useParams()
@@ -32,8 +33,7 @@ function ScenarioPlayer() {
     const nextNode = scenario.content.nodes[choice.next]
     if (nextNode.end && !xpAwarded) {
       setXpAwarded(true)
-      const { data: settings } = await supabase.from('user_settings').select('total_xp').eq('user_id', user.id).single()
-      await supabase.from('user_settings').update({ total_xp: settings.total_xp + 10 }).eq('user_id', user.id)
+      await awardProgress(user.id, { xpGained: 10 })
     }
   }
 

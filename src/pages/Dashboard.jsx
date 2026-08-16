@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
-import { getNextLesson, computeUnitStates } from '../lib/progress.js'
+import { getNextLesson, computeUnitStates, dailyXpThreshold } from '../lib/progress.js'
 import { computeLevel } from '../lib/level.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
@@ -59,6 +59,9 @@ function Dashboard() {
   const totalCompleted = unitStates.reduce((sum, s) => sum + s.completedCount, 0)
   const progressPct = totalLessons > 0 ? Math.round((totalCompleted / totalLessons) * 100) : 0
   const todayIndex = (new Date().getDay() + 6) % 7
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayXp = settings.xp_today_date === todayStr ? settings.xp_gained_today : 0
+  const goalThreshold = dailyXpThreshold(settings.daily_goal_minutes)
   const level = computeLevel(settings.total_xp)
   const displayName = user.email.split('@')[0]
   const initial = displayName.charAt(0).toUpperCase()
@@ -103,6 +106,16 @@ function Dashboard() {
                 <span className="streak-day-label">{label}</span>
               </div>
             ))}
+          </div>
+          <div className="goal-progress-mini">
+            <div className="progress-bar-track">
+              <div className="progress-bar-fill" style={{ width: `${Math.min(100, Math.round((todayXp / goalThreshold) * 100))}%` }} />
+            </div>
+            <p className="progress-card-sub">
+              {todayXp >= goalThreshold
+                ? `Objectif du jour atteint ✅ (${todayXp}/${goalThreshold} XP)`
+                : `Objectif du jour : ${todayXp}/${goalThreshold} XP`}
+            </p>
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
-import { computeUnitStates } from '../lib/progress.js'
+import { computeUnitStates, dailyXpThreshold } from '../lib/progress.js'
 import { computeLevel, xpForNextLevel, formatDuration } from '../lib/level.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
@@ -73,6 +73,9 @@ function Profile() {
   const { xpIntoLevel, xpNeeded, currentLevel } = xpForNextLevel(settings.total_xp)
   const levelPct = Math.round((xpIntoLevel / xpNeeded) * 100)
   const todayIndex = (new Date().getDay() + 6) % 7
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayXp = settings.xp_today_date === todayStr ? settings.xp_gained_today : 0
+  const goalThreshold = dailyXpThreshold(settings.daily_goal_minutes)
   const displayName = user.email.split('@')[0]
   const initial = displayName.charAt(0).toUpperCase()
 
@@ -102,6 +105,16 @@ function Profile() {
                 <span className="streak-day-label">{label}</span>
               </div>
             ))}
+          </div>
+          <div className="goal-progress-mini">
+            <div className="progress-bar-track">
+              <div className="progress-bar-fill" style={{ width: `${Math.min(100, Math.round((todayXp / goalThreshold) * 100))}%` }} />
+            </div>
+            <p className="progress-card-sub">
+              {todayXp >= goalThreshold
+                ? `Objectif du jour atteint ✅ (${todayXp}/${goalThreshold} XP)`
+                : `Objectif du jour : ${todayXp}/${goalThreshold} XP`}
+            </p>
           </div>
         </div>
 

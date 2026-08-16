@@ -32,6 +32,7 @@ function Lesson() {
   const [xpGained, setXpGained] = useState(null)
   const [newStreak, setNewStreak] = useState(null)
   const [alreadyCompleted, setAlreadyCompleted] = useState(false)
+  const [goalInfo, setGoalInfo] = useState(null)
   const startTimeRef = useRef(Date.now())
 
   useEffect(() => {
@@ -90,6 +91,7 @@ function Lesson() {
         setXpGained(result.xpGained)
         setNewStreak(result.newStreak)
         setAlreadyCompleted(result.alreadyCompleted)
+        setGoalInfo({ goalMetNow: result.goalMetNow, xpToday: result.xpToday, threshold: result.threshold })
       } catch (err) {
         setError(err.message)
       } finally {
@@ -156,6 +158,18 @@ function Lesson() {
                 <p className="feedback correct">Révision enregistrée · Streak : {newStreak} 🔥</p>
               ) : (
                 <p className="feedback correct">+{xpGained} XP · Streak : {newStreak} 🔥</p>
+              )}
+              {goalInfo && (
+                <div className="goal-progress-mini">
+                  <div className="progress-bar-track">
+                    <div className="progress-bar-fill" style={{ width: `${Math.min(100, Math.round((goalInfo.xpToday / goalInfo.threshold) * 100))}%` }} />
+                  </div>
+                  <p className="progress-card-sub">
+                    {goalInfo.goalMetNow
+                      ? `Objectif du jour atteint ✅ (${goalInfo.xpToday}/${goalInfo.threshold} XP)`
+                      : `Objectif du jour : ${goalInfo.xpToday}/${goalInfo.threshold} XP`}
+                  </p>
+                </div>
               )}
               <button className="btn-primary" onClick={() => navigate('/dashboard')}>
                 Retour au tableau de bord
