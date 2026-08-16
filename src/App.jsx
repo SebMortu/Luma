@@ -20,6 +20,7 @@ import ScenarioList from './pages/ScenarioList.jsx'
 import ScenarioPlayer from './pages/ScenarioPlayer.jsx'
 import WordGamesLibrary from './pages/WordGamesLibrary.jsx'
 import WordPuzzlePlayer from './pages/WordPuzzlePlayer.jsx'
+import WordGamesHistory from './pages/WordGamesHistory.jsx'
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
             <Route path="/scenario/:scenarioId" element={<ProtectedRoute><ScenarioPlayer /></ProtectedRoute>} />
             <Route path="/word-games" element={<ProtectedRoute><WordGamesLibrary /></ProtectedRoute>} />
             <Route path="/word-puzzle/:puzzleId" element={<ProtectedRoute><WordPuzzlePlayer /></ProtectedRoute>} />
+            <Route path="/word-games/history" element={<ProtectedRoute><WordGamesHistory /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
