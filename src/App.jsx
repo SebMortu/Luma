@@ -18,6 +18,8 @@ import ToeicTest from './pages/ToeicTest.jsx'
 import ScenariosLibrary from './pages/ScenariosLibrary.jsx'
 import ScenarioList from './pages/ScenarioList.jsx'
 import ScenarioPlayer from './pages/ScenarioPlayer.jsx'
+import WordGamesLibrary from './pages/WordGamesLibrary.jsx'
+import WordPuzzlePlayer from './pages/WordPuzzlePlayer.jsx'
 
 function App() {
   return (
@@ -41,6 +43,8 @@ function App() {
             <Route path="/scenarios" element={<ProtectedRoute><ScenariosLibrary /></ProtectedRoute>} />
             <Route path="/scenarios/:themeId" element={<ProtectedRoute><ScenarioList /></ProtectedRoute>} />
             <Route path="/scenario/:scenarioId" element={<ProtectedRoute><ScenarioPlayer /></ProtectedRoute>} />
+            <Route path="/word-games" element={<ProtectedRoute><WordGamesLibrary /></ProtectedRoute>} />
+            <Route path="/word-puzzle/:puzzleId" element={<ProtectedRoute><WordPuzzlePlayer /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
