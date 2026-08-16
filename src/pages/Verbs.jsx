@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
@@ -166,20 +166,105 @@ function UsageSheet() {
   )
 }
 
+// Génère la forme "régularisée" incorrecte qu'un apprenant produirait naturellement
+// (ex: goed au lieu de went) — excellent leurre pédagogique
+function regularize(base) {
+  if (base.endsWith('e')) return base + 'd'
+  if (/[^aeiou]y$/.test(base)) return base.slice(0, -1) + 'ied'
+  return base + 'ed'
+}
+
+// Légère altération orthographique du mot correct (permutation de deux lettres)
+function mutateSpelling(word) {
+  if (word.length < 4) return word + 'e'
+  const i = 1 + Math.floor(Math.random() * (word.length - 3))
+  return word.slice(0, i) + word[i + 1] + word[i] + word.slice(i + 2)
+}
+
+function buildOptions(verb, pool, difficulty) {
+  const distractors = new Set()
+  if (difficulty !== 'easy' && verb.participle_form !== verb.past_form) {
+    distractors.add(verb.participle_form) // même verbe, autre temps — piège classique
+  }
+  if (difficulty !== 'easy') {
+    distractors.add(regularize(verb.base_form)) // forme "régularisée" fautive
+  }
+  if (difficulty === 'hard') {
+    distractors.add(mutateSpelling(verb.past_form)) // faute d'orthographe plausible
+  }
+  while (distractors.size < 3) {
+    const other = pool[Math.floor(Math.random() * pool.length)]
+    if (other.past_form !== verb.past_form) distractors.add(other.past_form)
+  }
+  return shuffle([verb.past_form, ...Array.from(distractors).slice(0, 3)])
+}
+
+const DIFFICULTY_LABELS = {
+  easy: { label: 'A1-A2 · Facile', desc: 'Réponses assez distinctes' },
+  medium: { label: 'B1-B2 · Intermédiaire', desc: 'Pièges sur les temps et l\'orthographe' },
+  hard: { label: 'C1 · Avancé', desc: 'Fautes d\'orthographe plausibles incluses' },
+}
+
+function SprintSetup({ onStart }) {
+  const [difficulty, setDifficulty] = useState('medium')
+  const [writeMode, setWriteMode] = useState(false)
+
+  return (
+    <div>
+      <p className="dashboard-section-title">Niveau de difficulté</p>
+      <div className="onboarding-options" style={{ marginBottom: '1.5rem' }}>
+        {Object.entries(DIFFICULTY_LABELS).map(([key, v]) => (
+          <button key={key} className={`onboarding-option ${difficulty === key ? 'selected' : ''}`} onClick={() => setDifficulty(key)}>
+            <span className="onboarding-option-title">{v.label}</span>
+            <span className="onboarding-option-desc">{v.desc}</span>
+          </button>
+        ))}
+      </div>
+
+      <p className="dashboard-section-title">Format</p>
+      <div className="onboarding-options" style={{ marginBottom: '1.5rem' }}>
+        <button className={`onboarding-option row ${!writeMode ? 'selected' : ''}`} onClick={() => setWriteMode(false)}>
+          <span className="onboarding-option-title">🔘 QCM</span>
+        </button>
+        <button className={`onboarding-option row ${writeMode ? 'selected' : ''}`} onClick={() => setWriteMode(true)}>
+          <span className="onboarding-option-title">⌨️ Écriture</span>
+        </button>
+      </div>
+
+      <button className="btn-primary" onClick={() => onStart({ difficulty, writeMode })}>Commencer le défi</button>
+    </div>
+  )
+}
+
 function SprintMode({ verbs, user }) {
+  const [config, setConfig] = useState(null)
+
+  if (!config) return <SprintSetup onStart={setConfig} />
+  return <SprintChallenge verbs={verbs} user={user} difficulty={config.difficulty} writeMode={config.writeMode} />
+}
+
+function SprintChallenge({ verbs, user, difficulty, writeMode }) {
+  const pool = difficulty === 'easy' ? verbs.filter((v) => v.is_priority) : verbs
+  const usablePool = pool.length >= 4 ? pool : verbs
+
   const [current, setCurrent] = useState(null)
   const [options, setOptions] = useState([])
+  const [inputValue, setInputValue] = useState('')
   const [score, setScore] = useState(0)
   const [secondsLeft, setSecondsLeft] = useState(60)
   const [finished, setFinished] = useState(false)
   const [bestScore, setBestScore] = useState(0)
   const [isNewRecord, setIsNewRecord] = useState(false)
+  const scoreRef = useRef(0)
+  const finishedRef = useRef(false)
+  const startTimeRef = useRef(Date.now())
+  const DURATION_MS = 60000
 
   const pickQuestion = () => {
-    const verb = verbs[Math.floor(Math.random() * verbs.length)]
-    const wrongOnes = shuffle(verbs.filter((v) => v.past_form !== verb.past_form)).slice(0, 3).map((v) => v.past_form)
+    const verb = usablePool[Math.floor(Math.random() * usablePool.length)]
     setCurrent(verb)
-    setOptions(shuffle([verb.past_form, ...wrongOnes]))
+    setInputValue('')
+    if (!writeMode) setOptions(buildOptions(verb, usablePool, difficulty))
   }
 
   useEffect(() => {
@@ -191,38 +276,53 @@ function SprintMode({ verbs, user }) {
     pickQuestion()
   }, [])
 
+  // Chrono basé sur l'heure réelle (pas un simple compteur) : reste correct même
+  // si le téléphone se met en veille pendant le défi.
   useEffect(() => {
-    if (finished) return
-    const timer = setInterval(() => {
-      setSecondsLeft((s) => {
-        if (s <= 1) {
-          clearInterval(timer)
-          finish()
-          return 0
-        }
-        return s - 1
-      })
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [finished])
+    const tick = () => {
+      if (finishedRef.current) return
+      const elapsed = Date.now() - startTimeRef.current
+      const remaining = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000))
+      setSecondsLeft(remaining)
+      if (remaining <= 0) finish()
+    }
+    tick()
+    const interval = setInterval(tick, 1000)
+    const onVisible = () => { if (document.visibilityState === 'visible') tick() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [])
 
   const finish = async () => {
+    if (finishedRef.current) return
+    finishedRef.current = true
     setFinished(true)
-    if (score > bestScore) {
+    if (scoreRef.current > bestScore) {
       setIsNewRecord(true)
-      await supabase.from('user_settings').update({ best_verb_sprint_score: score }).eq('user_id', user.id)
+      await supabase.from('user_settings').update({ best_verb_sprint_score: scoreRef.current }).eq('user_id', user.id)
     }
   }
 
-  const answer = (opt) => {
-    if (finished) return
-    if (opt === current.past_form) {
-      playCorrect()
-      setScore((s) => s + 1)
-    } else {
-      playIncorrect()
+  const registerAnswer = (isCorrect) => {
+    isCorrect ? playCorrect() : playIncorrect()
+    if (isCorrect) {
+      scoreRef.current += 1
+      setScore(scoreRef.current)
     }
     pickQuestion()
+  }
+
+  const answerQCM = (opt) => {
+    if (finished) return
+    registerAnswer(opt === current.past_form)
+  }
+
+  const submitWritten = () => {
+    if (finished || !inputValue.trim()) return
+    registerAnswer(inputValue.trim().toLowerCase() === current.past_form.toLowerCase())
   }
 
   if (finished) {
@@ -248,11 +348,26 @@ function SprintMode({ verbs, user }) {
       {current && (
         <div className="exercise">
           <p className="exercise-question">Passé de "{current.base_form}" ?</p>
-          <div className="exercise-options">
-            {options.map((opt) => (
-              <button key={opt} className="exercise-option" onClick={() => answer(opt)}>{opt}</button>
-            ))}
-          </div>
+          {writeMode ? (
+            <>
+              <input
+                type="text"
+                autoFocus
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submitWritten()}
+                className="exercise-input"
+                style={{ width: '100%', marginBottom: '8px' }}
+              />
+              <button className="exercise-submit" onClick={submitWritten}>Valider</button>
+            </>
+          ) : (
+            <div className="exercise-options">
+              {options.map((opt) => (
+                <button key={opt} className="exercise-option" onClick={() => answerQCM(opt)}>{opt}</button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
