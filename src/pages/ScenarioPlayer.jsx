@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
-import AppLayout from '../components/AppLayout.jsx'
 import TranslateToggle from '../components/TranslateToggle.jsx'
 
 function ScenarioPlayer() {
@@ -38,15 +37,14 @@ function ScenarioPlayer() {
     }
   }
 
-  if (loading) return <AppLayout><div className="page"><p>Chargement...</p></div></AppLayout>
-  if (!scenario) return <AppLayout><div className="page"><p>Scénario introuvable.</p></div></AppLayout>
+  if (loading) return <div className="page"><p>Chargement...</p></div>
+  if (!scenario) return <div className="page"><p>Scénario introuvable.</p></div>
 
   const node = scenario.content.nodes[currentNodeId]
   const speakerName = scenario.content.characters[node.speaker] || node.speaker
 
   return (
-    <AppLayout>
-      <div className="page">
+    <div className="page">
         <button className="lesson-back" onClick={() => navigate(-1)}>← Quitter le scénario</button>
         <h1>{scenario.title}</h1>
 
@@ -86,8 +84,7 @@ function ScenarioPlayer() {
             ))}
           </div>
         )}
-      </div>
-    </AppLayout>
+    </div>
   )
 }
 

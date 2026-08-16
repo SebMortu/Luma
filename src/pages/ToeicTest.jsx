@@ -202,37 +202,36 @@ function ToeicTest() {
   const categories = [...new Set(tests.map((t) => t.exam_type))]
   const testsInCategory = tests.filter((t) => t.exam_type === selectedCategory)
 
-  return (
-    <AppLayout>
-      <div className="page">
-        {screen === 'categories' && (
-          <>
-            <h1>📝 Tests type examen</h1>
-            <p className="dashboard-goal">Choisis un type d'examen à t'entraîner.</p>
-            <div className="unit-list">
-              {categories.map((cat) => {
-                const count = tests.filter((t) => t.exam_type === cat).length
-                return (
-                  <div key={cat} className="unit-card clickable" onClick={() => chooseCategory(cat)}>
-                    <div className="unit-icon">📝</div>
-                    <div>
-                      <p className="unit-title">{EXAM_LABELS[cat]?.name || cat}</p>
-                      <p className="unit-status">{EXAM_LABELS[cat]?.desc} · {count} test{count > 1 ? 's' : ''} disponible{count > 1 ? 's' : ''}</p>
-                    </div>
+  const content = (
+    <div className="page">
+      {screen === 'categories' && (
+        <>
+          <h1>📝 Tests type examen</h1>
+          <p className="dashboard-goal">Choisis un type d'examen à t'entraîner.</p>
+          <div className="unit-list">
+            {categories.map((cat) => {
+              const count = tests.filter((t) => t.exam_type === cat).length
+              return (
+                <div key={cat} className="unit-card clickable" onClick={() => chooseCategory(cat)}>
+                  <div className="unit-icon">📝</div>
+                  <div>
+                    <p className="unit-title">{EXAM_LABELS[cat]?.name || cat}</p>
+                    <p className="unit-status">{EXAM_LABELS[cat]?.desc} · {count} test{count > 1 ? 's' : ''} disponible{count > 1 ? 's' : ''}</p>
                   </div>
-                )
-              })}
-            </div>
-          </>
-        )}
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
 
-        {screen === 'select' && (
-          <>
-            <button className="lesson-back" onClick={() => setScreen('categories')}>← Changer de catégorie</button>
-            <h1>{EXAM_LABELS[selectedCategory]?.name}</h1>
-            <div className="unit-list">
-              {testsInCategory.map((t) => {
-                const testHistory = history.filter((h) => h.toeic_test_id === t.id)
+      {screen === 'select' && (
+        <>
+          <button className="lesson-back" onClick={() => setScreen('categories')}>← Changer de catégorie</button>
+          <h1>{EXAM_LABELS[selectedCategory]?.name}</h1>
+          <div className="unit-list">
+            {testsInCategory.map((t) => {
+              const testHistory = history.filter((h) => h.toeic_test_id === t.id)
                 const best = testHistory[0]
                 return (
                   <div key={t.id} className="unit-card clickable" onClick={() => chooseTest(t)}>
@@ -284,9 +283,12 @@ function ToeicTest() {
         {screen === 'result' && result && (
           <TestResult raw={result.raw} max={result.max} examType={selectedTest.exam_type} onClose={() => setScreen('select')} />
         )}
-      </div>
-    </AppLayout>
+    </div>
   )
+
+  // Pas de sidebar pendant le test en cours ou l'écran de résultat (mode focus)
+  const noSidebar = screen === 'running' || screen === 'result'
+  return noSidebar ? content : <AppLayout>{content}</AppLayout>
 }
 
 export default ToeicTest

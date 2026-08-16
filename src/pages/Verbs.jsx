@@ -191,47 +191,48 @@ function Verbs() {
 
   if (loading) return <AppLayout><div className="page"><p>Chargement...</p></div></AppLayout>
 
-  return (
-    <AppLayout>
-      <div className="page">
-        <h1>🔤 Verbes irréguliers</h1>
-        <UsageSheet />
+  const content = (
+    <div className="page">
+      <h1>🔤 Verbes irréguliers</h1>
+      <UsageSheet />
 
-        {!mode && (
-          <>
-            <p className="dashboard-section-title">Choisis un groupe</p>
-            <div className="verb-family-select">
-              <button className={`onboarding-option ${familyFilter === 'priority' ? 'selected' : ''}`} onClick={() => setFamilyFilter('priority')}>
-                <span className="onboarding-option-title">⭐ Top 30 prioritaires</span>
+      {!mode && (
+        <>
+          <p className="dashboard-section-title">Choisis un groupe</p>
+          <div className="verb-family-select">
+            <button className={`onboarding-option ${familyFilter === 'priority' ? 'selected' : ''}`} onClick={() => setFamilyFilter('priority')}>
+              <span className="onboarding-option-title">⭐ Top 30 prioritaires</span>
+            </button>
+            <button className={`onboarding-option ${familyFilter === 'all' ? 'selected' : ''}`} onClick={() => setFamilyFilter('all')}>
+              <span className="onboarding-option-title">Tous les verbes ({verbs.length})</span>
+            </button>
+            {families.map((f) => (
+              <button key={f} className={`onboarding-option ${familyFilter === f ? 'selected' : ''}`} onClick={() => setFamilyFilter(f)}>
+                <span className="onboarding-option-title">Famille : {f}</span>
               </button>
-              <button className={`onboarding-option ${familyFilter === 'all' ? 'selected' : ''}`} onClick={() => setFamilyFilter('all')}>
-                <span className="onboarding-option-title">Tous les verbes ({verbs.length})</span>
-              </button>
-              {families.map((f) => (
-                <button key={f} className={`onboarding-option ${familyFilter === f ? 'selected' : ''}`} onClick={() => setFamilyFilter(f)}>
-                  <span className="onboarding-option-title">Famille : {f}</span>
-                </button>
-              ))}
-            </div>
+            ))}
+          </div>
 
-            <p className="dashboard-section-title">Mode d'entraînement ({filtered.length} verbes)</p>
-            <button className="btn-primary" onClick={() => setMode('list')} style={{ background: 'var(--bg-surface-alt)', color: 'var(--text-primary)', border: '1.5px solid var(--border)' }}>📋 Réviser la liste</button>
-            <button className="btn-primary" onClick={() => setMode('flashcards')}>🃏 Flashcards</button>
-            <button className="btn-primary" onClick={() => setMode('quiz')} style={{ background: 'var(--accent-blue)' }}>❓ Quiz (10 questions)</button>
-          </>
-        )}
+          <p className="dashboard-section-title">Mode d'entraînement ({filtered.length} verbes)</p>
+          <button className="btn-primary" onClick={() => setMode('list')} style={{ background: 'var(--bg-surface-alt)', color: 'var(--text-primary)', border: '1.5px solid var(--border)' }}>📋 Réviser la liste</button>
+          <button className="btn-primary" onClick={() => setMode('flashcards')}>🃏 Flashcards</button>
+          <button className="btn-primary" onClick={() => setMode('quiz')} style={{ background: 'var(--accent-blue)' }}>❓ Quiz (10 questions)</button>
+        </>
+      )}
 
-        {mode && (
-          <>
-            <button className="lesson-back" onClick={() => setMode(null)}>← Changer de mode</button>
-            {mode === 'list' && <ListMode verbs={filtered} />}
-            {mode === 'flashcards' && <FlashcardMode verbs={filtered} />}
-            {mode === 'quiz' && <QuizMode verbs={filtered} />}
-          </>
-        )}
-      </div>
-    </AppLayout>
+      {mode && (
+        <>
+          <button className="lesson-back" onClick={() => setMode(null)}>← Changer de mode</button>
+          {mode === 'list' && <ListMode verbs={filtered} />}
+          {mode === 'flashcards' && <FlashcardMode verbs={filtered} />}
+          {mode === 'quiz' && <QuizMode verbs={filtered} />}
+        </>
+      )}
+    </div>
   )
+
+  // Pas de sidebar pendant l'entraînement actif (mode focus), sidebar visible sur l'écran de sélection
+  return mode ? content : <AppLayout>{content}</AppLayout>
 }
 
 export default Verbs
