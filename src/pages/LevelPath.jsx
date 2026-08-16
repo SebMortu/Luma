@@ -54,27 +54,62 @@ function LevelPath() {
 
         <div className="path-container">
           <div className="path-line" />
-          {[...nodes].reverse().map((node, i) => (
-            <div key={node.lesson.id} className={`path-node-row ${i % 2 === 0 ? 'align-left' : 'align-right'}`}>
-              <button
-                className={`path-node ${node.status}`}
-                disabled={node.status === 'locked'}
-                onClick={() => navigate(`/lesson/${node.lesson.id}`)}
-              >
-                <span className="path-node-icon">{STATUS_ICON[node.status]}</span>
-              </button>
-              <div className="path-node-info">
-                <p className="path-node-title">{node.lesson.title}</p>
-                <p className="path-node-sub">
-                  {node.status === 'completed' && node.bestScore !== null
-                    ? `Terminée · ${Math.round(node.bestScore * 100)}%`
-                    : node.status === 'locked'
-                      ? 'Verrouillée'
-                      : "Jusqu'à 20 XP"}
-                </p>
-              </div>
-            </div>
-          ))}
+          {(() => {
+            // Insère un repère "Test de sortie" à la fin de chaque unité
+            const items = []
+            nodes.forEach((node, idx) => {
+              const prevNode = nodes[idx - 1]
+              if (prevNode && prevNode.unit.id !== node.unit.id) {
+                items.push({ type: 'test', unit: prevNode.unit, locked: prevNode.status === 'locked' })
+              }
+              items.push({ type: 'lesson', node })
+            })
+            if (nodes.length > 0) {
+              const lastNode = nodes[nodes.length - 1]
+              items.push({ type: 'test', unit: lastNode.unit, locked: lastNode.status === 'locked' })
+            }
+            return [...items].reverse().map((item, i) => {
+              if (item.type === 'test') {
+                return (
+                  <div key={`test-${item.unit.id}`} className={`path-node-row ${i % 2 === 0 ? 'align-left' : 'align-right'}`}>
+                    <button
+                      className="path-node test"
+                      disabled={item.locked}
+                      onClick={() => navigate(`/unit/${item.unit.id}/test`)}
+                    >
+                      <span className="path-node-icon">📝</span>
+                    </button>
+                    <div className="path-node-info">
+                      <p className="path-node-title">Test de sortie</p>
+                      <p className="path-node-sub">{item.locked ? 'Verrouillé' : 'Valide toute l\'unité à 80%'}</p>
+                    </div>
+                  </div>
+                )
+              }
+              const node = item.node
+              return (
+                <div key={node.lesson.id} className={`path-node-row ${i % 2 === 0 ? 'align-left' : 'align-right'}`}>
+                  <button
+                    className={`path-node ${node.status}`}
+                    disabled={node.status === 'locked'}
+                    onClick={() => navigate(`/lesson/${node.lesson.id}`)}
+                  >
+                    <span className="path-node-icon">{STATUS_ICON[node.status]}</span>
+                  </button>
+                  <div className="path-node-info">
+                    <p className="path-node-title">{node.lesson.title}</p>
+                    <p className="path-node-sub">
+                      {node.status === 'completed' && node.bestScore !== null
+                        ? `Terminée · ${Math.round(node.bestScore * 100)}%`
+                        : node.status === 'locked'
+                          ? 'Verrouillée'
+                          : "Jusqu'à 20 XP"}
+                    </p>
+                  </div>
+                </div>
+              )
+            })
+          })()}
         </div>
       </div>
     </AppLayout>

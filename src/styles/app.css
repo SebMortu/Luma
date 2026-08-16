@@ -987,6 +987,19 @@
   color: var(--text-primary);
 }
 
+.path-node.test {
+  background: var(--accent-warm);
+  border-color: var(--accent-warm);
+  color: var(--accent-contrast);
+}
+
+.path-node.test:disabled {
+  background: var(--bg-surface-alt);
+  border-color: var(--border);
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
 .path-node-title {
   font-size: 13px;
   font-weight: 600;
