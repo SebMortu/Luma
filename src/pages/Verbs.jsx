@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
+import { playCorrect, playIncorrect } from '../lib/sounds.js'
 
 function shuffle(array) {
   const copy = [...array]
@@ -165,6 +166,99 @@ function UsageSheet() {
   )
 }
 
+function SprintMode({ verbs, user }) {
+  const [current, setCurrent] = useState(null)
+  const [options, setOptions] = useState([])
+  const [score, setScore] = useState(0)
+  const [secondsLeft, setSecondsLeft] = useState(60)
+  const [finished, setFinished] = useState(false)
+  const [bestScore, setBestScore] = useState(0)
+  const [isNewRecord, setIsNewRecord] = useState(false)
+
+  const pickQuestion = () => {
+    const verb = verbs[Math.floor(Math.random() * verbs.length)]
+    const wrongOnes = shuffle(verbs.filter((v) => v.past_form !== verb.past_form)).slice(0, 3).map((v) => v.past_form)
+    setCurrent(verb)
+    setOptions(shuffle([verb.past_form, ...wrongOnes]))
+  }
+
+  useEffect(() => {
+    async function loadBest() {
+      const { data } = await supabase.from('user_settings').select('best_verb_sprint_score').eq('user_id', user.id).single()
+      setBestScore(data?.best_verb_sprint_score || 0)
+    }
+    loadBest()
+    pickQuestion()
+  }, [])
+
+  useEffect(() => {
+    if (finished) return
+    const timer = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          clearInterval(timer)
+          finish()
+          return 0
+        }
+        return s - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [finished])
+
+  const finish = async () => {
+    setFinished(true)
+    if (score > bestScore) {
+      setIsNewRecord(true)
+      await supabase.from('user_settings').update({ best_verb_sprint_score: score }).eq('user_id', user.id)
+    }
+  }
+
+  const answer = (opt) => {
+    if (finished) return
+    if (opt === current.past_form) {
+      playCorrect()
+      setScore((s) => s + 1)
+    } else {
+      playIncorrect()
+    }
+    pickQuestion()
+  }
+
+  if (finished) {
+    return (
+      <div className="verb-card">
+        <p className="verb-result">⚡ Score : {score}</p>
+        {isNewRecord ? (
+          <p className="feedback correct">🏆 Nouveau record !</p>
+        ) : (
+          <p className="verb-translation">Record actuel : {bestScore}</p>
+        )}
+        <button className="btn-primary" onClick={() => window.location.reload()}>Rejouer</button>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div className="toeic-header">
+        <span>Score : {score}</span>
+        <span className={secondsLeft < 10 ? 'toeic-timer warning' : 'toeic-timer'}>⏱ {secondsLeft}s</span>
+      </div>
+      {current && (
+        <div className="exercise">
+          <p className="exercise-question">Passé de "{current.base_form}" ?</p>
+          <div className="exercise-options">
+            {options.map((opt) => (
+              <button key={opt} className="exercise-option" onClick={() => answer(opt)}>{opt}</button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Verbs() {
   const { user } = useAuth()
   const [verbs, setVerbs] = useState([])
@@ -217,6 +311,7 @@ function Verbs() {
           <button className="btn-primary" onClick={() => setMode('list')} style={{ background: 'var(--bg-surface-alt)', color: 'var(--text-primary)', border: '1.5px solid var(--border)' }}>📋 Réviser la liste</button>
           <button className="btn-primary" onClick={() => setMode('flashcards')}>🃏 Flashcards</button>
           <button className="btn-primary" onClick={() => setMode('quiz')} style={{ background: 'var(--accent-blue)' }}>❓ Quiz (10 questions)</button>
+          <button className="btn-primary" onClick={() => setMode('sprint')} style={{ background: 'var(--accent-warm)' }}>⚡ Défi 60 secondes</button>
         </>
       )}
 
@@ -226,6 +321,7 @@ function Verbs() {
           {mode === 'list' && <ListMode verbs={filtered} />}
           {mode === 'flashcards' && <FlashcardMode verbs={filtered} />}
           {mode === 'quiz' && <QuizMode verbs={filtered} />}
+          {mode === 'sprint' && <SprintMode verbs={filtered} user={user} />}
         </>
       )}
     </div>

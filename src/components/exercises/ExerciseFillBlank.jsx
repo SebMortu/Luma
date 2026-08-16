@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import TranslateToggle from '../TranslateToggle.jsx'
+import { playCorrect, playIncorrect } from '../../lib/sounds.js'
 
 function ExerciseFillBlank({ content, onAnswered }) {
   const [value, setValue] = useState('')
@@ -18,6 +19,7 @@ function ExerciseFillBlank({ content, onAnswered }) {
       .includes(value.trim().toLowerCase())
     setIsCorrect(correct)
     setAnswered(true)
+    correct ? playCorrect() : playIncorrect()
     onAnswered?.(correct)
   }
 

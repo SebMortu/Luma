@@ -30,6 +30,7 @@ function Settings() {
   const { theme, setTheme, pastelBg, setPastelBg } = useTheme()
   const [settings, setSettings] = useState(null)
   const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('luma-notifications') === 'true')
+  const [soundsEnabled, setSoundsEnabled] = useState(() => localStorage.getItem('luma-sounds') !== 'false')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -44,6 +45,12 @@ function Settings() {
     const newValue = !notifEnabled
     setNotifEnabled(newValue)
     localStorage.setItem('luma-notifications', String(newValue))
+  }
+
+  const toggleSounds = () => {
+    const newValue = !soundsEnabled
+    setSoundsEnabled(newValue)
+    localStorage.setItem('luma-sounds', String(newValue))
   }
 
   const updateSetting = async (field, value) => {
@@ -69,6 +76,12 @@ function Settings() {
         <p className="setting-note">
           Enregistre ta préférence dès maintenant — l'envoi effectif des notifications arrivera dans une prochaine mise à jour.
         </p>
+
+        <h2>Sons</h2>
+        <button className="setting-row" onClick={toggleSounds}>
+          <span>Sons de réponse</span>
+          <span>{soundsEnabled ? '🔊 Activés' : '🔇 Désactivés'}</span>
+        </button>
 
         <h2>Apparence</h2>
         <div className="theme-options">

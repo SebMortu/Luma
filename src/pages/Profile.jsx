@@ -87,7 +87,6 @@ function Profile() {
               <p className="dashboard-level">Niveau {currentLevel}</p>
             </div>
           </div>
-          <Link to="/settings" className="settings-gear" title="Réglages">⚙️</Link>
         </div>
 
         <div className="streak-card">
@@ -168,7 +167,9 @@ function Profile() {
             <span className="trophy-icon">⚡</span>
             <div>
               <p className="trophy-title">Record verbes irréguliers (60s)</p>
-              <p className="trophy-value">Pas encore disponible</p>
+              <p className="trophy-value">
+                {settings.best_verb_sprint_score > 0 ? `${settings.best_verb_sprint_score} bonnes réponses` : 'Pas encore de record — tente ta chance !'}
+              </p>
             </div>
           </div>
           <div className="trophy-card">

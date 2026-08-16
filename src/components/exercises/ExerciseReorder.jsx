@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { playCorrect, playIncorrect } from '../../lib/sounds.js'
 
 function shuffle(array) {
   const copy = [...array]
@@ -37,6 +38,7 @@ function ExerciseReorder({ content, onAnswered }) {
     const correct = builtSentence === content.words.join(' ')
     setIsCorrect(correct)
     setAnswered(true)
+    correct ? playCorrect() : playIncorrect()
     onAnswered?.(correct)
   }
 

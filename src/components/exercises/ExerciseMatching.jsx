@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { playCorrect, playIncorrect } from '../../lib/sounds.js'
 
 function shuffle(array) {
   const copy = [...array]
@@ -25,6 +26,7 @@ function ExerciseMatching({ content, onAnswered }) {
     if (!allFilled) return
     setAnswered(true)
     const allCorrect = content.pairs.every((p) => answers[p.left] === p.right)
+    allCorrect ? playCorrect() : playIncorrect()
     onAnswered?.(allCorrect)
   }
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import TranslateToggle from '../TranslateToggle.jsx'
+import { playCorrect, playIncorrect } from '../../lib/sounds.js'
 
 function ExerciseTrueFalse({ content, onAnswered }) {
   const [selected, setSelected] = useState(null)
@@ -9,7 +10,9 @@ function ExerciseTrueFalse({ content, onAnswered }) {
     if (answered) return
     setSelected(value)
     setAnswered(true)
-    onAnswered?.(value === content.correct_answer)
+    const correct = value === content.correct_answer
+    correct ? playCorrect() : playIncorrect()
+    onAnswered?.(correct)
   }
 
   const isCorrectChoice = (value) => answered && value === content.correct_answer

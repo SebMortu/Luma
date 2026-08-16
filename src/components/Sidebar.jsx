@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { path: '/verbs', icon: '🔤', label: 'Verbes', enabled: true },
   { path: '/scenarios', icon: '🎭', label: 'Scénarios', enabled: true },
   { path: '/profile', icon: '👤', label: 'Profil', enabled: true },
+  { path: '/settings', icon: '⚙️', label: 'Réglages', enabled: true },
 ]
 
 function Sidebar() {

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import TranslateToggle from '../TranslateToggle.jsx'
+import { playCorrect, playIncorrect } from '../../lib/sounds.js'
 
 function ExerciseQCM({ content, onAnswered }) {
   const [selected, setSelected] = useState(null)
@@ -9,7 +10,9 @@ function ExerciseQCM({ content, onAnswered }) {
     if (answered) return
     setSelected(index)
     setAnswered(true)
-    onAnswered?.(index === content.correct_index)
+    const correct = index === content.correct_index
+    correct ? playCorrect() : playIncorrect()
+    onAnswered?.(correct)
   }
 
   return (
