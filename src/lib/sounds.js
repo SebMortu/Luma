@@ -39,9 +39,10 @@ export function playCorrect() {
     const context = getCtx()
     ensureResumed(context)
     const now = context.currentTime
-    // Petit arpège chaleureux façon marimba (do → mi), doux et rond
-    playTone(context, 523.25, now, 0.18, 'triangle', 0.10)
-    playTone(context, 659.25, now + 0.09, 0.22, 'triangle', 0.10)
+    // Style Duolingo : petit arpège ascendant "ta-da", chaleureux mais bien audible
+    playTone(context, 523.25, now, 0.14, 'triangle', 0.13) // Do5
+    playTone(context, 659.25, now + 0.08, 0.14, 'triangle', 0.13) // Mi5
+    playTone(context, 783.99, now + 0.16, 0.22, 'triangle', 0.14) // Sol5
   } catch (e) { /* audio non supporté, on ignore silencieusement */ }
 }
 
@@ -51,7 +52,8 @@ export function playIncorrect() {
     const context = getCtx()
     ensureResumed(context)
     const now = context.currentTime
-    // Ton bas et doux, jamais agressif — juste un signal discret
-    playTone(context, 246, now, 0.22, 'sine', 0.08)
+    // Style Duolingo : deux notes courtes qui descendent ("bonk-bonk"), bien audibles
+    playTone(context, 349.23, now, 0.13, 'square', 0.11) // F4
+    playTone(context, 233.08, now + 0.11, 0.22, 'square', 0.13) // Sib3, un peu plus fort et plus long
   } catch (e) { /* audio non supporté, on ignore silencieusement */ }
 }
