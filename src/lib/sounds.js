@@ -52,8 +52,8 @@ export function playIncorrect() {
     const context = getCtx()
     ensureResumed(context)
     const now = context.currentTime
-    // Style Duolingo : deux notes courtes qui descendent ("bonk-bonk"), bien audibles
-    playTone(context, 349.23, now, 0.13, 'square', 0.11) // F4
-    playTone(context, 233.08, now + 0.11, 0.22, 'square', 0.13) // Sib3, un peu plus fort et plus long
+    // Deux notes courtes qui descendent, mais en onde douce (triangle) pour éviter le côté strident
+    playTone(context, 349.23, now, 0.14, 'triangle', 0.11) // F4
+    playTone(context, 233.08, now + 0.11, 0.24, 'triangle', 0.12) // Sib3
   } catch (e) { /* audio non supporté, on ignore silencieusement */ }
 }
