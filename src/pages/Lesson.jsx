@@ -17,6 +17,37 @@ const EXERCISE_COMPONENTS = {
   reorder: ExerciseReorder,
 }
 
+function LessonExplanation({ lesson }) {
+  return (
+    <>
+      <div className="lesson-rule">
+        <p>{lesson.content.rule}</p>
+      </div>
+
+      {lesson.content.table && (
+        <table className="lesson-table">
+          <tbody>
+            {lesson.content.table.map((row, i) => (
+              <tr key={i}>
+                <td>{row.subject}</td>
+                <td>{row.affirmative}</td>
+                <td>{row.negative}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {lesson.content.example && (
+        <div className="lesson-example">
+          <p><strong>{lesson.content.example.en}</strong></p>
+          <p>{lesson.content.example.fr}</p>
+        </div>
+      )}
+    </>
+  )
+}
+
 function Lesson() {
   const { lessonId } = useParams()
   const { user } = useAuth()
@@ -27,7 +58,13 @@ function Lesson() {
   const [exercises, setExercises] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  const [phase, setPhase] = useState('explanation')
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [results, setResults] = useState({})
+  const [showExplanationOverlay, setShowExplanationOverlay] = useState(false)
+  const [hasAnsweredCurrent, setHasAnsweredCurrent] = useState(false)
+
   const [saving, setSaving] = useState(false)
   const [xpGained, setXpGained] = useState(null)
   const [newStreak, setNewStreak] = useState(null)
@@ -67,11 +104,20 @@ function Lesson() {
 
   const handleAnswered = (exerciseId, correct) => {
     setResults((prev) => ({ ...prev, [exerciseId]: correct }))
+    setHasAnsweredCurrent(true)
   }
 
-  const answeredCount = Object.keys(results).length
+  const goToNext = () => {
+    if (currentIndex + 1 >= exercises.length) {
+      setPhase('finished')
+    } else {
+      setCurrentIndex((i) => i + 1)
+      setHasAnsweredCurrent(false)
+    }
+  }
+
   const correctCount = Object.values(results).filter(Boolean).length
-  const isFinished = exercises.length > 0 && answeredCount === exercises.length
+  const isFinished = phase === 'finished'
 
   useEffect(() => {
     if (!isFinished || xpGained !== null || saving) return
@@ -105,79 +151,98 @@ function Lesson() {
   if (error) return <div className="page"><p className="feedback incorrect">Erreur : {error}</p></div>
   if (!lesson) return <div className="page"><p>Leçon introuvable.</p></div>
 
-  return (
-    <div className="page">
-      <button className="lesson-back" onClick={() => navigate(-1)}>← Retour</button>
-      <h1>{lesson.title}</h1>
-
-      <div className="lesson-rule">
-        <p>{lesson.content.rule}</p>
+  if (phase === 'explanation') {
+    return (
+      <div className="page">
+        <button className="lesson-back" onClick={() => navigate(-1)}>← Retour</button>
+        <h1>{lesson.title}</h1>
+        <LessonExplanation lesson={lesson} />
+        {exercises.length > 0 ? (
+          <button className="btn-primary" style={{ width: '100%', marginTop: '1.5rem' }} onClick={() => setPhase('exercises')}>
+            Commencer les exercices ({exercises.length})
+          </button>
+        ) : (
+          <p style={{ marginTop: '1.5rem' }}>Aucun exercice pour cette leçon pour l'instant.</p>
+        )}
       </div>
+    )
+  }
 
-      {lesson.content.table && (
-        <table className="lesson-table">
-          <tbody>
-            {lesson.content.table.map((row, i) => (
-              <tr key={i}>
-                <td>{row.subject}</td>
-                <td>{row.affirmative}</td>
-                <td>{row.negative}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+  if (phase === 'exercises') {
+    const ex = exercises[currentIndex]
+    const Component = EXERCISE_COMPONENTS[ex.type]
+    const progressPct = Math.round((currentIndex / exercises.length) * 100)
 
-      {lesson.content.example && (
-        <div className="lesson-example">
-          <p><strong>{lesson.content.example.en}</strong></p>
-          <p>{lesson.content.example.fr}</p>
+    return (
+      <div className="page">
+        <div className="lesson-progress-top">
+          <button className="lesson-back-icon" onClick={() => navigate(-1)} aria-label="Quitter">←</button>
+          <div className="progress-bar-track" style={{ flex: 1 }}>
+            <div className="progress-bar-fill" style={{ width: `${progressPct}%` }} />
+          </div>
+          <button className="lesson-explain-icon" onClick={() => setShowExplanationOverlay(true)} aria-label="Revoir l'explication">📖</button>
         </div>
-      )}
+        <p className="verb-progress">{currentIndex + 1} / {exercises.length}</p>
 
-      <h2>Exercices</h2>
-      {exercises.map((ex) => {
-        const Component = EXERCISE_COMPONENTS[ex.type]
-        if (!Component) return <p key={ex.id}>Type d'exercice inconnu : {ex.type}</p>
-        return (
+        {!EXERCISE_COMPONENTS[ex.type] && <p>Type d'exercice inconnu : {ex.type}</p>}
+        {Component && (
           <Component
             key={ex.id}
             content={ex.content}
             onAnswered={(correct) => handleAnswered(ex.id, correct)}
           />
-        )
-      })}
+        )}
 
-      {isFinished && (
-        <div className="lesson-summary">
-          <p>Score : {correctCount} / {exercises.length}</p>
-          {saving && <p>Enregistrement...</p>}
-          {xpGained !== null && (
-            <>
-              {alreadyCompleted ? (
-                <p className="feedback correct">Révision enregistrée · Streak : {newStreak} 🔥</p>
-              ) : (
-                <p className="feedback correct">+{xpGained} XP · Streak : {newStreak} 🔥</p>
-              )}
-              {goalInfo && (
-                <div className="goal-progress-mini">
-                  <div className="progress-bar-track">
-                    <div className="progress-bar-fill" style={{ width: `${Math.min(100, Math.round((goalInfo.xpToday / goalInfo.threshold) * 100))}%` }} />
-                  </div>
-                  <p className="progress-card-sub">
-                    {goalInfo.goalMetNow
-                      ? `Objectif du jour atteint ✅ (${goalInfo.xpToday}/${goalInfo.threshold} XP)`
-                      : `Objectif du jour : ${goalInfo.xpToday}/${goalInfo.threshold} XP`}
-                  </p>
+        {hasAnsweredCurrent && (
+          <button className="btn-primary" style={{ width: '100%', marginTop: '1rem' }} onClick={goToNext}>
+            {currentIndex + 1 >= exercises.length ? 'Terminer la leçon' : 'Exercice suivant →'}
+          </button>
+        )}
+
+        {showExplanationOverlay && (
+          <div className="lesson-overlay-backdrop" onClick={() => setShowExplanationOverlay(false)}>
+            <div className="lesson-overlay-panel" onClick={(e) => e.stopPropagation()}>
+              <button className="lesson-overlay-close" onClick={() => setShowExplanationOverlay(false)}>✕</button>
+              <h2 style={{ marginBottom: '1rem' }}>{lesson.title}</h2>
+              <LessonExplanation lesson={lesson} />
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="page">
+      <h1>{lesson.title}</h1>
+      <div className="lesson-summary">
+        <p>Score : {correctCount} / {exercises.length}</p>
+        {saving && <p>Enregistrement...</p>}
+        {xpGained !== null && (
+          <>
+            {alreadyCompleted ? (
+              <p className="feedback correct">Révision enregistrée · Streak : {newStreak} 🔥</p>
+            ) : (
+              <p className="feedback correct">+{xpGained} XP · Streak : {newStreak} 🔥</p>
+            )}
+            {goalInfo && (
+              <div className="goal-progress-mini">
+                <div className="progress-bar-track">
+                  <div className="progress-bar-fill" style={{ width: `${Math.min(100, Math.round((goalInfo.xpToday / goalInfo.threshold) * 100))}%` }} />
                 </div>
-              )}
-              <button className="btn-primary" onClick={() => navigate('/dashboard')}>
-                Retour au tableau de bord
-              </button>
-            </>
-          )}
-        </div>
-      )}
+                <p className="progress-card-sub">
+                  {goalInfo.goalMetNow
+                    ? `Objectif du jour atteint ✅ (${goalInfo.xpToday}/${goalInfo.threshold} XP)`
+                    : `Objectif du jour : ${goalInfo.xpToday}/${goalInfo.threshold} XP`}
+                </p>
+              </div>
+            )}
+            <button className="btn-primary" onClick={() => navigate('/dashboard')}>
+              Retour au tableau de bord
+            </button>
+          </>
+        )}
+      </div>
     </div>
   )
 }

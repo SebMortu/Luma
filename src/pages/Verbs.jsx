@@ -91,8 +91,35 @@ function FlashcardMode({ verbs }) {
   )
 }
 
+function QuizSetup({ onStart }) {
+  const [difficulty, setDifficulty] = useState('medium')
+  return (
+    <div>
+      <p className="dashboard-section-title">Niveau de difficulté</p>
+      <div className="onboarding-options" style={{ marginBottom: '1.5rem' }}>
+        {Object.entries(DIFFICULTY_LABELS).map(([key, v]) => (
+          <button key={key} className={`onboarding-option ${difficulty === key ? 'selected' : ''}`} onClick={() => setDifficulty(key)}>
+            <span className="onboarding-option-title">{v.label}</span>
+            <span className="onboarding-option-desc">{v.desc}</span>
+          </button>
+        ))}
+      </div>
+      <button className="btn-primary" onClick={() => onStart(difficulty)}>Commencer le quiz</button>
+    </div>
+  )
+}
+
 function QuizMode({ verbs }) {
-  const [deck] = useState(() => shuffle(verbs).slice(0, 10))
+  const [difficulty, setDifficulty] = useState(null)
+  if (!difficulty) return <QuizSetup onStart={setDifficulty} />
+  return <QuizRun verbs={verbs} difficulty={difficulty} />
+}
+
+function QuizRun({ verbs, difficulty }) {
+  const pool = difficulty === 'easy' ? verbs.filter((v) => v.is_priority) : verbs
+  const usablePool = pool.length >= 4 ? pool : verbs
+
+  const [deck] = useState(() => shuffle(usablePool).slice(0, 10))
   const [index, setIndex] = useState(0)
   const [options, setOptions] = useState([])
   const [selected, setSelected] = useState(null)
@@ -103,8 +130,7 @@ function QuizMode({ verbs }) {
 
   useEffect(() => {
     if (!current) return
-    const wrongOnes = shuffle(verbs.filter((v) => v.past_form !== current.past_form)).slice(0, 3).map((v) => v.past_form)
-    setOptions(shuffle([current.past_form, ...wrongOnes]))
+    setOptions(buildOptions(current, usablePool, difficulty))
     setSelected(null)
   }, [index])
 
@@ -127,7 +153,7 @@ function QuizMode({ verbs }) {
 
   return (
     <div>
-      <p className="verb-progress">{index + 1} / {deck.length}</p>
+      <p className="verb-progress">{index + 1} / {deck.length} · {DIFFICULTY_LABELS[difficulty].label}</p>
       <div className="exercise">
         <p className="exercise-question">Quel est le passé de "{current.base_form}" ?</p>
         <div className="exercise-options">
