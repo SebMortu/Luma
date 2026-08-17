@@ -1,0 +1,103 @@
+-- ============================================
+-- LUMA — Unité 36 (DERNIÈRE unité du parcours complet !) : doublement + 4 nouvelles leçons
+-- ============================================
+
+
+with l as (select lessons.id from lessons join units on units.id = lessons.unit_id join languages on languages.id = units.language_id where languages.code = 'en' and units.position = 36 and lessons.position = 1)
+insert into exercises (lesson_id, type, position, content, is_hybrid) select l.id, v.type, v.position, v.content::jsonb, false from l, (values
+  (5, 'qcm', '{"question": "\"You know\" à l''oral sert à :", "options": ["Poser une question", "Marquer une pause/chercher ses mots", "Conclure", "Contredire"], "correct_index": 1, "feedback_correct": "Correct !", "feedback_incorrect": "\"You know\" est un marqueur de discours pour gagner du temps."}'),
+  (6, 'fill_blank', '{"sentence_before": "", "sentence_after": ", I think we should reconsider. (well, marqueur de discours)", "correct_answers": ["Well"], "feedback_correct": "Correct !", "feedback_incorrect": "\"Well\" introduit une réflexion à l''oral."}'),
+  (7, 'true_false', '{"statement": "\"I mean\" is used to clarify or rephrase what was just said.", "correct_answer": true, "feedback_correct": "Exact !", "feedback_incorrect": "Faux — c''est bien son usage."}'),
+  (8, 'matching', '{"instruction": "Relie le marqueur oral à sa fonction.", "pairs": [{"left": "you know", "right": "chercher ses mots"}, {"left": "I mean", "right": "clarifier"}, {"left": "anyway", "right": "revenir au sujet"}], "feedback_correct": "Parfait !", "feedback_incorrect": "Quelques erreurs, regarde les corrections."}')
+) as v(position, type, content);
+
+
+with l as (select lessons.id from lessons join units on units.id = lessons.unit_id join languages on languages.id = units.language_id where languages.code = 'en' and units.position = 36 and lessons.position = 2)
+insert into exercises (lesson_id, type, position, content, is_hybrid) select l.id, v.type, v.position, v.content::jsonb, false from l, (values
+  (5, 'qcm', '{"question": "Pour introduire un contre-argument poliment, on dit :", "options": ["You''re wrong.", "That said, I think...", "Whatever.", "No way."], "correct_index": 1, "feedback_correct": "Correct !", "feedback_incorrect": "\"That said\" introduit poliment une nuance/contre-argument."}'),
+  (6, 'fill_blank', '{"sentence_before": "I understand your point, ", "sentence_after": " I see it differently. (but)", "correct_answers": ["but"], "feedback_correct": "Correct !", "feedback_incorrect": "\"But\" introduit le contre-argument."}'),
+  (7, 'true_false', '{"statement": "Acknowledging the other person''s point before disagreeing is good debate etiquette.", "correct_answer": true, "feedback_correct": "Exact !", "feedback_incorrect": "Faux — c''est bien une bonne pratique de débat."}'),
+  (8, 'reorder', '{"instruction": "Remets les mots dans le bon ordre.", "words": ["I", "see", "your", "point,", "but", "consider", "this."], "correct_sentence": "I see your point, but consider this.", "feedback_correct": "Parfait !"}')
+) as v(position, type, content);
+
+
+with l as (select lessons.id from lessons join units on units.id = lessons.unit_id join languages on languages.id = units.language_id where languages.code = 'en' and units.position = 36 and lessons.position = 3)
+insert into exercises (lesson_id, type, position, content, is_hybrid) select l.id, v.type, v.position, v.content::jsonb, false from l, (values
+  (5, 'qcm', '{"question": "\"Let''s meet halfway\" veut dire :", "options": ["Se disputer", "Trouver un compromis", "Abandonner", "Ignorer le problème"], "correct_index": 1, "feedback_correct": "Correct !", "feedback_incorrect": "\"Meet halfway\" = trouver un compromis."}'),
+  (6, 'fill_blank', '{"sentence_before": "Maybe we can find some ", "sentence_after": " ground. (common)", "correct_answers": ["common"], "feedback_correct": "Correct !", "feedback_incorrect": "\"Common ground\" = terrain d''entente."}'),
+  (7, 'true_false', '{"statement": "\"What if we...\" is a good way to propose a compromise.", "correct_answer": true, "feedback_correct": "Exact !", "feedback_incorrect": "Faux — c''est bien une bonne formule."}'),
+  (8, 'reorder', '{"instruction": "Remets les mots dans le bon ordre.", "words": ["Let''s", "try", "to", "find", "a", "middle", "ground."], "correct_sentence": "Let''s try to find a middle ground.", "feedback_correct": "Parfait !"}')
+) as v(position, type, content);
+
+
+with l as (select lessons.id from lessons join units on units.id = lessons.unit_id join languages on languages.id = units.language_id where languages.code = 'en' and units.position = 36 and lessons.position = 4)
+insert into exercises (lesson_id, type, position, content, is_hybrid) select l.id, v.type, v.position, v.content::jsonb, false from l, (values
+  (5, 'qcm', '{"question": "Une conversation fluide combine :", "options": ["Uniquement de la grammaire parfaite", "Grammaire, vocabulaire, connecteurs et registre adapté", "Uniquement du vocabulaire complexe", "Des phrases très courtes seulement"], "correct_index": 1, "feedback_correct": "Correct !", "feedback_incorrect": "La fluidité combine tous ces éléments."}'),
+  (6, 'fill_blank', '{"sentence_before": "", "sentence_after": " all, I think we agree on the main point. (all things considered / overall)", "correct_answers": ["Overall", "All in"], "feedback_correct": "Correct !", "feedback_incorrect": "\"Overall\" ou \"All in all\" résument une synthèse."}'),
+  (7, 'true_false', '{"statement": "Fluency comes from combining grammar accuracy with natural expressions.", "correct_answer": true, "feedback_correct": "Exact !", "feedback_incorrect": "Faux — c''est bien la clé de la fluidité."}'),
+  (8, 'reorder', '{"instruction": "Remets les mots dans le bon ordre.", "words": ["All", "in", "all,", "it", "was", "a", "great", "experience."], "correct_sentence": "All in all, it was a great experience.", "feedback_correct": "Parfait !"}')
+) as v(position, type, content);
+
+
+with u as (select units.id from units join languages on languages.id = units.language_id where languages.code = 'en' and units.position = 36)
+insert into lessons (unit_id, position, title, content) select u.id, 5, 'Gérer les malentendus à l''oral', '{"rule": "Cette leçon fournit les outils pour clarifier un malentendu à l''oral : \"What I meant was...\", \"Let me rephrase that\", \"That''s not quite what I said\".", "table": [{"subject": "Clarifier", "affirmative": "What I meant was...", "negative": "—"}, {"subject": "Reformuler", "affirmative": "Let me rephrase that.", "negative": "—"}, {"subject": "Corriger", "affirmative": "That''s not quite what I said.", "negative": "—"}], "example": {"en": "Sorry, that''s not quite what I meant. Let me rephrase — what I''m trying to say is...", "fr": "Désolé, ce n''est pas tout à fait ce que je voulais dire. Laisse-moi reformuler — ce que j''essaie de dire, c''est..."}}'::jsonb from u;
+
+with l as (select lessons.id from lessons join units on units.id = lessons.unit_id join languages on languages.id = units.language_id where languages.code = 'en' and units.position = 36 and lessons.position = 5)
+insert into exercises (lesson_id, type, position, content, is_hybrid) select l.id, v.type, v.position, v.content::jsonb, false from l, (values
+  (1, 'qcm', '{"question": "\"Let me rephrase that\" sert à :", "options": ["Changer de sujet", "Reformuler pour être plus clair", "Terminer la conversation", "S''excuser sans raison"], "correct_index": 1, "feedback_correct": "Correct !", "feedback_incorrect": "Cette formule sert à clarifier en reformulant."}'),
+  (2, 'qcm', '{"question": "Complète : What I ___ to say is that we need more time.", "options": ["''m trying", "trying", "try", "tried"], "correct_index": 0, "feedback_correct": "Correct !", "feedback_incorrect": "\"I''m trying to say\" clarifie l''intention."}'),
+  (3, 'fill_blank', '{"sentence_before": "That''s not quite what I ", "sentence_after": ". (meant)", "correct_answers": ["meant"], "feedback_correct": "Correct !", "feedback_incorrect": "\"That''s not quite what I meant\" corrige un malentendu."}'),
+  (4, 'true_false', '{"statement": "Clarifying phrases help avoid misunderstandings in conversation.", "correct_answer": true, "feedback_correct": "Exact !", "feedback_incorrect": "Faux — c''est bien leur fonction."}'),
+  (5, 'matching', '{"instruction": "Relie la formule à sa fonction.", "pairs": [{"left": "What I meant was...", "right": "clarifier"}, {"left": "In other words...", "right": "reformuler simplement"}, {"left": "To put it differently...", "right": "reformuler autrement"}], "feedback_correct": "Parfait !", "feedback_incorrect": "Quelques erreurs, regarde les corrections."}'),
+  (6, 'reorder', '{"instruction": "Remets les mots dans le bon ordre.", "words": ["What", "I", "meant", "was", "something", "different."], "correct_sentence": "What I meant was something different.", "feedback_correct": "Parfait !"}'),
+  (7, 'qcm', '{"question": "\"In other words\" sert à :", "options": ["Contredire", "Simplifier/reformuler", "Conclure définitivement", "Changer de sujet"], "correct_index": 1, "feedback_correct": "Correct !", "feedback_incorrect": "\"In other words\" reformule plus simplement."}'),
+  (8, 'fill_blank', '{"sentence_before": "Sorry, let me ", "sentence_after": " that differently. (put)", "correct_answers": ["put"], "feedback_correct": "Correct !", "feedback_incorrect": "\"Let me put that differently\" = laisse-moi le dire autrement."}')
+) as v(position, type, content);
+
+
+with u as (select units.id from units join languages on languages.id = units.language_id where languages.code = 'en' and units.position = 36)
+insert into lessons (unit_id, position, title, content) select u.id, 6, 'Négocier et persuader', '{"rule": "Cette leçon donne les outils de négociation et de persuasion : \"Here''s the thing...\", \"What if we tried...\", \"I''m confident that...\".", "table": [{"subject": "Introduire un point", "affirmative": "Here''s the thing...", "negative": "—"}, {"subject": "Proposer", "affirmative": "What if we tried...?", "negative": "—"}, {"subject": "Persuader", "affirmative": "I''m confident that...", "negative": "—"}], "example": {"en": "Here''s the thing — what if we tried a different approach? I''m confident that it would work better.", "fr": "Voilà le truc — et si on essayait une approche différente ? Je suis convaincu que ça marcherait mieux."}}'::jsonb from u;
+
+with l as (select lessons.id from lessons join units on units.id = lessons.unit_id join languages on languages.id = units.language_id where languages.code = 'en' and units.position = 36 and lessons.position = 6)
+insert into exercises (lesson_id, type, position, content, is_hybrid) select l.id, v.type, v.position, v.content::jsonb, false from l, (values
+  (1, 'qcm', '{"question": "\"Here''s the thing\" sert à :", "options": ["Terminer la conversation", "Introduire un point important", "S''excuser", "Poser une question fermée"], "correct_index": 1, "feedback_correct": "Correct !", "feedback_incorrect": "\"Here''s the thing\" introduit un point clé."}'),
+  (2, 'qcm', '{"question": "\"What if we tried...?\" est une formule de :", "options": ["Refus", "Proposition", "Regret", "Excuse"], "correct_index": 1, "feedback_correct": "Correct !", "feedback_incorrect": "\"What if we tried\" propose une alternative."}'),
+  (3, 'fill_blank', '{"sentence_before": "I''m ", "sentence_after": " that this will work. (confident)", "correct_answers": ["confident"], "feedback_correct": "Correct !", "feedback_incorrect": "\"I''m confident that\" exprime la conviction persuasive."}'),
+  (4, 'true_false', '{"statement": "Persuasive language often combines confidence with openness to alternatives.", "correct_answer": true, "feedback_correct": "Exact !", "feedback_incorrect": "Faux — c''est bien une bonne stratégie persuasive."}'),
+  (5, 'matching', '{"instruction": "Relie la formule persuasive à sa fonction.", "pairs": [{"left": "Here''s the thing", "right": "introduire un point"}, {"left": "What if we...?", "right": "proposer"}, {"left": "I''m confident that...", "right": "convaincre"}], "feedback_correct": "Parfait !", "feedback_incorrect": "Quelques erreurs, regarde les corrections."}'),
+  (6, 'reorder', '{"instruction": "Remets les mots dans le bon ordre.", "words": ["What", "if", "we", "tried", "something", "new?"], "correct_sentence": "What if we tried something new?", "feedback_correct": "Parfait !"}'),
+  (7, 'qcm', '{"question": "Complète : Here''s the ___ — we need more resources.", "options": ["thing", "point only", "problem always", "issue never"], "correct_index": 0, "feedback_correct": "Correct !", "feedback_incorrect": "\"Here''s the thing\" introduit le point important."}'),
+  (8, 'fill_blank', '{"sentence_before": "I''m confident ", "sentence_after": " this plan will succeed. (that)", "correct_answers": ["that"], "feedback_correct": "Correct !", "feedback_incorrect": "\"I''m confident that\" exprime la conviction."}')
+) as v(position, type, content);
+
+
+with u as (select units.id from units join languages on languages.id = units.language_id where languages.code = 'en' and units.position = 36)
+insert into lessons (unit_id, position, title, content) select u.id, 7, 'Conclure une conversation avec élégance', '{"rule": "Cette leçon donne des formules pour conclure une conversation ou une réunion avec élégance, que ce soit à l''oral formel ou informel.", "table": [{"subject": "Formel", "affirmative": "It''s been a pleasure speaking with you.", "negative": "—"}, {"subject": "Neutre", "affirmative": "Well, I should get going.", "negative": "—"}, {"subject": "Informel", "affirmative": "Catch you later!", "negative": "—"}], "example": {"en": "It''s been a pleasure speaking with you. Let''s stay in touch. Take care!", "fr": "Ce fut un plaisir de discuter avec vous. Restons en contact. Prenez soin de vous !"}}'::jsonb from u;
+
+with l as (select lessons.id from lessons join units on units.id = lessons.unit_id join languages on languages.id = units.language_id where languages.code = 'en' and units.position = 36 and lessons.position = 7)
+insert into exercises (lesson_id, type, position, content, is_hybrid) select l.id, v.type, v.position, v.content::jsonb, false from l, (values
+  (1, 'qcm', '{"question": "\"It''s been a pleasure speaking with you\" est utilisé dans un contexte :", "options": ["Très familier", "Formel/professionnel", "Enfantin", "Argotique"], "correct_index": 1, "feedback_correct": "Correct !", "feedback_incorrect": "C''est une formule de clôture formelle/professionnelle."}'),
+  (2, 'qcm', '{"question": "\"Catch you later!\" est :", "options": ["Très formel", "Informel/décontracté", "Impossible à utiliser", "Grossier"], "correct_index": 1, "feedback_correct": "Correct !", "feedback_incorrect": "\"Catch you later\" est informel/décontracté."}'),
+  (3, 'fill_blank', '{"sentence_before": "Let''s ", "sentence_after": " in touch! (stay)", "correct_answers": ["stay"], "feedback_correct": "Correct !", "feedback_incorrect": "\"Stay in touch\" = restons en contact."}'),
+  (4, 'true_false', '{"statement": "The way you close a conversation should match the register of the whole exchange.", "correct_answer": true, "feedback_correct": "Exact !", "feedback_incorrect": "Faux — c''est bien important d''adapter le registre."}'),
+  (5, 'matching', '{"instruction": "Relie la formule de clôture à son registre.", "pairs": [{"left": "It''s been a pleasure", "right": "formel"}, {"left": "Take care", "right": "neutre"}, {"left": "Catch you later", "right": "informel"}], "feedback_correct": "Parfait !", "feedback_incorrect": "Quelques erreurs, regarde les corrections."}'),
+  (6, 'reorder', '{"instruction": "Remets les mots dans le bon ordre.", "words": ["It''s", "been", "great", "talking", "to", "you."], "correct_sentence": "It''s been great talking to you.", "feedback_correct": "Parfait !"}'),
+  (7, 'qcm', '{"question": "\"Well, I should get going\" sert à :", "options": ["Commencer une conversation", "Annoncer qu''on doit partir", "Insulter quelqu''un", "Poser une question"], "correct_index": 1, "feedback_correct": "Correct !", "feedback_incorrect": "Cette formule annonce poliment un départ."}'),
+  (8, 'fill_blank', '{"sentence_before": "Take ", "sentence_after": "! (care)", "correct_answers": ["care"], "feedback_correct": "Correct !", "feedback_incorrect": "\"Take care\" clôture chaleureusement."}')
+) as v(position, type, content);
+
+
+with u as (select units.id from units join languages on languages.id = units.language_id where languages.code = 'en' and units.position = 36)
+insert into lessons (unit_id, position, title, content) select u.id, 8, 'SYNTHÈSE FINALE : fluidité complète de A1 à C1', '{"rule": "Cette toute dernière leçon du parcours combine des éléments de tous les niveaux — présent, passé, futur, conditionnels, passif, discours rapporté, inversion, emphase, idiomes et registre — pour célébrer ta maîtrise complète de l''anglais conversationnel et écrit.", "table": [{"subject": "Ton parcours", "affirmative": "De ''I am a student'' (A1) à des structures complexes comme l''inversion et l''emphase (C1)", "negative": "—"}, {"subject": "Prochaine étape", "affirmative": "Pratiquer, lire, écouter, et continuer à progresser dans la vraie vie !", "negative": "—"}], "example": {"en": "Looking back, it''s been quite a journey. Not only have I learned the grammar, but I''ve also gained the confidence to express complex ideas fluently. Whatever comes next, I know I''m ready.", "fr": "En regardant en arrière, ça a été tout un parcours. Non seulement j''ai appris la grammaire, mais j''ai aussi gagné la confiance nécessaire pour exprimer des idées complexes avec fluidité. Quoi qu''il arrive ensuite, je sais que je suis prêt(e)."}}'::jsonb from u;
+
+with l as (select lessons.id from lessons join units on units.id = lessons.unit_id join languages on languages.id = units.language_id where languages.code = 'en' and units.position = 36 and lessons.position = 8)
+insert into exercises (lesson_id, type, position, content, is_hybrid) select l.id, v.type, v.position, v.content::jsonb, false from l, (values
+  (1, 'qcm', '{"question": "Complète : Not only ___ I learned English, but I''ve also gained confidence.", "options": ["have", "has", "did", "do"], "correct_index": 0, "feedback_correct": "Correct !", "feedback_incorrect": "Inversion après \"not only\" : \"have I\"."}'),
+  (2, 'qcm', '{"question": "Complète : It ___ my dedication that made the difference. (emphase)", "options": ["was", "is", "has", "did"], "correct_index": 0, "feedback_correct": "Correct !", "feedback_incorrect": "It-cleft : \"It was my dedication\"."}'),
+  (3, 'fill_blank', '{"sentence_before": "", "sentence_after": " all, this has been an incredible journey. (all in)", "correct_answers": ["All in"], "feedback_correct": "Correct !", "feedback_incorrect": "\"All in all\" résume le parcours."}'),
+  (4, 'true_false', '{"statement": "True fluency combines grammar, vocabulary, idioms, and register awareness across all levels.", "correct_answer": true, "feedback_correct": "Exact ! Bravo, tu as terminé l''INTÉGRALITÉ du parcours A1 à C1 !", "feedback_incorrect": "Faux — c''est bien la combinaison de tous ces éléments."}'),
+  (5, 'matching', '{"instruction": "Bilan final : relie chaque compétence à son niveau d''acquisition.", "pairs": [{"left": "Présent simple, to be", "right": "A1 — les fondations"}, {"left": "Present perfect, conditionnels", "right": "B1/B2 — la nuance"}, {"left": "Inversion, emphase, idiomes", "right": "C1 — la maîtrise"}], "feedback_correct": "🎉 FÉLICITATIONS ! Tu as terminé l''intégralité du parcours Luma, de A1 à C1 !", "feedback_incorrect": "Quelques erreurs, regarde les corrections."}'),
+  (6, 'reorder', '{"instruction": "Remets les mots dans le bon ordre.", "words": ["I''ve", "come", "a", "long", "way", "since", "the", "beginning."], "correct_sentence": "I''ve come a long way since the beginning.", "feedback_correct": "Parfait !"}'),
+  (7, 'qcm', '{"question": "Complète : Whatever ___ next, I''m ready.", "options": ["comes", "come", "came", "will comes"], "correct_index": 0, "feedback_correct": "Correct ! 🎉 Bravo, parcours A1-C1 terminé !", "feedback_incorrect": "Present simple après \"whatever\" : \"comes\"."}'),
+  (8, 'fill_blank', '{"sentence_before": "Congratulations on completing your ", "sentence_after": " journey! (language)", "correct_answers": ["language"], "feedback_correct": "🎉 Félicitations pour avoir terminé tout le parcours Luma !", "feedback_incorrect": "\"Language journey\" = parcours linguistique."}')
+) as v(position, type, content);

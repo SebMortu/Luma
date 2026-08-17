@@ -14,6 +14,7 @@ function ScenarioPlayer() {
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const [xpAwarded, setXpAwarded] = useState(false)
+  const [shownTranslations, setShownTranslations] = useState({})
 
   useEffect(() => {
     async function load() {
@@ -29,6 +30,7 @@ function ScenarioPlayer() {
     const node = scenario.content.nodes[currentNodeId]
     setHistory((h) => [...h, { speaker: node.speaker, text: node.text, text_fr: node.text_fr, chosenReply: choice.text }])
     setCurrentNodeId(choice.next)
+    setShownTranslations({})
 
     const nextNode = scenario.content.nodes[choice.next]
     if (nextNode.end && !xpAwarded) {
@@ -78,9 +80,23 @@ function ScenarioPlayer() {
         ) : (
           <div className="dialogue-choices">
             {node.choices.map((choice, i) => (
-              <button key={i} className="exercise-option" onClick={() => chooseOption(choice)}>
-                {choice.text}
-              </button>
+              <div key={i} className="dialogue-choice-row">
+                <button className="exercise-option dialogue-choice-btn" onClick={() => chooseOption(choice)}>
+                  {choice.text}
+                </button>
+                {choice.text_fr && (
+                  <button
+                    className="dialogue-choice-translate"
+                    onClick={(e) => { e.stopPropagation(); setShownTranslations((s) => ({ ...s, [i]: !s[i] })) }}
+                    aria-label="Traduire cette réponse"
+                  >
+                    🌐
+                  </button>
+                )}
+                {shownTranslations[i] && choice.text_fr && (
+                  <p className="dialogue-choice-fr">🌐 {choice.text_fr}</p>
+                )}
+              </div>
             ))}
           </div>
         )}

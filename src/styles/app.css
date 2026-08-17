@@ -312,6 +312,40 @@
   color: rgba(244,245,248,0.85) !important;
 }
 
+/* Traduction des choix de réponse dans les scénarios */
+.dialogue-choice-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.dialogue-choice-btn {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0 !important;
+}
+
+.dialogue-choice-translate {
+  background: var(--bg-surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.dialogue-choice-fr {
+  flex-basis: 100%;
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  margin: 0;
+}
+
 /* Progression card */
 .progress-card {
   background: var(--bg-surface);
