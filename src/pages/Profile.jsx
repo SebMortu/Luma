@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { computeUnitStates, dailyXpThreshold } from '../lib/progress.js'
 import { computeLevel, xpForNextLevel, formatDuration } from '../lib/level.js'
 import { loadWordPuzzleHistory, formatTime } from '../lib/wordPuzzle.js'
+import RingProgress from '../components/RingProgress.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
 
@@ -123,16 +124,14 @@ function Profile() {
           </div>
         </div>
 
-        <div className="progress-card">
-          <p className="progress-card-title">Ta progression</p>
-          <div className="level-row">
-            <span>Niveau {currentLevel}</span>
-            <span>Niveau {currentLevel + 1}</span>
+        <div className="progress-card ring-progress-card">
+          <RingProgress percent={levelPct} size={90} stroke={7}>
+            <span className="ring-level-number">{currentLevel}</span>
+          </RingProgress>
+          <div>
+            <p className="progress-card-title">Vers le niveau {currentLevel + 1}</p>
+            <p className="mono" style={{ fontSize: 15, marginTop: 4 }}>{xpIntoLevel} / {xpNeeded} XP</p>
           </div>
-          <div className="progress-bar-track">
-            <div className="progress-bar-fill" style={{ width: `${levelPct}%` }} />
-          </div>
-          <p className="progress-card-sub">{xpIntoLevel} / {xpNeeded} XP</p>
         </div>
 
         <div className="stats-row">

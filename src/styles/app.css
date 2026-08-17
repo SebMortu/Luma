@@ -230,6 +230,29 @@
   border-top: 1px solid var(--border);
 }
 
+.ring-progress-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.ring-level-number {
+  font-family: var(--font-display, inherit);
+  font-weight: 700;
+  font-size: 22px;
+}
+
+/* Chemin de progression : ambiance de ciel qui évolue par niveau — texte toujours clair */
+.path-page, .path-page .path-node-title, .path-page h1 {
+  color: #F4F5F8 !important;
+}
+.path-page .path-node-sub {
+  color: rgba(244,245,248,0.7) !important;
+}
+.path-page .back-link {
+  color: rgba(244,245,248,0.85) !important;
+}
+
 /* Progression card */
 .progress-card {
   background: var(--bg-surface);
@@ -899,6 +922,25 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+}
+
+.level-card.ring-style {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+}
+
+.ring-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
 }
 
 .level-card-title {

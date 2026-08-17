@@ -6,6 +6,7 @@ import { useTheme, THEMES, PASTEL_SWATCHES } from '../contexts/ThemeContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
 
 const SWATCH_PREVIEW = {
+  lumen: 'linear-gradient(135deg, #0B0E14, #1D2330 55%, #FFB648)',
   night: '#0e1420',
   forest: '#1a1a1a',
   light: '#f7f6f3',

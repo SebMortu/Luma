@@ -13,6 +13,16 @@ const CECR_TITLES = {
   C1: 'C1 · Avancé',
 }
 
+// Petits détails d'ambiance qui évoluent avec le niveau — du lever du jour (A1)
+// à la nuit tombée (C1), sans image, juste une teinte de fond + un astre.
+const LEVEL_SKY = {
+  A1: { gradient: 'linear-gradient(180deg, #2a2340 0%, #4a3a5e 35%, #7a5a6e 65%, #c98a6e 100%)', orb: '#FFE9C4', orbGlow: 'rgba(255,220,150,0.5)', orbTop: '78%' },
+  A2: { gradient: 'linear-gradient(180deg, #241f3a 0%, #453a5c 35%, #7a5478 65%, #c07666 100%)', orb: '#FFE0B0', orbGlow: 'rgba(255,200,130,0.45)', orbTop: '62%' },
+  B1: { gradient: 'linear-gradient(180deg, #1c1830 0%, #362c52 35%, #6a3f66 65%, #a85560 100%)', orb: '#FFD79A', orbGlow: 'rgba(255,180,110,0.4)', orbTop: '46%' },
+  B2: { gradient: 'linear-gradient(180deg, #141124 0%, #241d3f 40%, #4a2c58 70%, #7a3a52 100%)', orb: '#F4C77A', orbGlow: 'rgba(240,170,100,0.35)', orbTop: '28%' },
+  C1: { gradient: 'linear-gradient(180deg, #0b0a16 0%, #17132b 30%, #2a1a3d 60%, #3a1f38 100%)', orb: '#EAD9FF', orbGlow: 'rgba(180,150,255,0.4)', orbTop: '14%' },
+}
+
 const STATUS_ICON = { completed: '✓', current: '▶', available: '📖', locked: '🔒' }
 
 function LevelPath() {
@@ -44,9 +54,19 @@ function LevelPath() {
   if (loading) return <AppLayout><div className="page"><p>Chargement...</p></div></AppLayout>
   if (error) return <AppLayout><div className="page"><p className="feedback incorrect">Erreur : {error}</p></div></AppLayout>
 
+  const sky = LEVEL_SKY[levelCode] || LEVEL_SKY.A1
+
   return (
     <AppLayout>
-      <div className="page">
+      <div className="page path-page" style={{ background: sky.gradient, borderRadius: 20, position: 'relative', overflow: 'hidden', margin: '-4px', padding: '20px' }}>
+        <div
+          className="path-orb"
+          style={{
+            position: 'absolute', left: '50%', top: sky.orbTop, transform: 'translate(-50%, -50%)',
+            width: 90, height: 90, borderRadius: '50%', background: sky.orb,
+            boxShadow: `0 0 60px 20px ${sky.orbGlow}`, zIndex: 0, transition: 'top 0.6s ease',
+          }}
+        />
         <Link to="/dashboard" className="back-link">← Retour aux niveaux</Link>
         <h1>{CECR_TITLES[levelCode] || levelCode}</h1>
 

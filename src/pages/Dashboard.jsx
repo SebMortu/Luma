@@ -5,6 +5,7 @@ import { getNextLesson, computeUnitStates, dailyXpThreshold } from '../lib/progr
 import { computeLevel } from '../lib/level.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
+import RingProgress from '../components/RingProgress.jsx'
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const CECR_TITLES = {
@@ -137,24 +138,25 @@ function Dashboard() {
             return (
               <div
                 key={group.level}
-                className={`level-card ${levelLocked ? 'locked' : 'clickable'}`}
+                className={`level-card ring-style ${levelLocked ? 'locked' : 'clickable'}`}
                 onClick={() => !levelLocked && navigate(`/level/${group.level}`)}
               >
-                <div className="level-card-top">
-                  <p className="level-card-title">{CECR_TITLES[group.level] || group.level}</p>
-                  {levelLocked && <span>🔒</span>}
-                </div>
                 {!levelLocked && totalInLevel > 0 && (
-                  <>
-                    <div className="progress-bar-track">
-                      <div className="progress-bar-fill" style={{ width: `${levelPct}%` }} />
-                    </div>
-                    <p className="progress-card-sub">{completedInLevel} / {totalInLevel} leçons</p>
-                  </>
+                  <RingProgress percent={levelPct} size={48} stroke={4} />
                 )}
-                {!levelLocked && totalInLevel === 0 && (
-                  <p className="progress-card-sub">Pas encore de contenu</p>
+                {(levelLocked || totalInLevel === 0) && (
+                  <div className="ring-placeholder">{levelLocked ? '🔒' : '—'}</div>
                 )}
+                <div>
+                  <p className="level-card-title">{CECR_TITLES[group.level] || group.level}</p>
+                  {!levelLocked && totalInLevel > 0 && (
+                    <p className="progress-card-sub">{completedInLevel} / {totalInLevel} leçons · {levelPct}%</p>
+                  )}
+                  {!levelLocked && totalInLevel === 0 && (
+                    <p className="progress-card-sub">Pas encore de contenu</p>
+                  )}
+                  {levelLocked && <p className="progress-card-sub">Verrouillé</p>}
+                </div>
               </div>
             )
           })}

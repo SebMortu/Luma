@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 const ThemeContext = createContext(null)
 
 export const THEMES = [
+  { value: 'lumen', label: 'Lumen', desc: 'Notre nouvelle identité — premium et lumineuse' },
   { value: 'night', label: 'Nuit', desc: 'Marine profond, accent citron' },
   { value: 'forest', label: 'Forêt', desc: 'Sombre et végétal (thème d\'origine)' },
   { value: 'light', label: 'Clair', desc: 'Fond lumineux' },
@@ -21,7 +22,7 @@ export const PASTEL_SWATCHES = [
 ]
 
 export function ThemeProvider({ children }) {
-  const [theme, setThemeState] = useState(() => localStorage.getItem('luma-theme') || 'night')
+  const [theme, setThemeState] = useState(() => localStorage.getItem('luma-theme') || 'lumen')
   const [pastelBg, setPastelBgState] = useState(() => localStorage.getItem('luma-pastel-bg') || PASTEL_SWATCHES[0].bg)
 
   useEffect(() => {

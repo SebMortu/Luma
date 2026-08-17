@@ -67,3 +67,80 @@
   --danger-bg: #fddede;
   --danger-text: #8f2a2a;
 }
+
+/* ============================================
+   Thème "Lumen" — identité premium "la lumière qui grandit"
+   Fond quasi-noir, accent ambre (Lumen) + teal (Aurora) + violet (rare)
+   ============================================ */
+[data-theme="lumen"] {
+  --bg-page: #0B0E14;
+  --bg-surface: #151A24;
+  --bg-surface-alt: #1D2330;
+  --text-primary: #F4F5F8;
+  --text-secondary: #8B93A7;
+  --accent: #FFB648;
+  --accent-contrast: #1A0F00;
+  --accent-warm: #F2872F;
+  --accent-blue: #2FE6C0;
+  --accent-violet: #8B7CF6;
+  --border: #262C3B;
+  --success-bg: #12332C;
+  --success-text: #3CE6C4;
+  --danger-bg: #3A1616;
+  --danger-text: #FF7A7A;
+
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+[data-theme="lumen"] h1,
+[data-theme="lumen"] .h-display,
+[data-theme="lumen"] .dashboard-name,
+[data-theme="lumen"] .unit-title,
+[data-theme="lumen"] .path-node-title,
+[data-theme="lumen"] .verb-base,
+[data-theme="lumen"] .streak-card-value,
+[data-theme="lumen"] .btn-primary,
+[data-theme="lumen"] .exercise-question {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+[data-theme="lumen"] .mono,
+[data-theme="lumen"] .badge,
+[data-theme="lumen"] .progress-card-sub,
+[data-theme="lumen"] .toeic-timer,
+[data-theme="lumen"] .streak-day-label,
+[data-theme="lumen"] .verb-progress {
+  font-family: var(--font-mono);
+}
+
+/* Signature "halo lumineux" — boutons et carte de streak */
+[data-theme="lumen"] .btn-primary {
+  background: linear-gradient(135deg, #FFB648, #F2872F);
+  box-shadow: 0 0 0 rgba(255, 182, 72, 0);
+  transition: box-shadow 0.25s ease, transform 0.15s ease;
+  font-weight: 600;
+}
+[data-theme="lumen"] .btn-primary:hover {
+  box-shadow: 0 0 24px rgba(255, 182, 72, 0.35);
+  transform: translateY(-1px);
+}
+[data-theme="lumen"] .streak-card {
+  background: linear-gradient(160deg, rgba(255, 182, 72, 0.10), rgba(139, 124, 246, 0.05));
+  border: 1px solid rgba(255, 182, 72, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+[data-theme="lumen"] .streak-day-dot.active {
+  box-shadow: 0 0 10px rgba(255, 182, 72, 0.6);
+}
+[data-theme="lumen"] .path-node.current {
+  box-shadow: 0 0 0 8px rgba(255, 182, 72, 0.18), 0 6px 18px rgba(0,0,0,0.4);
+}
+[data-theme="lumen"] .exercise-option.correct,
+[data-theme="lumen"] .path-node.completed,
+[data-theme="lumen"] .unit-icon.completed {
+  box-shadow: 0 0 14px rgba(60, 230, 196, 0.25);
+}
