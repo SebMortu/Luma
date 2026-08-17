@@ -68,7 +68,7 @@ function LevelPath() {
               const lastNode = nodes[nodes.length - 1]
               items.push({ type: 'test', unit: lastNode.unit, locked: lastNode.status === 'locked' })
             }
-            return [...items].reverse().map((item, i) => {
+            return items.map((item, i) => {
               if (item.type === 'test') {
                 return (
                   <div key={`test-${item.unit.id}`} className={`path-node-row ${i % 2 === 0 ? 'align-left' : 'align-right'}`}>
