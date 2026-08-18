@@ -15,7 +15,7 @@ function BooksLibrary() {
     async function load() {
       const { data: settings } = await supabase.from('user_settings').select('active_language_id').eq('user_id', user.id).single()
       const { data: booksData } = await supabase
-        .from('books').select('*').eq('language_id', settings.active_language_id).order('position')
+        .from('books').select('*').eq('language_id', settings.active_language_id).is('series_id', null).order('position')
       const { data: progressData } = await supabase
         .from('user_book_progress').select('*').eq('user_id', user.id)
 
@@ -40,18 +40,25 @@ function BooksLibrary() {
         <div className="book-grid">
           {books.map((b) => {
             const progress = progressMap[b.id]
-            const pct = progress ? Math.round((progress.current_page / b.total_pages) * 100) : 0
+            const pct = progress && b.total_pages ? Math.round((progress.current_page / b.total_pages) * 100) : 0
             return (
-              <div key={b.id} className="book-card clickable" onClick={() => navigate(`/books/${b.id}`)}>
+              <div
+                key={b.id}
+                className="book-card clickable"
+                onClick={() => navigate(b.is_series ? `/books/series/${b.id}` : `/books/${b.id}`)}
+              >
                 <div className="book-cover">
                   <span className="book-cover-emoji">{b.cover_emoji}</span>
                   <span className="book-cover-level">{b.cecr_level}</span>
+                  {b.is_series && <span className="book-cover-series">Plusieurs tomes</span>}
                 </div>
                 <div className="book-card-info">
                   <p className="book-card-title">{b.title}</p>
                   <p className="book-card-theme">{b.theme}</p>
                   <p className="book-card-desc">{b.description}</p>
-                  {progress ? (
+                  {b.is_series ? (
+                    <p className="progress-card-sub">Voir les tomes →</p>
+                  ) : progress ? (
                     <div className="book-progress-mini">
                       <div className="progress-bar-track">
                         <div className="progress-bar-fill" style={{ width: `${pct}%` }} />

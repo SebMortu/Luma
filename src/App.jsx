@@ -24,6 +24,7 @@ import WordPuzzlePlayer from './pages/WordPuzzlePlayer.jsx'
 import WordGamesHistory from './pages/WordGamesHistory.jsx'
 import BooksLibrary from './pages/BooksLibrary.jsx'
 import BookReader from './pages/BookReader.jsx'
+import BookSeriesDetail from './pages/BookSeriesDetail.jsx'
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
             <Route path="/word-puzzle/:puzzleId" element={<ProtectedRoute><WordPuzzlePlayer /></ProtectedRoute>} />
             <Route path="/word-games/history" element={<ProtectedRoute><WordGamesHistory /></ProtectedRoute>} />
             <Route path="/books" element={<ProtectedRoute><BooksLibrary /></ProtectedRoute>} />
+            <Route path="/books/series/:seriesId" element={<ProtectedRoute><BookSeriesDetail /></ProtectedRoute>} />
             <Route path="/books/:bookId" element={<ProtectedRoute><BookReader /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>

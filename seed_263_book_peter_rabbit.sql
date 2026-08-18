@@ -1,0 +1,110 @@
+-- ============================================
+-- LUMA — Livre du domaine public : 'The Tale of Peter Rabbit' (Beatrix Potter, 1902)
+-- Texte original intégral, domaine public (publié avant 1930)
+-- ============================================
+
+
+with lang as (select id from languages where code = 'en')
+insert into books (language_id, title, theme, description, cecr_level, cover_emoji, total_pages, position)
+select id, 'The Tale of Peter Rabbit', 'Classique • Beatrix Potter (1902)', 'L''histoire originale et intégrale de Peter Rabbit, un jeune lapin désobéissant qui s''aventure dans le jardin interdit de M. McGregor. Un classique de la littérature anglaise, dans le domaine public.', 'A2-B1', '🐇', 20, 2
+from lang;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 1, '[{"en": "Once upon a time there were four little Rabbits, and their names were Flopsy, Mopsy, Cotton-tail, and Peter.", "fr": "Il était une fois quatre petits lapins, et leurs noms étaient Flopsy, Mopsy, Queue-de-Coton, et Pierre."}, {"en": "They lived with their Mother in a sand-bank, underneath the root of a very big fir-tree.", "fr": "Ils vivaient avec leur mère dans un talus de sable, sous la racine d''un très grand sapin."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 2, '[{"en": "''Now my dears,'' said old Mrs. Rabbit one morning, ''you may go into the fields or down the lane, but don''t go into Mr. McGregor''s garden.''", "fr": "''Maintenant mes chéris,'' dit un matin la vieille Mme Lapin, ''vous pouvez aller dans les champs ou dans le chemin, mais n''allez pas dans le jardin de M. McGregor.''"}, {"en": "''Your Father had an accident there; he was put in a pie by Mrs. McGregor.''", "fr": "''Votre père a eu un accident là-bas ; il a été mis dans une tourte par Mme McGregor.''"}, {"en": "''Now run along, and don''t get into mischief. I am going out.''", "fr": "''Maintenant filez, et ne faites pas de bêtises. Je sors.''"}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 3, '[{"en": "Then old Mrs. Rabbit took a basket and her umbrella, and went through the wood to the baker''s.", "fr": "Alors la vieille Mme Lapin prit un panier et son parapluie, et traversa le bois pour aller chez le boulanger."}, {"en": "She bought a loaf of brown bread and five currant buns.", "fr": "Elle acheta un pain complet et cinq petits pains aux raisins."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 4, '[{"en": "Flopsy, Mopsy, and Cotton-tail, who were good little bunnies, went down the lane to gather blackberries.", "fr": "Flopsy, Mopsy, et Queue-de-Coton, qui étaient de gentils petits lapins, allèrent dans le chemin cueillir des mûres."}, {"en": "But Peter, who was very naughty, ran straight away to Mr. McGregor''s garden, and squeezed under the gate!", "fr": "Mais Pierre, qui était très désobéissant, courut tout droit vers le jardin de M. McGregor, et se faufila sous le portail !"}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 5, '[{"en": "First he ate some lettuces and some French beans; and then he ate some radishes.", "fr": "D''abord il mangea des laitues et des haricots verts ; puis il mangea des radis."}, {"en": "And then, feeling rather sick, he went to look for some parsley.", "fr": "Et puis, se sentant plutôt malade, il alla chercher du persil."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 6, '[{"en": "But round the end of a cucumber frame, whom should he meet but Mr. McGregor!", "fr": "Mais au bout d''un châssis à concombres, qui rencontra-t-il sinon M. McGregor !"}, {"en": "Mr. McGregor was on his hands and knees planting out young cabbages, but he jumped up and ran after Peter, waving a rake and calling out, ''Stop thief!''", "fr": "M. McGregor était à quatre pattes en train de planter de jeunes choux, mais il se leva d''un bond et courut après Pierre, en agitant un râteau et en criant, ''Au voleur !''"}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 7, '[{"en": "Peter was most dreadfully frightened; he rushed all over the garden, for he had forgotten the way back to the gate.", "fr": "Pierre était affreusement effrayé ; il se précipita dans tout le jardin, car il avait oublié le chemin du retour vers le portail."}, {"en": "He lost one of his shoes among the cabbages, and the other shoe amongst the potatoes.", "fr": "Il perdit une de ses chaussures parmi les choux, et l''autre chaussure parmi les pommes de terre."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 8, '[{"en": "After losing them, he ran on four legs and went faster, so that I think he might have got away altogether if he had not unfortunately run into a gooseberry net, and got caught by the large buttons on his jacket.", "fr": "Après les avoir perdues, il courut à quatre pattes et alla plus vite, si bien que je pense qu''il aurait pu s''échapper complètement s''il n''avait pas malheureusement couru dans un filet à groseilles, et ne s''était pas fait attraper par les gros boutons de sa veste."}, {"en": "It was a blue jacket with brass buttons, quite new.", "fr": "C''était une veste bleue avec des boutons en laiton, toute neuve."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 9, '[{"en": "Peter gave himself up for lost, and shed big tears; but his sobs were overheard by some friendly sparrows, who flew to him in great excitement, and implored him to exert himself.", "fr": "Pierre se crut perdu, et versa de grosses larmes ; mais ses sanglots furent entendus par des moineaux amicaux, qui volèrent vers lui tout excités, et le supplièrent de faire un effort."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 10, '[{"en": "Mr. McGregor came up with a sieve, which he intended to pop upon the top of Peter; but Peter wriggled out just in time, leaving his jacket behind him.", "fr": "M. McGregor arriva avec un tamis, qu''il avait l''intention de poser sur Pierre ; mais Pierre se tortilla juste à temps pour s''échapper, laissant sa veste derrière lui."}, {"en": "And rushed into the tool-shed, and jumped into a can. It would have been a beautiful thing to hide in, if it had not had so much water in it.", "fr": "Et se précipita dans la remise à outils, et sauta dans un arrosoir. Ç''aurait été une belle cachette, s''il n''y avait pas eu autant d''eau dedans."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 11, '[{"en": "Mr. McGregor was quite sure that Peter was somewhere in the tool-shed, perhaps hidden underneath a flower-pot.", "fr": "M. McGregor était tout à fait sûr que Pierre était quelque part dans la remise à outils, peut-être caché sous un pot de fleurs."}, {"en": "He began to turn them over carefully, looking under each. Presently Peter sneezed—''Kertyschoo!'' Mr. McGregor was after him in no time.", "fr": "Il commença à les retourner soigneusement, en regardant sous chacun. Bientôt Pierre éternua—''Atchoum !'' M. McGregor fut sur lui en un instant."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 12, '[{"en": "And tried to put his foot upon Peter, who jumped out of a window, upsetting three plants.", "fr": "Et essaya de poser son pied sur Pierre, qui sauta par une fenêtre, renversant trois plantes."}, {"en": "The window was too small for Mr. McGregor, and he was tired of running after Peter. He went back to his work.", "fr": "La fenêtre était trop petite pour M. McGregor, et il était fatigué de courir après Pierre. Il retourna à son travail."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 13, '[{"en": "Peter sat down to rest; he was out of breath and trembling with fright, and he had not the least idea which way to go.", "fr": "Pierre s''assit pour se reposer ; il était essoufflé et tremblant de peur, et il n''avait pas la moindre idée de quelle direction prendre."}, {"en": "Also he was very damp with sitting in that can.", "fr": "Il était aussi très mouillé d''être resté assis dans cet arrosoir."}, {"en": "After a time he began to wander about, going lippity—lippity—not very fast, and looking all round.", "fr": "Après un moment il commença à errer, allant clopin-clopant—pas très vite, et regardant tout autour."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 14, '[{"en": "He found a door in a wall; but it was locked, and there was no room for a fat little rabbit to squeeze underneath.", "fr": "Il trouva une porte dans un mur ; mais elle était verrouillée, et il n''y avait pas de place pour qu''un petit lapin dodu se faufile dessous."}, {"en": "An old mouse was running in and out over the stone doorstep, carrying peas and beans to her family in the wood.", "fr": "Une vieille souris allait et venait sur le seuil de pierre, transportant des pois et des haricots pour sa famille dans le bois."}, {"en": "Peter asked her the way to the gate, but she had such a large pea in her mouth that she could not answer. She only shook her head at him. Peter began to cry.", "fr": "Pierre lui demanda le chemin du portail, mais elle avait un si gros pois dans la bouche qu''elle ne pouvait pas répondre. Elle secoua seulement la tête. Pierre se mit à pleurer."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 15, '[{"en": "Then he tried to find his way straight across the garden, but he became more and more puzzled.", "fr": "Alors il essaya de trouver son chemin tout droit à travers le jardin, mais il devint de plus en plus perplexe."}, {"en": "Presently, he came to a pond where Mr. McGregor filled his water-cans. A white cat was staring at some gold-fish; she sat very, very still, but now and then the tip of her tail twitched as if it were alive.", "fr": "Bientôt, il arriva à un étang où M. McGregor remplissait ses arrosoirs. Un chat blanc fixait des poissons rouges ; il était assis très, très immobile, mais de temps en temps le bout de sa queue frémissait comme s''il était vivant."}, {"en": "Peter thought it best to go away without speaking to her; he had heard about cats from his cousin, little Benjamin Bunny.", "fr": "Pierre pensa qu''il valait mieux s''éloigner sans lui parler ; il avait entendu parler des chats par son cousin, le petit Benjamin Lapin."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 16, '[{"en": "He went back towards the tool-shed, but suddenly, quite close to him, he heard the noise of a hoe—scr-r-ritch, scratch, scratch, scritch.", "fr": "Il retourna vers la remise à outils, mais soudain, tout près de lui, il entendit le bruit d''une houe—scr-r-ritch, scratch, scratch, scritch."}, {"en": "Peter scuttered underneath the bushes. But presently, as nothing happened, he came out, and climbed upon a wheelbarrow and peeped over.", "fr": "Pierre se précipita sous les buissons. Mais bientôt, comme rien ne se passait, il sortit, et grimpa sur une brouette pour jeter un coup d''œil."}, {"en": "The first thing he saw was Mr. McGregor hoeing onions. His back was turned towards Peter, and beyond him was the gate!", "fr": "La première chose qu''il vit fut M. McGregor en train de sarcler des oignons. Son dos était tourné vers Pierre, et au-delà de lui se trouvait le portail !"}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 17, '[{"en": "Peter got down very quietly off the wheelbarrow; and started running as fast as he could go, along a straight walk behind some black-currant bushes.", "fr": "Pierre descendit très doucement de la brouette ; et se mit à courir aussi vite qu''il le pouvait, le long d''une allée droite derrière des buissons de cassis."}, {"en": "Mr. McGregor caught sight of him at the corner, but Peter did not care.", "fr": "M. McGregor l''aperçut au coin, mais Pierre s''en moquait."}, {"en": "He slipped underneath the gate, and was safe at last in the wood outside the garden.", "fr": "Il se glissa sous le portail, et fut enfin en sécurité dans le bois à l''extérieur du jardin."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 18, '[{"en": "Mr. McGregor hung up the little jacket and the shoes for a scare-crow to frighten the blackbirds.", "fr": "M. McGregor accrocha la petite veste et les chaussures sur un épouvantail pour effrayer les merles."}, {"en": "Peter never stopped running or looked behind him till he got home to the big fir-tree.", "fr": "Pierre ne s''arrêta jamais de courir et ne regarda jamais derrière lui jusqu''à ce qu''il rentre au grand sapin."}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 19, '[{"en": "He was so tired that he flopped down upon the nice soft sand on the floor of the rabbit-hole and shut his eyes.", "fr": "Il était si fatigué qu''il s''effondra sur le sable doux et agréable du sol du terrier de lapin et ferma les yeux."}, {"en": "His mother was busy cooking; she wondered what he had done with his clothes. It was the second little jacket and pair of shoes that Peter had lost in a fortnight!", "fr": "Sa mère était occupée à cuisiner ; elle se demandait ce qu''il avait fait de ses vêtements. C''était la deuxième petite veste et paire de chaussures que Pierre avait perdues en quinze jours !"}]'::jsonb from b;
+
+
+with b as (select id from books where title = 'The Tale of Peter Rabbit' and language_id = (select id from languages where code = 'en'))
+insert into book_pages (book_id, page_number, sentences)
+select b.id, 20, '[{"en": "I am sorry to say that Peter was not very well during the evening.", "fr": "Je suis désolé de dire que Pierre ne se sentit pas très bien pendant la soirée."}, {"en": "His mother put him to bed, and made some camomile tea; and she gave a dose of it to Peter! ''One table-spoonful to be taken at bed-time.''", "fr": "Sa mère le mit au lit, et prépara une tisane à la camomille ; et elle en donna une dose à Pierre ! ''Une cuillère à soupe à prendre au coucher.''"}, {"en": "But Flopsy, Mopsy, and Cotton-tail had bread and milk and blackberries for supper.", "fr": "Mais Flopsy, Mopsy, et Queue-de-Coton eurent du pain, du lait et des mûres pour le souper."}]'::jsonb from b;
