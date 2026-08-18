@@ -394,15 +394,34 @@
 }
 
 /* Lecteur */
+.book-reader-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: 90px;
+}
+
 .book-reader-title {
   font-family: var(--font-display, inherit);
-  margin: 10px 0 18px;
+  margin: 10px 0 8px;
+  font-size: 20px;
+}
+
+.book-page-text-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-height: 0;
 }
 
 .book-page-text {
-  font-size: 17px;
-  line-height: 2;
-  padding-bottom: 90px;
+  font-size: 22px;
+  line-height: 2.1;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .book-page-text { font-size: 25px; }
 }
 
 .book-sentence-wrap { display: inline; }
