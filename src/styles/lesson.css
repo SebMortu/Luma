@@ -138,8 +138,18 @@
 .matching-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.matching-row:hover {
+  border-color: var(--accent);
+  background: var(--bg-surface-alt);
 }
 
 .matching-left {
@@ -147,6 +157,15 @@
   font-weight: 600;
   width: 90px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.matching-left::before {
+  content: '↔';
+  color: var(--accent);
+  font-size: 13px;
 }
 
 .matching-select {

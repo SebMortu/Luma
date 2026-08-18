@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
+import { saveVocabForReview } from '../lib/progress.js'
 
 function BookReader() {
   const { bookId } = useParams()
@@ -14,6 +15,7 @@ function BookReader() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [openBubbles, setOpenBubbles] = useState({})
+  const [savedVocab, setSavedVocab] = useState({})
 
   useEffect(() => {
     async function loadBook() {
@@ -51,6 +53,11 @@ function BookReader() {
   const toggleBubble = (idx) => setOpenBubbles((prev) => ({ ...prev, [idx]: true }))
   const closeBubble = (idx) => setOpenBubbles((prev) => ({ ...prev, [idx]: false }))
 
+  const saveForReview = async (idx, sentence) => {
+    await saveVocabForReview(user.id, { contentEn: sentence.en, contentFr: sentence.fr, sourceLabel: book.title })
+    setSavedVocab((prev) => ({ ...prev, [idx]: true }))
+  }
+
   const goNext = () => { if (book && pageNumber < book.total_pages) setPageNumber((p) => p + 1) }
   const goPrev = () => { if (pageNumber > 1) setPageNumber((p) => p - 1) }
 
@@ -87,6 +94,13 @@ function BookReader() {
                 {openBubbles[idx] && (
                   <span className="book-translate-bubble">
                     🌐 {s.fr}
+                    <button
+                      className={`book-vocab-save ${savedVocab[idx] ? 'saved' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); if (!savedVocab[idx]) saveForReview(idx, s) }}
+                      aria-label="Ajouter à mes révisions"
+                    >
+                      {savedVocab[idx] ? '⭐ Ajouté aux révisions' : '☆ Ajouter à mes révisions'}
+                    </button>
                     <button className="book-translate-close" onClick={() => closeBubble(idx)} aria-label="Fermer la traduction">
                       ▾
                     </button>

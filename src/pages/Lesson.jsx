@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { estimateMinutesRemaining } from '../lib/level.js'
 import { recordLessonCompletion } from '../lib/progress.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import ExerciseQCM from '../components/exercises/ExerciseQCM.jsx'
@@ -197,7 +198,13 @@ function Lesson() {
           </div>
           <button className="lesson-explain-icon" onClick={() => setShowExplanationOverlay(true)} aria-label="Revoir l'explication">📖</button>
         </div>
-        <p className="verb-progress">{currentIndex + 1} / {exercises.length}</p>
+        <p className="verb-progress">
+          {currentIndex + 1} / {exercises.length}
+          {(() => {
+            const mins = estimateMinutesRemaining(exercises.length - currentIndex)
+            return mins ? ` · ~${mins} min restante${mins > 1 ? 's' : ''}` : ''
+          })()}
+        </p>
 
         {!EXERCISE_COMPONENTS[ex.type] && <p>Type d'exercice inconnu : {ex.type}</p>}
         {Component && (

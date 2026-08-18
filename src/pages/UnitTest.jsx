@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import { estimateMinutesRemaining } from '../lib/level.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { awardProgress } from '../lib/progress.js'
 import ExerciseQCM from '../components/exercises/ExerciseQCM.jsx'
@@ -152,7 +153,13 @@ function UnitTest() {
             <div className="progress-bar-fill" style={{ width: `${progressPct}%` }} />
           </div>
         </div>
-        <p className="verb-progress">{currentIndex + 1} / {testExercises.length}</p>
+        <p className="verb-progress">
+          {currentIndex + 1} / {testExercises.length}
+          {(() => {
+            const mins = estimateMinutesRemaining(testExercises.length - currentIndex)
+            return mins ? ` · ~${mins} min restante${mins > 1 ? 's' : ''}` : ''
+          })()}
+        </p>
         <p className="dashboard-goal">
           📝 Test de sortie · Unité {unit?.position} — {unit?.title}
           <strong> · {Math.round(PASS_THRESHOLD * 100)}% de réussite valide toute l'unité</strong>

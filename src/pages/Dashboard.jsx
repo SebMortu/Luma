@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
-import { getNextLesson, computeUnitStates, dailyXpThreshold } from '../lib/progress.js'
+import { getNextLesson, computeUnitStates, dailyXpThreshold, countDueVocab } from '../lib/progress.js'
 import { computeLevel } from '../lib/level.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
@@ -22,6 +22,7 @@ function Dashboard() {
   const [settings, setSettings] = useState(null)
   const [unitStates, setUnitStates] = useState([])
   const [nextLesson, setNextLesson] = useState(null)
+  const [dueVocabCount, setDueVocabCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -44,6 +45,9 @@ function Dashboard() {
 
         const next = await getNextLesson(user.id, settingsData.active_language_id)
         setNextLesson(next)
+
+        const dueCount = await countDueVocab(user.id)
+        setDueVocabCount(dueCount)
       } catch (err) {
         setError(err.message)
       } finally {
@@ -170,6 +174,12 @@ function Dashboard() {
           <p className="dashboard-goal">
             Tu as terminé tout le contenu disponible pour l'instant. Reviens bientôt !
           </p>
+        )}
+
+        {dueVocabCount > 0 && (
+          <button className="btn-secondary" style={{ marginTop: '0.75rem' }} onClick={() => navigate('/vocab-review')}>
+            🗂️ {dueVocabCount} mot{dueVocabCount > 1 ? 's' : ''} à réviser aujourd'hui
+          </button>
         )}
       </div>
     </AppLayout>

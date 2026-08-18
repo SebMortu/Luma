@@ -27,6 +27,7 @@ import WordGamesHistory from './pages/WordGamesHistory.jsx'
 import BooksLibrary from './pages/BooksLibrary.jsx'
 import BookReader from './pages/BookReader.jsx'
 import BookSeriesDetail from './pages/BookSeriesDetail.jsx'
+import VocabReview from './pages/VocabReview.jsx'
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
             <Route path="/books" element={<ProtectedRoute><BooksLibrary /></ProtectedRoute>} />
             <Route path="/books/series/:seriesId" element={<ProtectedRoute><BookSeriesDetail /></ProtectedRoute>} />
             <Route path="/books/:bookId" element={<ProtectedRoute><BookReader /></ProtectedRoute>} />
+            <Route path="/vocab-review" element={<ProtectedRoute><VocabReview /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

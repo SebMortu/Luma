@@ -115,6 +115,69 @@ export async function awardProgress(userId, { xpGained = 0, secondsSpent = 0 }) 
   }
 }
 
+/**
+ * Sauvegarde une phrase de vocabulaire (issue d'un livre, par exemple) dans la
+ * file de révision espacée. Ignore silencieusement si elle y est déjà.
+ */
+export async function saveVocabForReview(userId, { contentEn, contentFr, sourceLabel }) {
+  const { error } = await supabase.from('user_review_queue').insert({
+    user_id: userId,
+    item_type: 'vocabulary',
+    item_id: null,
+    content_en: contentEn,
+    content_fr: contentFr,
+    source_label: sourceLabel,
+    next_review_date: new Date().toISOString().slice(0, 10),
+  })
+  // Code 23505 = violation de contrainte unique -> déjà sauvegardé, on ignore
+  if (error && error.code !== '23505') throw error
+  return !error
+}
+
+/** Récupère les éléments de vocabulaire dus aujourd'hui (ou en retard). */
+export async function getDueVocab(userId) {
+  const today = new Date().toISOString().slice(0, 10)
+  const { data, error } = await supabase
+    .from('user_review_queue').select('*')
+    .eq('user_id', userId).eq('item_type', 'vocabulary')
+    .lte('next_review_date', today)
+    .order('next_review_date')
+  if (error) throw error
+  return data
+}
+
+/** Compte le nombre d'éléments dus aujourd'hui, pour affichage sur le dashboard. */
+export async function countDueVocab(userId) {
+  const today = new Date().toISOString().slice(0, 10)
+  const { count, error } = await supabase
+    .from('user_review_queue').select('id', { count: 'exact', head: true })
+    .eq('user_id', userId).eq('item_type', 'vocabulary')
+    .lte('next_review_date', today)
+  if (error) throw error
+  return count || 0
+}
+
+/**
+ * Met à jour l'intervalle de répétition après une révision (méthode simple
+ * inspirée de SM-2) : succès -> l'intervalle double (plafonné à 60 jours),
+ * échec -> retour à 1 jour et remise à zéro du streak de réussite.
+ */
+export async function reviewVocabItem(itemId, remembered) {
+  const { data: item, error: fetchErr } = await supabase
+    .from('user_review_queue').select('*').eq('id', itemId).single()
+  if (fetchErr) throw fetchErr
+
+  const newStreak = remembered ? item.success_streak + 1 : 0
+  const newInterval = remembered ? Math.min(item.interval_days * 2, 60) : 1
+  const nextDate = new Date(Date.now() + newInterval * 86400000).toISOString().slice(0, 10)
+
+  const { error: updateErr } = await supabase
+    .from('user_review_queue')
+    .update({ success_streak: newStreak, interval_days: newInterval, next_review_date: nextDate })
+    .eq('id', itemId)
+  if (updateErr) throw updateErr
+}
+
 export async function recordLessonCompletion({ userId, languageId, unitId, lessonId, score, secondsSpent = 0 }) {
   // 1. Vérifier si cette leçon avait déjà été terminée avant (pour ne pas re-donner d'XP)
   const { data: existing } = await supabase
