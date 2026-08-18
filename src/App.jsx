@@ -4,6 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import RootRedirect from './pages/RootRedirect.jsx'
 import Login from './pages/Login.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 import Onboarding from './pages/Onboarding.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import UnitDetail from './pages/UnitDetail.jsx'
@@ -34,6 +35,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<ProtectedRoute><RootRedirect /></ProtectedRoute>} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

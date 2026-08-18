@@ -81,6 +81,10 @@ function LevelPath() {
           </button>
         )}
 
+        <p className="progress-card-sub" style={{ marginBottom: '1rem' }}>
+          ℹ️ Un thème se débloque quand toutes ses leçons sont validées à <strong>80% minimum</strong>. Une leçon terminée en dessous de ce seuil reste marquée « à retravailler ».
+        </p>
+
         {nodes.length === 0 && <p>Aucun contenu disponible pour ce niveau pour l'instant.</p>}
 
         <div className="path-container">
@@ -118,23 +122,26 @@ function LevelPath() {
                 )
               }
               const node = item.node
+              const belowThreshold = node.status === 'completed' && node.bestScore !== null && node.bestScore < 0.8
               return (
                 <div key={node.lesson.id} className={`path-node-row ${i % 2 === 0 ? 'align-left' : 'align-right'}`}>
                   <button
-                    className={`path-node ${node.status}`}
+                    className={`path-node ${node.status} ${belowThreshold ? 'below-threshold' : ''}`}
                     disabled={node.status === 'locked'}
                     onClick={() => navigate(`/lesson/${node.lesson.id}`)}
                   >
-                    <span className="path-node-icon">{STATUS_ICON[node.status]}</span>
+                    <span className="path-node-icon">{belowThreshold ? '⚠️' : STATUS_ICON[node.status]}</span>
                   </button>
                   <div className="path-node-info">
                     <p className="path-node-title">{node.lesson.title}</p>
                     <p className="path-node-sub">
-                      {node.status === 'completed' && node.bestScore !== null
-                        ? `Terminée · ${Math.round(node.bestScore * 100)}%`
-                        : node.status === 'locked'
-                          ? 'Verrouillée'
-                          : "Jusqu'à 20 XP"}
+                      {belowThreshold
+                        ? `À retravailler · ${Math.round(node.bestScore * 100)}% (80% requis)`
+                        : node.status === 'completed' && node.bestScore !== null
+                          ? `Terminée · ${Math.round(node.bestScore * 100)}%`
+                          : node.status === 'locked'
+                            ? 'Verrouillée'
+                            : "Jusqu'à 20 XP"}
                     </p>
                   </div>
                 </div>

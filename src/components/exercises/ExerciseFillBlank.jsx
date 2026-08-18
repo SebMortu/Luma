@@ -31,7 +31,11 @@ function ExerciseFillBlank({ content, onAnswered }) {
           type="text"
           value={value}
           onChange={(e) => { setValue(e.target.value); setError('') }}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !answered) handleSubmit() }}
           disabled={answered}
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
           className="exercise-input"
         />
         {content.sentence_after}
