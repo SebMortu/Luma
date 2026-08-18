@@ -24,6 +24,7 @@ const LEVEL_SKY = {
 }
 
 const STATUS_ICON = { completed: '✓', current: '▶', available: '📖', locked: '🔒' }
+const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1']
 
 function LevelPath() {
   const { levelCode } = useParams()
@@ -69,6 +70,16 @@ function LevelPath() {
         />
         <Link to="/dashboard" className="back-link">← Retour aux niveaux</Link>
         <h1>{CECR_TITLES[levelCode] || levelCode}</h1>
+
+        {LEVEL_ORDER.includes(levelCode) && LEVEL_ORDER.indexOf(levelCode) < LEVEL_ORDER.length - 1 && (
+          <button
+            className="btn-secondary"
+            style={{ width: '100%', marginBottom: '1rem' }}
+            onClick={() => navigate(`/level-up-test/${levelCode}`)}
+          >
+            🎯 Passer directement au niveau {LEVEL_ORDER[LEVEL_ORDER.indexOf(levelCode) + 1]} (test 90%)
+          </button>
+        )}
 
         {nodes.length === 0 && <p>Aucun contenu disponible pour ce niveau pour l'instant.</p>}
 

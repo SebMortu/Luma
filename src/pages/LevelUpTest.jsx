@@ -17,7 +17,9 @@ const EXERCISE_COMPONENTS = {
   reorder: ExerciseReorder,
 }
 
-const PASS_THRESHOLD = 0.8
+const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1']
+const PASS_THRESHOLD = 0.9
+const QUESTIONS_PER_LESSON = 4 // le double du test de sortie classique (2)
 
 function shuffle(array) {
   const copy = [...array]
@@ -28,12 +30,15 @@ function shuffle(array) {
   return copy
 }
 
-function UnitTest() {
-  const { unitId } = useParams()
+function LevelUpTest() {
+  const { fromLevel } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const [unit, setUnit] = useState(null)
+  const nextLevel = LEVEL_ORDER[LEVEL_ORDER.indexOf(fromLevel) + 1]
+
+  const [languageId, setLanguageId] = useState(null)
+  const [units, setUnits] = useState([])
   const [lessons, setLessons] = useState([])
   const [testExercises, setTestExercises] = useState([])
   const [loading, setLoading] = useState(true)
@@ -47,24 +52,31 @@ function UnitTest() {
 
   useEffect(() => {
     async function load() {
-      const { data: unitData } = await supabase.from('units').select('*').eq('id', unitId).single()
-      setUnit(unitData)
+      const { data: settings } = await supabase.from('user_settings').select('active_language_id').eq('user_id', user.id).single()
+      setLanguageId(settings.active_language_id)
 
-      const { data: lessonsData } = await supabase.from('lessons').select('*').eq('unit_id', unitId).order('position')
+      const { data: unitsData } = await supabase
+        .from('units').select('*').eq('language_id', settings.active_language_id).eq('cecr_level', fromLevel).order('position')
+      setUnits(unitsData || [])
+
+      const unitIds = (unitsData || []).map((u) => u.id)
+      if (unitIds.length === 0) { setLoading(false); return }
+
+      const { data: lessonsData } = await supabase.from('lessons').select('*').in('unit_id', unitIds)
       setLessons(lessonsData || [])
 
       const picked = []
       for (const lesson of lessonsData || []) {
         const { data: exercises } = await supabase.from('exercises').select('*').eq('lesson_id', lesson.id).order('position')
         if (exercises && exercises.length > 0) {
-          picked.push(...shuffle(exercises).slice(0, 2))
+          picked.push(...shuffle(exercises).slice(0, QUESTIONS_PER_LESSON))
         }
       }
       setTestExercises(shuffle(picked))
       setLoading(false)
     }
     load()
-  }, [unitId])
+  }, [fromLevel, user.id])
 
   const handleAnswered = (exerciseId, correct) => {
     setResults((prev) => ({ ...prev, [exerciseId]: correct }))
@@ -94,8 +106,8 @@ function UnitTest() {
       for (const lesson of lessons) {
         const { data: existing } = await supabase
           .from('user_progress').select('status, best_score')
-          .eq('user_id', user.id).eq('language_id', unit.language_id)
-          .eq('unit_id', unitId).eq('lesson_id', lesson.id)
+          .eq('user_id', user.id).eq('language_id', languageId)
+          .eq('unit_id', lesson.unit_id).eq('lesson_id', lesson.id)
           .maybeSingle()
 
         if (existing?.status !== 'completed') newlyCompleted++
@@ -103,8 +115,8 @@ function UnitTest() {
 
         await supabase.from('user_progress').upsert({
           user_id: user.id,
-          language_id: unit.language_id,
-          unit_id: unitId,
+          language_id: languageId,
+          unit_id: lesson.unit_id,
           lesson_id: lesson.id,
           status: 'completed',
           best_score: bestScore,
@@ -128,8 +140,9 @@ function UnitTest() {
     setTestExercises((prev) => shuffle(prev))
   }
 
-  if (loading) return <div className="page"><p>Préparation du test...</p></div>
-  if (testExercises.length === 0) return <div className="page"><p>Pas assez de contenu dans cette unité pour un test de sortie.</p></div>
+  if (!nextLevel) return <div className="page"><p>Il n'y a pas de niveau supérieur à {fromLevel}.</p></div>
+  if (loading) return <div className="page"><p>Préparation du test de passage...</p></div>
+  if (testExercises.length === 0) return <div className="page"><p>Pas assez de contenu dans le niveau {fromLevel} pour ce test.</p></div>
 
   if (!finished) {
     const ex = testExercises[currentIndex]
@@ -146,8 +159,8 @@ function UnitTest() {
         </div>
         <p className="verb-progress">{currentIndex + 1} / {testExercises.length}</p>
         <p className="dashboard-goal">
-          📝 Test de sortie · Unité {unit?.position} — {unit?.title}
-          <strong> · {Math.round(PASS_THRESHOLD * 100)}% de réussite valide toute l'unité</strong>
+          🎯 Test de passage {fromLevel} → {nextLevel}
+          <strong> · {Math.round(PASS_THRESHOLD * 100)}% de réussite requis</strong>
         </p>
 
         {!Component && <p>Type d'exercice inconnu : {ex.type}</p>}
@@ -170,19 +183,19 @@ function UnitTest() {
 
   return (
     <div className="page">
-      <h1>📝 Test de sortie</h1>
+      <h1>🎯 Test de passage {fromLevel} → {nextLevel}</h1>
       <div className="lesson-summary">
-        <p className="verb-result">Score : {correctCount} / {testExercises.length}</p>
+        <p className="verb-result">Score : {correctCount} / {testExercises.length} ({Math.round((correctCount / testExercises.length) * 100)}%)</p>
         {saving && <p>Enregistrement...</p>}
         {!saving && passed && (
           <>
-            <p className="feedback correct">✅ Unité validée ! {xpGained !== null && `+${xpGained} XP`}</p>
+            <p className="feedback correct">🎉 Niveau {nextLevel} débloqué ! {xpGained !== null && `+${xpGained} XP`}</p>
             <button className="btn-primary" onClick={() => navigate('/dashboard')}>Retour au tableau de bord</button>
           </>
         )}
         {!saving && !passed && (
           <>
-            <p className="feedback incorrect">Pas encore — il faut au moins {Math.round(PASS_THRESHOLD * 100)}% pour valider l'unité.</p>
+            <p className="feedback incorrect">Pas encore — il faut au moins {Math.round(PASS_THRESHOLD * 100)}% pour passer directement au niveau {nextLevel}.</p>
             <button className="btn-primary" onClick={retry}>Réessayer</button>
           </>
         )}
@@ -191,4 +204,4 @@ function UnitTest() {
   )
 }
 
-export default UnitTest
+export default LevelUpTest

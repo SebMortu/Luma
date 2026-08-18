@@ -15,12 +15,20 @@ function ScenarioPlayer() {
   const [loading, setLoading] = useState(true)
   const [xpAwarded, setXpAwarded] = useState(false)
   const [shownTranslations, setShownTranslations] = useState({})
+  const [discoveredEndings, setDiscoveredEndings] = useState([])
+  const [newEnding, setNewEnding] = useState(false)
 
   useEffect(() => {
     async function load() {
       const { data } = await supabase.from('scenarios').select('*').eq('id', scenarioId).single()
       setScenario(data)
       setCurrentNodeId(data.content.start_node)
+
+      const { data: endingsData } = await supabase
+        .from('user_scenario_endings').select('ending_label')
+        .eq('user_id', user.id).eq('scenario_id', scenarioId)
+      setDiscoveredEndings((endingsData || []).map((e) => e.ending_label))
+
       setLoading(false)
     }
     load()
@@ -36,6 +44,17 @@ function ScenarioPlayer() {
     if (nextNode.end && !xpAwarded) {
       setXpAwarded(true)
       await awardProgress(user.id, { xpGained: 10 })
+
+      const isNew = !discoveredEndings.includes(nextNode.ending_label)
+      setNewEnding(isNew)
+      if (isNew) {
+        await supabase.from('user_scenario_endings').insert({
+          user_id: user.id,
+          scenario_id: scenarioId,
+          ending_label: nextNode.ending_label,
+        })
+        setDiscoveredEndings((prev) => [...prev, nextNode.ending_label])
+      }
     }
   }
 
@@ -44,6 +63,7 @@ function ScenarioPlayer() {
 
   const node = scenario.content.nodes[currentNodeId]
   const speakerName = scenario.content.characters[node.speaker] || node.speaker
+  const totalEndings = Object.values(scenario.content.nodes).filter((n) => n.end).length
 
   return (
     <div className="page">
@@ -74,7 +94,11 @@ function ScenarioPlayer() {
         {node.end ? (
           <div className="lesson-summary">
             <p className="verb-result">{node.ending_label}</p>
+            {newEnding && <p className="feedback correct">🆕 Nouvelle fin découverte !</p>}
             <p className="feedback correct">+10 XP</p>
+            <p className="progress-card-sub">
+              🔍 {discoveredEndings.length} / {totalEndings} fin{totalEndings > 1 ? 's' : ''} découverte{discoveredEndings.length > 1 ? 's' : ''}
+            </p>
             <button className="btn-primary" onClick={() => navigate(-1)}>Retour aux scénarios</button>
           </div>
         ) : (
