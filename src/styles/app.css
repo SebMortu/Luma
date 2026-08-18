@@ -409,19 +409,13 @@
 
 .book-page-text-wrap {
   flex: 1;
-  display: flex;
-  align-items: center;
   min-height: 0;
 }
 
 .book-page-text {
-  font-size: 22px;
-  line-height: 2.1;
+  font-size: 17px;
+  line-height: 1.75;
   width: 100%;
-}
-
-@media (min-width: 640px) {
-  .book-page-text { font-size: 25px; }
 }
 
 .book-sentence-wrap { display: inline; }
