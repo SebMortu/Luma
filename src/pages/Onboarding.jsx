@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
+import { getSelectableCharacters } from '../lib/characters.js'
+import CharacterAvatar from '../components/CharacterAvatar.jsx'
 
 const LEVELS = [
   { value: 'debutant', label: 'Débutant complet', desc: 'Je ne connais presque rien' },
@@ -29,8 +31,14 @@ function Onboarding() {
   const [level, setLevel] = useState(null)
   const [goal, setGoal] = useState(null)
   const [time, setTime] = useState(null)
+  const [characters, setCharacters] = useState([])
+  const [guideId, setGuideId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    getSelectableCharacters().then(setCharacters).catch(() => setCharacters([]))
+  }, [])
 
   const selectAndAdvance = (setter, value, nextStep) => {
     setter(value)
@@ -52,6 +60,7 @@ function Onboarding() {
           level,
           objective: goal,
           daily_goal_minutes: time,
+          guide_character_id: guideId,
         })
         .eq('user_id', user.id)
       if (updateErr) throw updateErr
@@ -69,6 +78,7 @@ function Onboarding() {
         <div className={`bar ${step >= 1 ? 'active' : ''}`} />
         <div className={`bar ${step >= 2 ? 'active' : ''}`} />
         <div className={`bar ${step >= 3 ? 'active' : ''}`} />
+        <div className={`bar ${step >= 4 ? 'active' : ''}`} />
       </div>
 
       {step === 1 && (
@@ -123,14 +133,39 @@ function Onboarding() {
               <button
                 key={opt.value}
                 className={`onboarding-option row ${time === opt.value ? 'selected' : ''}`}
-                onClick={() => { setTime(opt.value); setTimeout(finish, 200) }}
+                onClick={() => selectAndAdvance(setTime, opt.value, 4)}
               >
                 <span className="onboarding-option-title">{opt.label}</span>
                 <span className="onboarding-option-desc">{opt.desc}</span>
               </button>
             ))}
           </div>
-          {saving && <p>Préparation de ton parcours...</p>}
+        </>
+      )}
+
+      {step === 4 && (
+        <>
+          <div className="onboarding-back-row">
+            <button className="onboarding-back" onClick={() => setStep(3)}>←</button>
+          </div>
+          <h2>Choisis ton guide</h2>
+          <p className="onboarding-subtitle">Il t'accompagnera tout au long de ton apprentissage.</p>
+          <div className="character-picker-grid">
+            {characters.map((c) => (
+              <button
+                key={c.id}
+                className={`character-picker-card ${guideId === c.id ? 'selected' : ''}`}
+                onClick={() => setGuideId(c.id)}
+              >
+                <CharacterAvatar character={c} state={guideId === c.id ? 'happy' : 'neutral'} size={64} />
+                <p className="character-picker-name">{c.name}</p>
+                <p className="character-picker-desc">{c.description}</p>
+              </button>
+            ))}
+          </div>
+          <button className="btn-primary" style={{ marginTop: '1.5rem' }} disabled={!guideId || saving} onClick={finish}>
+            {saving ? 'Préparation de ton parcours...' : 'Commencer avec ' + (characters.find((c) => c.id === guideId)?.name || '')}
+          </button>
           {error && <p className="feedback incorrect">{error}</p>}
         </>
       )}

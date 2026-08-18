@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useTheme, THEMES } from '../contexts/ThemeContext.jsx'
+import { getSelectableCharacters, setGuideCharacter } from '../lib/characters.js'
+import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import AppLayout from '../components/AppLayout.jsx'
 
 const SWATCH_PREVIEW = {
@@ -27,6 +29,7 @@ function Settings() {
   const { user, signOut } = useAuth()
   const { theme, setTheme } = useTheme()
   const [settings, setSettings] = useState(null)
+  const [characters, setCharacters] = useState([])
   const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('luma-notifications') === 'true')
   const [soundsEnabled, setSoundsEnabled] = useState(() => localStorage.getItem('luma-sounds') !== 'false')
   const [saving, setSaving] = useState(false)
@@ -35,6 +38,7 @@ function Settings() {
     async function load() {
       const { data } = await supabase.from('user_settings').select('*').eq('user_id', user.id).single()
       setSettings(data)
+      getSelectableCharacters().then(setCharacters).catch(() => setCharacters([]))
     }
     load()
   }, [user.id])
@@ -56,6 +60,11 @@ function Settings() {
     setSettings((prev) => ({ ...prev, [field]: value }))
     await supabase.from('user_settings').update({ [field]: value }).eq('user_id', user.id)
     setSaving(false)
+  }
+
+  const changeGuide = async (characterId) => {
+    setSettings((prev) => ({ ...prev, guide_character_id: characterId }))
+    await setGuideCharacter(user.id, characterId)
   }
 
   if (!settings) return <AppLayout><div className="page"><p>Chargement...</p></div></AppLayout>
@@ -80,6 +89,20 @@ function Settings() {
           <span>Sons de réponse</span>
           <span>{soundsEnabled ? '🔊 Activés' : '🔇 Désactivés'}</span>
         </button>
+
+        <h2>Ton guide</h2>
+        <div className="character-picker-grid">
+          {characters.map((c) => (
+            <button
+              key={c.id}
+              className={`character-picker-card ${settings.guide_character_id === c.id ? 'selected' : ''}`}
+              onClick={() => changeGuide(c.id)}
+            >
+              <CharacterAvatar character={c} state={settings.guide_character_id === c.id ? 'happy' : 'neutral'} size={56} />
+              <p className="character-picker-name">{c.name}</p>
+            </button>
+          ))}
+        </div>
 
         <h2>Apparence</h2>
         <div className="theme-options">

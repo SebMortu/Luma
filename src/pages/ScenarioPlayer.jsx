@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import TranslateToggle from '../components/TranslateToggle.jsx'
+import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import { awardProgress } from '../lib/progress.js'
 
 function ScenarioPlayer() {
@@ -17,6 +18,7 @@ function ScenarioPlayer() {
   const [shownTranslations, setShownTranslations] = useState({})
   const [discoveredEndings, setDiscoveredEndings] = useState([])
   const [newEnding, setNewEnding] = useState(false)
+  const [speakerCharacters, setSpeakerCharacters] = useState({}) // speaker_key -> character
 
   useEffect(() => {
     async function load() {
@@ -28,6 +30,15 @@ function ScenarioPlayer() {
         .from('user_scenario_endings').select('ending_label')
         .eq('user_id', user.id).eq('scenario_id', scenarioId)
       setDiscoveredEndings((endingsData || []).map((e) => e.ending_label))
+
+      // Optionnel : si des personnages visuels ont été associés aux speakers
+      // de ce scénario, on les charge pour afficher leur avatar animé.
+      const { data: mappings } = await supabase
+        .from('scenario_speaker_characters').select('speaker_key, characters(*)')
+        .eq('scenario_id', scenarioId)
+      const map = {}
+      ;(mappings || []).forEach((m) => { map[m.speaker_key] = m.characters })
+      setSpeakerCharacters(map)
 
       setLoading(false)
     }
@@ -71,24 +82,35 @@ function ScenarioPlayer() {
         <h1>{scenario.title}</h1>
 
         <div className="dialogue-history">
-          {history.map((h, i) => (
-            <div key={i} className="dialogue-turn">
-              <div className="dialogue-bubble npc">
-                <p className="dialogue-speaker">{scenario.content.characters[h.speaker] || h.speaker}</p>
-                <p>{h.text}</p>
-                <TranslateToggle translation={h.text_fr} />
+          {history.map((h, i) => {
+            const char = speakerCharacters[h.speaker]
+            return (
+              <div key={i} className="dialogue-turn">
+                <div className={char ? 'dialogue-bubble-with-avatar' : ''}>
+                  {char && <CharacterAvatar character={char} state="neutral" size={40} />}
+                  <div className="dialogue-bubble npc">
+                    <p className="dialogue-speaker">{scenario.content.characters[h.speaker] || h.speaker}</p>
+                    <p>{h.text}</p>
+                    <TranslateToggle translation={h.text_fr} />
+                  </div>
+                </div>
+                <div className="dialogue-bubble user">
+                  <p>{h.chosenReply}</p>
+                </div>
               </div>
-              <div className="dialogue-bubble user">
-                <p>{h.chosenReply}</p>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
-        <div className="dialogue-bubble npc current">
-          <p className="dialogue-speaker">{speakerName}</p>
-          <p>{node.text}</p>
-          <TranslateToggle translation={node.text_fr} />
+        <div className={speakerCharacters[node.speaker] ? 'dialogue-bubble-with-avatar' : ''}>
+          {speakerCharacters[node.speaker] && (
+            <CharacterAvatar character={speakerCharacters[node.speaker]} state={node.end ? 'celebrating' : 'waving'} size={48} />
+          )}
+          <div className="dialogue-bubble npc current">
+            <p className="dialogue-speaker">{speakerName}</p>
+            <p>{node.text}</p>
+            <TranslateToggle translation={node.text_fr} />
+          </div>
         </div>
 
         {node.end ? (

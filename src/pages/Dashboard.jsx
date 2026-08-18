@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { getNextLesson, computeUnitStates, dailyXpThreshold, countDueVocab } from '../lib/progress.js'
 import { computeLevel } from '../lib/level.js'
+import { getGuideCharacter, guideDashboardMessage } from '../lib/characters.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
 import RingProgress from '../components/RingProgress.jsx'
+import CharacterAvatar from '../components/CharacterAvatar.jsx'
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const CECR_TITLES = {
@@ -23,6 +25,7 @@ function Dashboard() {
   const [unitStates, setUnitStates] = useState([])
   const [nextLesson, setNextLesson] = useState(null)
   const [dueVocabCount, setDueVocabCount] = useState(0)
+  const [guideCharacter, setGuideCharacter] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -48,6 +51,9 @@ function Dashboard() {
 
         const dueCount = await countDueVocab(user.id)
         setDueVocabCount(dueCount)
+
+        const guide = await getGuideCharacter(user.id)
+        setGuideCharacter(guide)
       } catch (err) {
         setError(err.message)
       } finally {
@@ -98,6 +104,21 @@ function Dashboard() {
             <span className="badge badge-xp">⭐ {settings.total_xp}</span>
           </div>
         </div>
+
+        {guideCharacter && (() => {
+          const goalThreshold = dailyXpThreshold(settings.daily_goal_minutes)
+          const msg = guideDashboardMessage({
+            goalMetToday: (settings.xp_gained_today || 0) >= goalThreshold,
+            currentStreak: settings.current_streak,
+            hasNextLesson: !!nextLesson,
+          })
+          return (
+            <div className="guide-card">
+              <CharacterAvatar character={guideCharacter} state={msg.state} size={56} />
+              <p className="guide-card-message">{msg.text}</p>
+            </div>
+          )
+        })()}
 
         <div className="streak-card">
           <p className="streak-card-title">Série actuelle 🔥</p>

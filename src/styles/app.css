@@ -489,6 +489,151 @@
   line-height: 1.4;
 }
 
+/* ===== Système de personnages / mascottes ===== */
+.character-avatar {
+  position: relative;
+  border-radius: 50%;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.character-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.character-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  border: 2px solid rgba(255,255,255,0.15);
+}
+
+/* Idle : légère respiration en boucle, comme un personnage "vivant" au repos */
+@keyframes char-idle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-3px) scale(1.02); }
+}
+.char-anim-idle { animation: char-idle 2.4s ease-in-out infinite; }
+
+/* Happy : petit rebond joyeux */
+@keyframes char-bounce {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-10px); }
+  50% { transform: translateY(0); }
+  70% { transform: translateY(-4px); }
+}
+.char-anim-bounce { animation: char-bounce 0.6s ease-in-out; }
+
+/* Celebrating : rotation + rebond, pour les réussites */
+@keyframes char-celebrate {
+  0% { transform: translateY(0) rotate(0deg) scale(1); }
+  25% { transform: translateY(-14px) rotate(-8deg) scale(1.08); }
+  50% { transform: translateY(0) rotate(8deg) scale(1.08); }
+  75% { transform: translateY(-8px) rotate(-4deg) scale(1.04); }
+  100% { transform: translateY(0) rotate(0deg) scale(1); }
+}
+.char-anim-celebrate { animation: char-celebrate 0.9s ease-in-out; }
+
+/* Thinking : léger balancement pensif */
+@keyframes char-tilt {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-6deg); }
+}
+.char-anim-tilt { animation: char-tilt 1.6s ease-in-out infinite; }
+
+/* Sad : affaissement doux */
+@keyframes char-droop {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(4px) scale(0.97); opacity: 0.85; }
+}
+.char-anim-droop { animation: char-droop 0.5s ease-out forwards; }
+
+/* Waving : petit salut d'accueil */
+@keyframes char-wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  50% { transform: rotate(8deg); }
+  75% { transform: rotate(-6deg); }
+}
+.char-anim-wave { animation: char-wave 0.8s ease-in-out; }
+
+/* Carte de sélection du guide (onboarding + réglages) */
+.character-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 1rem;
+}
+
+.character-picker-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.character-picker-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.character-picker-card.selected {
+  border-color: var(--accent);
+  background: var(--bg-surface-alt);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.character-picker-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.character-picker-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+/* Bulle de mascotte-guide sur le tableau de bord */
+.guide-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 1rem;
+}
+
+.guide-card-message {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Avatar de personnage dans les bulles de dialogue de scénario */
+.dialogue-bubble-with-avatar {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
 .book-vocab-save {
   display: block;
   width: 100%;
