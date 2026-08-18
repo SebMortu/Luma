@@ -93,6 +93,16 @@ function Lesson() {
           .from('exercises').select('*').eq('lesson_id', lessonId).order('position')
         if (exercisesErr) throw exercisesErr
         setExercises(exercisesData)
+
+        // Reprend une session interrompue si elle existe (même leçon, exercices identiques)
+        try {
+          const saved = JSON.parse(localStorage.getItem(`luma-lesson-progress-${lessonId}`) || 'null')
+          if (saved && saved.phase === 'exercises' && saved.currentIndex < exercisesData.length) {
+            setPhase('exercises')
+            setCurrentIndex(saved.currentIndex)
+            setResults(saved.results || {})
+          }
+        } catch { /* ignore une sauvegarde corrompue */ }
       } catch (err) {
         setError(err.message)
       } finally {
@@ -110,9 +120,14 @@ function Lesson() {
   const goToNext = () => {
     if (currentIndex + 1 >= exercises.length) {
       setPhase('finished')
+      localStorage.removeItem(`luma-lesson-progress-${lessonId}`)
     } else {
-      setCurrentIndex((i) => i + 1)
+      const nextIndex = currentIndex + 1
+      setCurrentIndex(nextIndex)
       setHasAnsweredCurrent(false)
+      localStorage.setItem(`luma-lesson-progress-${lessonId}`, JSON.stringify({
+        phase: 'exercises', currentIndex: nextIndex, results,
+      }))
     }
   }
 

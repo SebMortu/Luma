@@ -97,48 +97,22 @@ export function dailyXpThreshold(dailyGoalMinutes) {
  * (en XP) est réellement atteint — pas à la première leçon venue.
  */
 export async function awardProgress(userId, { xpGained = 0, secondsSpent = 0 }) {
-  const { data: settings, error: settingsErr } = await supabase
-    .from('user_settings').select('*').eq('user_id', userId).single()
-  if (settingsErr) throw settingsErr
+  const { data, error } = await supabase.rpc('award_progress', {
+    p_user_id: userId,
+    p_xp_gained: xpGained,
+    p_seconds_spent: secondsSpent,
+  })
+  if (error) throw error
 
-  const today = new Date().toISOString().slice(0, 10)
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-
-  // Cumul de l'XP du jour (remis à zéro si on change de jour)
-  const xpTodaySoFar = settings.xp_today_date === today ? settings.xp_gained_today : 0
-  const xpToday = xpTodaySoFar + xpGained
-
-  const threshold = dailyXpThreshold(settings.daily_goal_minutes)
-  const goalMetNow = xpToday >= threshold
-  const alreadyCountedToday = settings.last_activity_date === today
-
-  let newStreak = settings.current_streak
-  let newLastActivity = settings.last_activity_date
-
-  // Le streak n'avance que la première fois où l'objectif est atteint dans la journée
-  if (goalMetNow && !alreadyCountedToday) {
-    newStreak = settings.last_activity_date === yesterday ? settings.current_streak + 1 : 1
-    newLastActivity = today
+  const result = Array.isArray(data) ? data[0] : data
+  return {
+    xpGained: result.xp_gained,
+    newStreak: result.new_streak,
+    newTotalXp: result.new_total_xp,
+    goalMetNow: result.goal_met_now,
+    xpToday: result.xp_today,
+    threshold: result.threshold,
   }
-  const newLongest = Math.max(settings.longest_streak, newStreak)
-  const newTotalXp = settings.total_xp + xpGained
-
-  const { error: updateErr } = await supabase
-    .from('user_settings')
-    .update({
-      total_xp: newTotalXp,
-      xp_gained_today: xpToday,
-      xp_today_date: today,
-      current_streak: newStreak,
-      longest_streak: newLongest,
-      last_activity_date: newLastActivity,
-      total_learning_seconds: settings.total_learning_seconds + secondsSpent,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('user_id', userId)
-  if (updateErr) throw updateErr
-
-  return { xpGained, newStreak, newTotalXp, goalMetNow, xpToday, threshold }
 }
 
 export async function recordLessonCompletion({ userId, languageId, unitId, lessonId, score, secondsSpent = 0 }) {

@@ -20,6 +20,7 @@ const EXERCISE_COMPONENTS = {
 const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1']
 const PASS_THRESHOLD = 0.9
 const QUESTIONS_PER_LESSON = 4 // le double du test de sortie classique (2)
+const MAX_QUESTIONS = 45 // évite un test de plusieurs centaines de questions sur les gros niveaux
 
 function shuffle(array) {
   const copy = [...array]
@@ -72,7 +73,7 @@ function LevelUpTest() {
           picked.push(...shuffle(exercises).slice(0, QUESTIONS_PER_LESSON))
         }
       }
-      setTestExercises(shuffle(picked))
+      setTestExercises(shuffle(picked).slice(0, MAX_QUESTIONS))
       setLoading(false)
     }
     load()
@@ -149,10 +150,17 @@ function LevelUpTest() {
     const Component = EXERCISE_COMPONENTS[ex.type]
     const progressPct = Math.round((currentIndex / testExercises.length) * 100)
 
+    const handleQuit = () => {
+      if (currentIndex > 0 && !window.confirm('Ta progression sur ce test sera perdue si tu quittes maintenant. Continuer quand même ?')) {
+        return
+      }
+      navigate(-1)
+    }
+
     return (
       <div className="page">
         <div className="lesson-progress-top">
-          <button className="lesson-back-icon" onClick={() => navigate(-1)} aria-label="Quitter">←</button>
+          <button className="lesson-back-icon" onClick={handleQuit} aria-label="Quitter">←</button>
           <div className="progress-bar-track" style={{ flex: 1 }}>
             <div className="progress-bar-fill" style={{ width: `${progressPct}%` }} />
           </div>

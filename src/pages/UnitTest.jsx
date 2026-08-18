@@ -136,10 +136,18 @@ function UnitTest() {
     const Component = EXERCISE_COMPONENTS[ex.type]
     const progressPct = Math.round((currentIndex / testExercises.length) * 100)
 
+    const handleQuit = () => {
+      if (currentIndex > 0 && window.confirm('Ta progression sur ce test sera perdue si tu quittes maintenant. Continuer quand même ?')) {
+        navigate(-1)
+      } else if (currentIndex === 0) {
+        navigate(-1)
+      }
+    }
+
     return (
       <div className="page">
         <div className="lesson-progress-top">
-          <button className="lesson-back-icon" onClick={() => navigate(-1)} aria-label="Quitter">←</button>
+          <button className="lesson-back-icon" onClick={handleQuit} aria-label="Quitter">←</button>
           <div className="progress-bar-track" style={{ flex: 1 }}>
             <div className="progress-bar-fill" style={{ width: `${progressPct}%` }} />
           </div>
