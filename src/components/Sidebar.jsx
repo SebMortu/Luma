@@ -1,28 +1,25 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const NAV_ITEMS = [
-  { path: '/dashboard', icon: '🏠', label: 'Accueil', enabled: true },
-  { path: '/grammar', icon: '📚', label: 'Grammaire', enabled: true },
-  { path: '/toeic-test', icon: '📝', label: 'Examen', enabled: true },
-  { path: '/verbs', icon: '🔤', label: 'Verbes', enabled: true },
-  { path: '/scenarios', icon: '🎭', label: 'Scénarios', enabled: true },
-  { path: '/books', icon: '📖', label: 'Livre', enabled: true },
-  { path: '/vocab-review', icon: '🗂️', label: 'Révision', enabled: true },
-  { path: '/word-games', icon: '🧩', label: 'Jeux', enabled: true },
-  { path: '/profile', icon: '👤', label: 'Profil', enabled: true },
-  { path: '/settings', icon: '⚙️', label: 'Réglages', enabled: true },
+  { path: '/dashboard', icon: '🏠', label: 'Accueil', enabled: true, matches: ['/dashboard'] },
+  { path: '/learn', icon: '🎓', label: 'Apprendre', enabled: true, matches: ['/learn', '/grammar', '/toeic-test', '/verbs', '/unit', '/lesson', '/level'] },
+  { path: '/practice', icon: '🎮', label: 'Pratiquer', enabled: true, matches: ['/practice', '/scenario', '/word-games', '/word-puzzle', '/vocab-review'] },
+  { path: '/books', icon: '📖', label: 'Livre', enabled: true, matches: ['/books'] },
+  { path: '/profile', icon: '👤', label: 'Profil', enabled: true, matches: ['/profile', '/settings', '/reset-password'] },
 ]
 
 function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
 
+  const isActive = (item) => item.matches.some((prefix) => location.pathname.startsWith(prefix))
+
   return (
     <nav className="sidebar">
       {NAV_ITEMS.map((item) => (
         <button
           key={item.path}
-          className={`nav-item ${location.pathname === item.path ? 'active' : ''} ${!item.enabled ? 'disabled' : ''}`}
+          className={`nav-item ${isActive(item) ? 'active' : ''} ${!item.enabled ? 'disabled' : ''}`}
           onClick={() => item.enabled && navigate(item.path)}
           disabled={!item.enabled}
         >

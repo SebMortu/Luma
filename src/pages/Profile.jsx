@@ -96,6 +96,9 @@ function Profile() {
               <p className="dashboard-level">Niveau {currentLevel}</p>
             </div>
           </div>
+          <button className="nav-item" style={{ width: 'auto' }} onClick={() => navigate('/settings')} aria-label="Réglages">
+            <span className="nav-icon">⚙️</span>
+          </button>
         </div>
 
         <div className="streak-card">
