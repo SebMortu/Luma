@@ -2,15 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
-import { useTheme, THEMES, PASTEL_SWATCHES } from '../contexts/ThemeContext.jsx'
+import { useTheme, THEMES } from '../contexts/ThemeContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
 
 const SWATCH_PREVIEW = {
   lumen: 'linear-gradient(135deg, #0B0E14, #1D2330 55%, #FFB648)',
-  night: '#0e1420',
-  forest: '#1a1a1a',
-  light: '#f7f6f3',
-  pastel: 'linear-gradient(135deg, #FFADAD, #A0C4FF)',
+  'lumen-light': 'linear-gradient(135deg, #FAF8F4, #F0EDE5 55%, #E08A1E)',
 }
 
 const TIME_OPTIONS = [5, 10, 20]
@@ -28,7 +25,7 @@ const GOAL_OPTIONS = [
 
 function Settings() {
   const { user, signOut } = useAuth()
-  const { theme, setTheme, pastelBg, setPastelBg } = useTheme()
+  const { theme, setTheme } = useTheme()
   const [settings, setSettings] = useState(null)
   const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('luma-notifications') === 'true')
   const [soundsEnabled, setSoundsEnabled] = useState(() => localStorage.getItem('luma-sounds') !== 'false')
@@ -100,20 +97,6 @@ function Settings() {
             </button>
           ))}
         </div>
-
-        {theme === 'pastel' && (
-          <div className="pastel-grid" style={{ marginTop: -10 }}>
-            {PASTEL_SWATCHES.map((s) => (
-              <button
-                key={s.bg}
-                className={`pastel-swatch ${pastelBg === s.bg ? 'selected' : ''}`}
-                style={{ background: s.bg }}
-                onClick={() => setPastelBg(s.bg)}
-                title={s.label}
-              />
-            ))}
-          </div>
-        )}
 
         <h2>Objectif quotidien</h2>
         <div className="onboarding-options">

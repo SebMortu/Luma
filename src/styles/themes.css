@@ -1,77 +1,9 @@
-/* Thème "Nuit" — inspiré de la référence (marine profond + accent citron vert) */
-[data-theme="night"] {
-  --bg-page: #0e1420;
-  --bg-surface: #1a2233;
-  --bg-surface-alt: #2a3652;
-  --text-primary: #f2f4f8;
-  --text-secondary: #9aa4b8;
-  --accent: #c9e265;
-  --accent-contrast: #10160f;
-  --accent-warm: #f0a860;
-  --accent-blue: #6fa8e0;
-  --border: #3d4a6b;
-  --success-bg: #1e2a1f;
-  --success-text: #8fd97f;
-  --danger-bg: #3a1e1e;
-  --danger-text: #e28a8a;
-}
-
-/* Thème "Forêt" — notre thème d'origine, sombre et végétal */
-[data-theme="forest"] {
-  --bg-page: #1a1a1a;
-  --bg-surface: #262625;
-  --bg-surface-alt: #363634;
-  --text-primary: #f0efec;
-  --text-secondary: #999;
-  --accent: #7fd393;
-  --accent-contrast: #0d1a0f;
-  --accent-warm: #e0a860;
-  --accent-blue: #7fa3d3;
-  --border: #565654;
-  --success-bg: #1e2a1f;
-  --success-text: #7fd393;
-  --danger-bg: #2a1e1e;
-  --danger-text: #e28a8a;
-}
-
-/* Thème "Clair" — pour ceux qui préfèrent un fond lumineux */
-[data-theme="light"] {
-  --bg-page: #f7f6f3;
-  --bg-surface: #ffffff;
-  --bg-surface-alt: #e6e2d8;
-  --text-primary: #1e1e1c;
-  --text-secondary: #6b6b66;
-  --accent: #2f6b3f;
-  --accent-contrast: #ffffff;
-  --accent-warm: #c47a2e;
-  --accent-blue: #2c5686;
-  --border: #cfc9bd;
-  --success-bg: #e3f3e5;
-  --success-text: #2f6b3f;
-  --danger-bg: #fbe6e6;
-  --danger-text: #a13a3a;
-}
-
-/* Thème "Pastel" — couleur de fond au choix parmi 8 teintes, définie dynamiquement en JS */
-[data-theme="pastel"] {
-  --bg-surface: color-mix(in srgb, var(--bg-page) 88%, black 12%);
-  --bg-surface-alt: color-mix(in srgb, var(--bg-page) 72%, black 28%);
-  --text-primary: #241f1a;
-  --text-secondary: #4a453f;
-  --accent-contrast: #ffffff;
-  --accent-warm: #a35a1e;
-  --accent-blue: #2c5686;
-  --border: color-mix(in srgb, var(--bg-page) 55%, black 30%);
-  --success-bg: #d9f2db;
-  --success-text: #1f5c30;
-  --danger-bg: #fddede;
-  --danger-text: #8f2a2a;
-}
-
 /* ============================================
-   Thème "Lumen" — identité premium "la lumière qui grandit"
-   Fond quasi-noir, accent ambre (Lumen) + teal (Aurora) + violet (rare)
+   LUMA — Identité "Lumen" unique, déclinée en deux variantes :
+   sombre (par défaut) et claire. Même palette d'accent, mêmes polices,
+   mêmes effets de halo — seul le fond/texte change entre les deux.
    ============================================ */
+
 [data-theme="lumen"] {
   --bg-page: #0B0E14;
   --bg-surface: #151A24;
@@ -94,6 +26,29 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
+[data-theme="lumen-light"] {
+  --bg-page: #FAF8F4;
+  --bg-surface: #FFFFFF;
+  --bg-surface-alt: #F0EDE5;
+  --text-primary: #1A1712;
+  --text-secondary: #6B6558;
+  --accent: #E08A1E;
+  --accent-contrast: #FFFFFF;
+  --accent-warm: #D9691F;
+  --accent-blue: #159E82;
+  --accent-violet: #6B57D6;
+  --border: #E4E0D5;
+  --success-bg: #E1F5EE;
+  --success-text: #0F8A6C;
+  --danger-bg: #FBE8E5;
+  --danger-text: #C4453A;
+
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* Typographie partagée par les deux variantes */
 [data-theme="lumen"] h1,
 [data-theme="lumen"] .h-display,
 [data-theme="lumen"] .dashboard-name,
@@ -102,7 +57,16 @@
 [data-theme="lumen"] .verb-base,
 [data-theme="lumen"] .streak-card-value,
 [data-theme="lumen"] .btn-primary,
-[data-theme="lumen"] .exercise-question {
+[data-theme="lumen"] .exercise-question,
+[data-theme="lumen-light"] h1,
+[data-theme="lumen-light"] .h-display,
+[data-theme="lumen-light"] .dashboard-name,
+[data-theme="lumen-light"] .unit-title,
+[data-theme="lumen-light"] .path-node-title,
+[data-theme="lumen-light"] .verb-base,
+[data-theme="lumen-light"] .streak-card-value,
+[data-theme="lumen-light"] .btn-primary,
+[data-theme="lumen-light"] .exercise-question {
   font-family: var(--font-display);
   letter-spacing: -0.01em;
 }
@@ -112,13 +76,20 @@
 [data-theme="lumen"] .progress-card-sub,
 [data-theme="lumen"] .toeic-timer,
 [data-theme="lumen"] .streak-day-label,
-[data-theme="lumen"] .verb-progress {
+[data-theme="lumen"] .verb-progress,
+[data-theme="lumen-light"] .mono,
+[data-theme="lumen-light"] .badge,
+[data-theme="lumen-light"] .progress-card-sub,
+[data-theme="lumen-light"] .toeic-timer,
+[data-theme="lumen-light"] .streak-day-label,
+[data-theme="lumen-light"] .verb-progress {
   font-family: var(--font-mono);
 }
 
-/* Signature "halo lumineux" — boutons et carte de streak */
-[data-theme="lumen"] .btn-primary {
-  background: linear-gradient(135deg, #FFB648, #F2872F);
+/* Signature "halo lumineux" — boutons et carte de streak, partagée */
+[data-theme="lumen"] .btn-primary,
+[data-theme="lumen-light"] .btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-warm));
   box-shadow: 0 0 0 rgba(255, 182, 72, 0);
   transition: box-shadow 0.25s ease, transform 0.15s ease;
   font-weight: 600;
@@ -127,20 +98,41 @@
   box-shadow: 0 0 24px rgba(255, 182, 72, 0.35);
   transform: translateY(-1px);
 }
+[data-theme="lumen-light"] .btn-primary:hover {
+  box-shadow: 0 0 20px rgba(224, 138, 30, 0.3);
+  transform: translateY(-1px);
+}
 [data-theme="lumen"] .streak-card {
   background: linear-gradient(160deg, rgba(255, 182, 72, 0.10), rgba(139, 124, 246, 0.05));
   border: 1px solid rgba(255, 182, 72, 0.2);
   position: relative;
   overflow: hidden;
 }
+[data-theme="lumen-light"] .streak-card {
+  background: linear-gradient(160deg, rgba(224, 138, 30, 0.08), rgba(107, 87, 214, 0.04));
+  border: 1px solid rgba(224, 138, 30, 0.18);
+  position: relative;
+  overflow: hidden;
+}
 [data-theme="lumen"] .streak-day-dot.active {
   box-shadow: 0 0 10px rgba(255, 182, 72, 0.6);
 }
+[data-theme="lumen-light"] .streak-day-dot.active {
+  box-shadow: 0 0 8px rgba(224, 138, 30, 0.4);
+}
 [data-theme="lumen"] .path-node.current {
   box-shadow: 0 0 0 8px rgba(255, 182, 72, 0.18), 0 6px 18px rgba(0,0,0,0.4);
+}
+[data-theme="lumen-light"] .path-node.current {
+  box-shadow: 0 0 0 8px rgba(224, 138, 30, 0.15), 0 4px 14px rgba(0,0,0,0.1);
 }
 [data-theme="lumen"] .exercise-option.correct,
 [data-theme="lumen"] .path-node.completed,
 [data-theme="lumen"] .unit-icon.completed {
   box-shadow: 0 0 14px rgba(60, 230, 196, 0.25);
+}
+[data-theme="lumen-light"] .exercise-option.correct,
+[data-theme="lumen-light"] .path-node.completed,
+[data-theme="lumen-light"] .unit-icon.completed {
+  box-shadow: 0 0 10px rgba(15, 138, 108, 0.18);
 }
