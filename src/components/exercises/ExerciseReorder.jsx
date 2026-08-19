@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import SpeakButton from '../SpeakButton.jsx'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
 
 function shuffle(array) {
@@ -74,6 +75,7 @@ function ExerciseReorder({ content, onAnswered }) {
           <p className={isCorrect ? 'feedback correct' : 'feedback incorrect'}>
             {isCorrect ? (content.feedback_correct || 'Correct !') : 'Pas tout à fait.'}
           </p>
+          <SpeakButton text={content.correct_sentence || content.words.join(' ')} size="small" />
           {!isCorrect && (
             <p className="translate-text">Réponse attendue : {content.correct_sentence || content.words.join(' ')}</p>
           )}

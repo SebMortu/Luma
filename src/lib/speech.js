@@ -6,7 +6,7 @@ export function sanitizeForSpeech(text) {
   if (!text) return ''
   return text
     .replace(/^(complète|complete|choisis|traduis|traduisez|complétez|sélectionne|select|translate)\s*:\s*/i, '')
-    .replace(/_{2,}(\s*_{2,})*/g, 'blank')
+    .replace(/_{2,}(\s*_{2,})*/g, '...') // pause silencieuse plutôt qu'un mot prononcé
     .replace(/\s{2,}/g, ' ')
     .trim()
 }

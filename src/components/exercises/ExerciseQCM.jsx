@@ -37,7 +37,8 @@ function ExerciseQCM({ content, onAnswered }) {
               onClick={() => handleClick(index)}
               disabled={answered}
             >
-              {option}
+              <span>{option}</span>
+              <SpeakButton text={option} size="small" />
             </button>
           )
         })}

@@ -54,6 +54,10 @@
   cursor: pointer;
   font-size: 14px;
   transition: border-color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .exercise-option:hover:not(:disabled) {
