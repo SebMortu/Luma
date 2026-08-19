@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import TranslateToggle from '../TranslateToggle.jsx'
 import SpeakButton from '../SpeakButton.jsx'
+import { extractQuotedOrFull } from '../../lib/speech.js'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
 
 function ExerciseTrueFalse({ content, onAnswered }) {
@@ -22,7 +23,7 @@ function ExerciseTrueFalse({ content, onAnswered }) {
   return (
     <div className="exercise">
       <p className="exercise-question">{content.statement}</p>
-      <SpeakButton text={content.statement} size="small" />
+      <SpeakButton text={extractQuotedOrFull(content.statement)} size="small" />
       <TranslateToggle translation={content.statement_fr} autoReveal={answered} />
       <div className="exercise-options">
         <button

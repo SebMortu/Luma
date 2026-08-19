@@ -10,3 +10,14 @@ export function sanitizeForSpeech(text) {
     .replace(/\s{2,}/g, ' ')
     .trim()
 }
+
+/**
+ * Si le texte contient un fragment entre guillemets (ex: '"He are my brother"
+ * est grammaticalement correct.'), on ne veut lire QUE ce fragment anglais,
+ * pas la phrase française qui l'entoure. Gère guillemets droits et courbes.
+ */
+export function extractQuotedOrFull(text) {
+  if (!text) return ''
+  const match = text.match(/["“]([^"”]+)["”]/)
+  return match ? match[1] : text
+}
