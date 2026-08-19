@@ -1756,6 +1756,14 @@
   top: 0;
   bottom: 0;
   left: 0;
+  z-index: 1000;
+  /* Force la barre sur sa propre couche de rendu GPU : sans ça, iOS Safari
+     peut temporairement afficher le contenu qui défile PAR-DESSUS la barre
+     fixe pendant le scroll actif (bug connu de compositing), même si tout
+     redevient correct une fois le scroll arrêté. */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
 }
 
 .app-content {
@@ -1805,27 +1813,27 @@
     width: 100%;
     height: calc(64px + env(safe-area-inset-bottom));
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: space-around;
     align-items: center;
-    gap: 2px;
-    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    gap: 0;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
     top: auto;
     bottom: 0;
     left: 0;
     right: 0;
     border-right: none;
     border-top: 1px solid var(--border);
-    overflow-x: auto;
+    overflow-x: visible;
     overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
   }
 
   .nav-item {
     flex-direction: column;
-    flex-shrink: 0;
+    flex-shrink: 1;
+    flex: 1;
     width: auto;
-    min-width: 60px;
-    padding: 6px 8px;
+    min-width: 0;
+    padding: 6px 4px;
   }
 
   .app-content {
