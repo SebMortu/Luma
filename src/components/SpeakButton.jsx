@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { sanitizeForSpeech } from '../lib/speech.js'
 
 // Sélectionne la meilleure voix anglaise disponible, une fois que le navigateur
 // a fini de charger sa liste de voix (asynchrone sur certains navigateurs).
@@ -12,9 +13,10 @@ function pickEnglishVoice() {
 }
 
 export function speak(text, { rate = 0.9 } = {}) {
-  if (!window.speechSynthesis || !text) return
+  const clean = sanitizeForSpeech(text)
+  if (!window.speechSynthesis || !clean) return
   window.speechSynthesis.cancel() // évite les lectures qui s'empilent
-  const utterance = new SpeechSynthesisUtterance(text)
+  const utterance = new SpeechSynthesisUtterance(clean)
   const voice = pickEnglishVoice()
   if (voice) utterance.voice = voice
   utterance.lang = voice?.lang || 'en-US'
