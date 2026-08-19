@@ -22,12 +22,20 @@ const STATE_ANIMATION_CLASS = {
   waving: 'char-anim-wave',
 }
 
+// États pour lesquels le mouvement réel est attendu DANS le fichier lui-même
+// (GIF/WebP animé, ex: un geste de la main). Pour ces états, si une vraie
+// image est renseignée, on désactive l'animation CSS globale du personnage
+// pour ne pas superposer un mouvement d'ensemble à un geste déjà animé.
+const STATES_WITH_BAKED_ANIMATION = new Set(['waving', 'celebrating'])
+
 function CharacterAvatar({ character, state = 'neutral', size = 64, className = '' }) {
   if (!character) return null
 
   const imageField = STATE_IMAGE_FIELD[state] || STATE_IMAGE_FIELD.neutral
   const imageUrl = character[imageField] || character[STATE_IMAGE_FIELD.neutral]
-  const animClass = STATE_ANIMATION_CLASS[state] || STATE_ANIMATION_CLASS.neutral
+  const hasRealImage = !!character[imageField]
+  const skipCssAnim = hasRealImage && STATES_WITH_BAKED_ANIMATION.has(state)
+  const animClass = skipCssAnim ? '' : (STATE_ANIMATION_CLASS[state] || STATE_ANIMATION_CLASS.neutral)
 
   return (
     <div
