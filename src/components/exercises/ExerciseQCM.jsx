@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import TranslateToggle from '../TranslateToggle.jsx'
+import SpeakButton from '../SpeakButton.jsx'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
 
 function ExerciseQCM({ content, onAnswered }) {
@@ -17,7 +18,10 @@ function ExerciseQCM({ content, onAnswered }) {
 
   return (
     <div className="exercise">
-      <p className="exercise-question">{content.question}</p>
+      <div className="exercise-question-row">
+        <p className="exercise-question">{content.question}</p>
+        <SpeakButton text={content.question} />
+      </div>
       <TranslateToggle translation={content.question_fr} autoReveal={answered} />
       <div className="exercise-options">
         {content.options.map((option, index) => {

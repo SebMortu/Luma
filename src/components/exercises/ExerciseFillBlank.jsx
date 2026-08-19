@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import TranslateToggle from '../TranslateToggle.jsx'
+import SpeakButton from '../SpeakButton.jsx'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
 
 function ExerciseFillBlank({ content, onAnswered }) {
@@ -41,6 +42,12 @@ function ExerciseFillBlank({ content, onAnswered }) {
         {content.sentence_after}
       </p>
       <TranslateToggle translation={content.sentence_fr} autoReveal={answered} />
+      {answered && (
+        <SpeakButton
+          text={`${content.sentence_before} ${content.correct_answers?.[0] || ''} ${content.sentence_after || ''}`.trim()}
+          size="small"
+        />
+      )}
       {error && <p className="feedback incorrect">{error}</p>}
       {!answered && (
         <button className="exercise-submit" onClick={handleSubmit}>Valider</button>

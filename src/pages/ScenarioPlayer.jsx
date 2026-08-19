@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import TranslateToggle from '../components/TranslateToggle.jsx'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
+import SpeakButton from '../components/SpeakButton.jsx'
 import { awardProgress } from '../lib/progress.js'
 
 function ScenarioPlayer() {
@@ -109,6 +110,7 @@ function ScenarioPlayer() {
           <div className="dialogue-bubble npc current">
             <p className="dialogue-speaker">{speakerName}</p>
             <p>{node.text}</p>
+            <SpeakButton text={node.text} size="small" />
             <TranslateToggle translation={node.text_fr} />
           </div>
         </div>

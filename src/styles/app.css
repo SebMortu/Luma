@@ -634,6 +634,57 @@
   gap: 10px;
 }
 
+.speak-btn {
+  background: var(--bg-surface-alt);
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.speak-btn:hover {
+  border-color: var(--accent);
+}
+
+.speak-btn.speaking {
+  border-color: var(--accent);
+  animation: speak-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes speak-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.speak-btn-small {
+  width: 26px;
+  height: 26px;
+  font-size: 12px;
+}
+
+.book-listen-page-btn {
+  margin-bottom: 12px;
+}
+
+.exercise-question-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.exercise-question-row .exercise-question {
+  margin-bottom: 0;
+  flex: 1;
+}
+
 .book-vocab-save {
   display: block;
   width: 100%;

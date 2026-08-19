@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { saveVocabForReview } from '../lib/progress.js'
+import SpeakButton from '../components/SpeakButton.jsx'
 
 function BookReader() {
   const { bookId } = useParams()
@@ -77,6 +78,13 @@ function BookReader() {
       </div>
 
       <h1 className="book-reader-title">{book.title}</h1>
+
+      {!loading && page && (
+        <SpeakButton
+          text={page.sentences.map((s) => s.en).join(' ')}
+          className="book-listen-page-btn"
+        />
+      )}
 
       {loading || !page ? (
         <p>Chargement de la page...</p>
