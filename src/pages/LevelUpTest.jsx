@@ -69,7 +69,7 @@ function LevelUpTest() {
 
       const picked = []
       for (const lesson of lessonsData || []) {
-        const { data: exercises } = await supabase.from('exercises').select('*').eq('lesson_id', lesson.id).order('position')
+        const { data: exercises } = await supabase.from('exercises').select('*').eq('lesson_id', lesson.id).neq('type', 'speaking_practice').order('position')
         if (exercises && exercises.length > 0) {
           picked.push(...shuffle(exercises).slice(0, QUESTIONS_PER_LESSON))
         }
