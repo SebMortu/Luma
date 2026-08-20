@@ -28,6 +28,15 @@ function WordPuzzlePlayer() {
 
   useEffect(() => {
     async function load() {
+      setLoading(true)
+      // Réinitialisation complète : sans ça, les lettres tapées sur une grille
+      // précédente restaient affichées sur la nouvelle (mauvaises cases).
+      setInputs({})
+      setSolved(false)
+      solvedRef.current = false
+      setElapsed(0)
+      startTimeRef.current = Date.now()
+
       const { data } = await supabase.from('word_puzzles').select('*').eq('id', puzzleId).single()
       setPuzzle(data)
       setNumberedWords(numberWords(data.words))
