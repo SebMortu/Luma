@@ -12,7 +12,9 @@ function shuffle(array) {
 }
 
 function ExerciseMatching({ content, onAnswered }) {
-  const shuffledRights = useMemo(() => shuffle(content.pairs.map((p) => p.right)), [content])
+  // Dédupliqué : si plusieurs paires partagent la même bonne réponse (ex. "are"
+  // pour you/we/they), elle ne doit apparaître qu'une seule fois dans la liste.
+  const shuffledRights = useMemo(() => shuffle([...new Set(content.pairs.map((p) => p.right))]), [content])
   const [answers, setAnswers] = useState({})
   const [answered, setAnswered] = useState(false)
 
