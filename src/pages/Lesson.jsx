@@ -261,8 +261,8 @@ function Lesson() {
                 </p>
               </div>
             )}
-            <button className="btn-primary" onClick={() => navigate('/dashboard')}>
-              Retour au tableau de bord
+            <button className="btn-primary" onClick={() => navigate(`/level/${unit.cecr_level}`)}>
+              Retour au niveau {unit.cecr_level}
             </button>
           </>
         )}

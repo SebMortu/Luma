@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
-import { useTheme, THEMES } from '../contexts/ThemeContext.jsx'
+import { useTheme, THEMES, TEXT_SCALES } from '../contexts/ThemeContext.jsx'
 import { getSelectableCharacters, setGuideCharacter } from '../lib/characters.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import AppLayout from '../components/AppLayout.jsx'
@@ -27,7 +27,7 @@ const GOAL_OPTIONS = [
 
 function Settings() {
   const { user, signOut } = useAuth()
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, textScale, setTextScale } = useTheme()
   const [settings, setSettings] = useState(null)
   const [characters, setCharacters] = useState([])
   const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('luma-notifications') === 'true')
@@ -117,6 +117,20 @@ function Settings() {
                 <p className="onboarding-option-title">{t.label}</p>
                 <p className="onboarding-option-desc">{t.desc}</p>
               </div>
+            </button>
+          ))}
+        </div>
+
+        <h2>Taille du texte</h2>
+        <div className="onboarding-options">
+          {TEXT_SCALES.map((s) => (
+            <button
+              key={s.value}
+              className={`onboarding-option row ${textScale === s.value ? 'selected' : ''}`}
+              onClick={() => setTextScale(s.value)}
+            >
+              <span style={{ fontSize: s.value === 'normal' ? '14px' : s.value === 'large' ? '17px' : '20px' }}>Aa</span>
+              {s.label}
             </button>
           ))}
         </div>

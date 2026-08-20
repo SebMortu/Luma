@@ -192,7 +192,7 @@ function UnitTest() {
         {!saving && passed && (
           <>
             <p className="feedback correct">✅ Unité validée ! {xpGained !== null && `+${xpGained} XP`}</p>
-            <button className="btn-primary" onClick={() => navigate('/dashboard')}>Retour au tableau de bord</button>
+            <button className="btn-primary" onClick={() => navigate(`/level/${unit.cecr_level}`)}>Retour au niveau {unit.cecr_level}</button>
           </>
         )}
         {!saving && !passed && (

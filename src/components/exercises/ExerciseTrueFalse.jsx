@@ -22,6 +22,7 @@ function ExerciseTrueFalse({ content, onAnswered }) {
 
   return (
     <div className="exercise">
+      <p className="exercise-instruction">Vrai ou faux ?</p>
       <p className="exercise-question">{content.statement}</p>
       <SpeakButton text={extractQuotedOrFull(content.statement)} size="small" />
       <TranslateToggle translation={content.statement_fr} autoReveal={answered} />

@@ -703,6 +703,52 @@
   margin-bottom: 12px;
 }
 
+.onboarding-tour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 60vh;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.onboarding-tour-emoji {
+  font-size: 64px;
+  margin-bottom: 0.5rem;
+}
+
+.onboarding-tour-slide h2 {
+  margin-bottom: 8px;
+}
+
+.onboarding-tour-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.onboarding-tour-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.onboarding-tour-dot.active {
+  background: var(--accent);
+  width: 20px;
+  border-radius: 4px;
+}
+
+.exercise-instruction {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
 .speaking-practice-label {
   font-size: 12px;
   font-weight: 700;
@@ -1764,6 +1810,17 @@
   color: var(--text-secondary);
   font-size: 13px;
   cursor: pointer;
+}
+
+/* Taille de texte réglable (accessibilité) — zoom global du contenu de l'app,
+   texte ET mise en page à l'échelle ensemble pour rester cohérent visuellement */
+html[data-text-scale="large"] .app-content,
+html[data-text-scale="large"] .auth-page {
+  zoom: 1.15;
+}
+html[data-text-scale="xlarge"] .app-content,
+html[data-text-scale="xlarge"] .auth-page {
+  zoom: 1.3;
 }
 
 /* Layout avec sidebar */
