@@ -25,6 +25,8 @@ function WordPuzzlePlayer() {
   const [loading, setLoading] = useState(true)
   const startTimeRef = useRef(Date.now())
   const solvedRef = useRef(false)
+  const inputRefs = useRef({})
+  const directionRef = useRef('across') // direction active pour la navigation auto
 
   useEffect(() => {
     async function load() {
@@ -36,6 +38,8 @@ function WordPuzzlePlayer() {
       solvedRef.current = false
       setElapsed(0)
       startTimeRef.current = Date.now()
+      inputRefs.current = {}
+      directionRef.current = 'across'
 
       const { data } = await supabase.from('word_puzzles').select('*').eq('id', puzzleId).single()
       setPuzzle(data)
@@ -60,6 +64,44 @@ function WordPuzzlePlayer() {
     return () => clearInterval(interval)
   }, [])
 
+  const saveScore = async (timeSeconds) => {
+    await supabase.from('word_puzzle_scores').insert({
+      puzzle_id: puzzleId,
+      user_id: user.id,
+      display_name: user.email.split('@')[0],
+      time_seconds: timeSeconds,
+    })
+    await loadLeaderboard()
+  }
+
+  // Pour une case donnée, indique si elle appartient à un mot horizontal,
+  // vertical, ou les deux (case d'intersection) — sert à savoir dans quel
+  // sens avancer automatiquement après la saisie d'une lettre.
+  const directionsForCell = (key) => {
+    const [r, c] = key.split(',').map(Number)
+    const dirs = new Set()
+    ;(puzzle?.words || []).forEach((w) => {
+      for (let i = 0; i < w.answer.length; i++) {
+        const wr = w.direction === 'down' ? w.row + i : w.row
+        const wc = w.direction === 'across' ? w.col + i : w.col
+        if (wr === r && wc === c) dirs.add(w.direction)
+      }
+    })
+    return dirs
+  }
+
+  const focusCell = (key) => {
+    const el = inputRefs.current[key]
+    if (el) el.focus()
+  }
+
+  const handleCellFocus = (key) => {
+    const dirs = directionsForCell(key)
+    // Si la case n'appartient qu'à une seule direction, on s'y cale.
+    // Si elle appartient aux deux (intersection), on garde la direction en cours.
+    if (dirs.size === 1) directionRef.current = [...dirs][0]
+  }
+
   const handleInput = (key, value) => {
     const letter = value.slice(-1).toUpperCase()
     const next = { ...inputs, [key]: letter }
@@ -73,17 +115,16 @@ function WordPuzzlePlayer() {
       const finalTime = Math.round((Date.now() - startTimeRef.current) / 1000)
       setElapsed(finalTime)
       saveScore(finalTime)
+      return
     }
-  }
 
-  const saveScore = async (timeSeconds) => {
-    await supabase.from('word_puzzle_scores').insert({
-      puzzle_id: puzzleId,
-      user_id: user.id,
-      display_name: user.email.split('@')[0],
-      time_seconds: timeSeconds,
-    })
-    await loadLeaderboard()
+    // Case suivante automatique, uniquement si une lettre a bien été saisie
+    if (!letter) return
+    const [r, c] = key.split(',').map(Number)
+    const nextKey = directionRef.current === 'across' ? `${r},${c + 1}` : `${r + 1},${c}`
+    if (nextKey in cellMap) {
+      focusCell(nextKey)
+    }
   }
 
   if (loading || !puzzle) return <div className="page"><p>Chargement...</p></div>
@@ -127,6 +168,8 @@ function WordPuzzlePlayer() {
                 maxLength={1}
                 value={inputs[key] || ''}
                 disabled={solved}
+                ref={(el) => { inputRefs.current[key] = el }}
+                onFocus={() => handleCellFocus(key)}
                 onChange={(e) => handleInput(key, e.target.value)}
                 className={`crossword-cell-input ${solved ? 'solved' : ''}`}
               />
