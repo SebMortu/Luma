@@ -28,17 +28,25 @@ function ExerciseFillBlank({ content, onAnswered }) {
     <div className="exercise">
       <p className="exercise-question">
         {content.sentence_before}
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => { setValue(e.target.value); setError('') }}
-          onKeyDown={(e) => { if (e.key === 'Enter' && !answered) handleSubmit() }}
-          disabled={answered}
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck="false"
-          className="exercise-input"
-        />
+        {!answered ? (
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => { setValue(e.target.value); setError('') }}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit() }}
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            className="exercise-input"
+          />
+        ) : (
+          <span className="exercise-blank-filled-wrap">
+            {!isCorrect && <span className="exercise-blank-wrong">{value}</span>}
+            <span className={`exercise-blank-filled ${isCorrect ? 'correct' : 'incorrect'}`}>
+              {content.correct_answers?.[0]}
+            </span>
+          </span>
+        )}
         {content.sentence_after}
       </p>
       <TranslateToggle translation={content.sentence_fr} autoReveal={answered} />
