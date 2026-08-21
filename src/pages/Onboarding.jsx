@@ -2,14 +2,16 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
-import { useTheme, THEMES } from '../contexts/ThemeContext.jsx'
+import { useTheme, THEMES, TEXT_SCALES } from '../contexts/ThemeContext.jsx'
 import { getSelectableCharacters } from '../lib/characters.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
 
 const LEVELS = [
-  { value: 'debutant', label: 'Débutant complet', desc: 'Je ne connais presque rien' },
-  { value: 'bases', label: 'Bases acquises', desc: 'Je connais quelques mots et structures' },
-  { value: 'intermediaire', label: 'Intermédiaire', desc: 'Je peux tenir une conversation simple' },
+  { value: 'A1', label: 'A1 · Débutant complet', desc: 'Je ne connais presque rien' },
+  { value: 'A2', label: 'A2 · Élémentaire', desc: 'Je connais quelques mots et structures' },
+  { value: 'B1', label: 'B1 · Intermédiaire', desc: 'Je peux tenir une conversation simple' },
+  { value: 'B2', label: 'B2 · Intermédiaire avancé', desc: 'Je suis à l\'aise à l\'oral et à l\'écrit' },
+  { value: 'C1', label: 'C1 · Avancé', desc: 'Je maîtrise déjà bien la langue' },
 ]
 
 const GOALS = [
@@ -48,7 +50,7 @@ const TOUR_SLIDES = [
 function Onboarding() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, textScale, setTextScale } = useTheme()
   const [step, setStep] = useState(1)
   const [tourIndex, setTourIndex] = useState(0)
   const [level, setLevel] = useState(null)
@@ -88,17 +90,65 @@ function Onboarding() {
         .eq('user_id', user.id)
       if (updateErr) throw updateErr
 
-      // On plonge directement dans la première leçon plutôt que de laisser
-      // l'utilisateur seul face au tableau de bord.
-      const { data: firstLesson } = await supabase
-        .from('lessons')
-        .select('id, unit_id, units!inner(position, language_id)')
-        .eq('units.language_id', language.id)
-        .eq('units.position', 1)
-        .eq('position', 1)
-        .single()
+      // Si l'utilisateur a un niveau supérieur à A1, on déverrouille réellement
+      // les niveaux inférieurs (sinon il resterait bloqué derrière du contenu
+      // A1 verrouillé alors qu'il a déjà ce niveau). On marque ces leçons comme
+      // complétées avec un bon score, mais SANS attribuer d'XP pour autant
+      // (pas de score = pas de farming), juste pour lever le verrou séquentiel.
+      const levelOrder = ['A1', 'A2', 'B1', 'B2', 'C1']
+      const targetIndex = levelOrder.indexOf(level)
 
-      navigate(firstLesson ? `/lesson/${firstLesson.id}` : '/dashboard')
+      let firstLessonId = null
+
+      if (targetIndex > 0) {
+        const levelsToUnlock = levelOrder.slice(0, targetIndex)
+        const { data: unitsToUnlock } = await supabase
+          .from('units').select('id')
+          .eq('language_id', language.id)
+          .in('cecr_level', levelsToUnlock)
+        const unitIds = (unitsToUnlock || []).map((u) => u.id)
+
+        if (unitIds.length > 0) {
+          const { data: lessonsToUnlock } = await supabase
+            .from('lessons').select('id, unit_id').in('unit_id', unitIds)
+
+          const bypassRows = (lessonsToUnlock || []).map((l) => ({
+            user_id: user.id,
+            language_id: language.id,
+            unit_id: l.unit_id,
+            lesson_id: l.id,
+            status: 'completed',
+            best_score: 1,
+          }))
+          if (bypassRows.length > 0) {
+            await supabase.from('user_progress')
+              .upsert(bypassRows, { onConflict: 'user_id,language_id,unit_id,lesson_id' })
+          }
+        }
+
+        const { data: firstUnitAtLevel } = await supabase
+          .from('units').select('id')
+          .eq('language_id', language.id).eq('cecr_level', level)
+          .order('position').limit(1).single()
+
+        if (firstUnitAtLevel) {
+          const { data: lesson } = await supabase
+            .from('lessons').select('id')
+            .eq('unit_id', firstUnitAtLevel.id).order('position').limit(1).single()
+          firstLessonId = lesson?.id || null
+        }
+      } else {
+        const { data: firstLesson } = await supabase
+          .from('lessons')
+          .select('id, unit_id, units!inner(position, language_id)')
+          .eq('units.language_id', language.id)
+          .eq('units.position', 1)
+          .eq('position', 1)
+          .single()
+        firstLessonId = firstLesson?.id || null
+      }
+
+      navigate(firstLessonId ? `/lesson/${firstLessonId}` : '/dashboard', { replace: true })
     } catch (err) {
       setError(err.message)
       setSaving(false)
@@ -183,14 +233,14 @@ function Onboarding() {
           <div className="onboarding-back-row">
             <button className="onboarding-back" onClick={() => setStep(3)}>←</button>
           </div>
-          <h2>Choisis ton apparence</h2>
+          <h2>Personnalise l'affichage</h2>
           <p className="onboarding-subtitle">Tu pourras en changer à tout moment dans les réglages.</p>
           <div className="theme-options">
             {THEMES.map((t) => (
               <button
                 key={t.value}
                 className={`theme-option ${theme === t.value ? 'selected' : ''}`}
-                onClick={() => { setTheme(t.value); setTimeout(() => setStep(5), 200) }}
+                onClick={() => setTheme(t.value)}
               >
                 <span className="theme-swatch" style={{ background: SWATCH_PREVIEW[t.value] }} />
                 <div>
@@ -200,6 +250,23 @@ function Onboarding() {
               </button>
             ))}
           </div>
+
+          <h2 style={{ marginTop: '1.5rem' }}>Taille du texte</h2>
+          <p className="onboarding-subtitle">Utile si tu préfères un texte plus grand et confortable à lire.</p>
+          <div className="onboarding-options">
+            {TEXT_SCALES.map((s) => (
+              <button
+                key={s.value}
+                className={`onboarding-option row ${textScale === s.value ? 'selected' : ''}`}
+                onClick={() => setTextScale(s.value)}
+              >
+                <span style={{ fontSize: s.value === 'normal' ? '14px' : s.value === 'large' ? '17px' : '20px' }}>Aa</span>
+                {s.label}
+              </button>
+            ))}
+          </div>
+
+          <button className="btn-primary" style={{ marginTop: '1.5rem' }} onClick={() => setStep(5)}>Continuer</button>
         </>
       )}
 
