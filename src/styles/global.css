@@ -19,12 +19,22 @@ body {
 
 button {
   font-family: inherit;
+  transition: background-color 0.2s, color 0.2s, transform 0.1s ease-out;
+}
+button:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .page {
   max-width: 480px;
   margin: 0 auto;
   padding: 1.5rem 1rem 6rem;
+  animation: page-fade-in 0.25s ease-out;
+}
+
+@keyframes page-fade-in {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 .page h1 {

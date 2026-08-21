@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
+import Confetti from '../components/Confetti.jsx'
 import { estimateMinutesRemaining } from '../lib/level.js'
 import { recordLessonCompletion } from '../lib/progress.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
@@ -256,7 +257,8 @@ function Lesson() {
   }
 
   return (
-    <div className="page">
+    <div className="page" style={{ position: 'relative' }}>
+      {xpGained !== null && !alreadyCompleted && (correctCount / exercises.length) >= 0.8 && <Confetti />}
       <h1>{lesson.title}</h1>
       <div className="lesson-summary">
         <p>Score : {correctCount} / {exercises.length}</p>
@@ -266,7 +268,7 @@ function Lesson() {
             {alreadyCompleted ? (
               <p className="feedback correct">Révision enregistrée · Streak : {newStreak} 🔥</p>
             ) : (
-              <p className="feedback correct">+{xpGained} XP · Streak : {newStreak} 🔥</p>
+              <p className="feedback correct"><span className="xp-pop">+{xpGained} XP</span> · Streak : {newStreak} <span className="streak-flame-pulse">🔥</span></p>
             )}
             {goalInfo && (
               <div className="goal-progress-mini">

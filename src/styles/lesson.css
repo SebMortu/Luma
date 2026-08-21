@@ -64,16 +64,32 @@
   border-color: var(--accent);
 }
 
+@keyframes option-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.045); }
+  100% { transform: scale(1); }
+}
+
+@keyframes option-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
 .exercise-option.correct {
   border-color: var(--success-text);
   background: var(--success-bg);
   color: var(--success-text);
+  animation: option-pop 0.35s ease-out;
 }
 
 .exercise-option.incorrect {
   border-color: var(--danger-text);
   background: var(--danger-bg);
   color: var(--danger-text);
+  animation: option-shake 0.4s ease-out;
 }
 
 .exercise-input {
@@ -186,11 +202,13 @@
 .matching-select.correct {
   border-color: var(--success-text);
   color: var(--success-text);
+  animation: option-pop 0.35s ease-out;
 }
 
 .matching-select.incorrect {
   border-color: var(--danger-text);
   color: var(--danger-text);
+  animation: option-shake 0.4s ease-out;
 }
 
 .matching-correct-hint {
