@@ -110,7 +110,7 @@ function Dashboard() {
         {guideCharacter && (() => {
           const goalThreshold = dailyXpThreshold(settings.daily_goal_minutes)
           const msg = guideDashboardMessage({
-            goalMetToday: (settings.xp_gained_today || 0) >= goalThreshold,
+            goalMetToday: todayXp >= goalThreshold,
             currentStreak: settings.current_streak,
             hasNextLesson: !!nextLesson,
           })
