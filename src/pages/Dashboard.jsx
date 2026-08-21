@@ -12,6 +12,7 @@ import DailyReviewPrompt from '../components/DailyReviewPrompt.jsx'
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const CECR_TITLES = {
+  A0: 'Fondations · Premiers pas',
   A1: 'A1 · Débutant complet',
   A2: 'A2 · Élémentaire',
   B1: 'B1 · Intermédiaire',

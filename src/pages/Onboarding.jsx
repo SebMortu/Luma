@@ -7,8 +7,9 @@ import { getSelectableCharacters } from '../lib/characters.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
 
 const LEVELS = [
-  { value: 'A1', label: 'A1 · Débutant complet', desc: 'Je ne connais presque rien' },
-  { value: 'A2', label: 'A2 · Élémentaire', desc: 'Je connais quelques mots et structures' },
+  { value: 'A0', label: 'Vrai grand débutant', desc: "Je n'ai jamais appris de langue étrangère" },
+  { value: 'A1', label: 'A1 · Quelques bases', desc: 'Je connais déjà quelques mots simples' },
+  { value: 'A2', label: 'A2 · Élémentaire', desc: 'Je connais quelques structures de phrase' },
   { value: 'B1', label: 'B1 · Intermédiaire', desc: 'Je peux tenir une conversation simple' },
   { value: 'B2', label: 'B2 · Intermédiaire avancé', desc: 'Je suis à l\'aise à l\'oral et à l\'écrit' },
   { value: 'C1', label: 'C1 · Avancé', desc: 'Je maîtrise déjà bien la langue' },
@@ -90,62 +91,55 @@ function Onboarding() {
         .eq('user_id', user.id)
       if (updateErr) throw updateErr
 
-      // Si l'utilisateur a un niveau supérieur à A1, on déverrouille réellement
-      // les niveaux inférieurs (sinon il resterait bloqué derrière du contenu
-      // A1 verrouillé alors qu'il a déjà ce niveau). On marque ces leçons comme
-      // complétées avec un bon score, mais SANS attribuer d'XP pour autant
-      // (pas de score = pas de farming), juste pour lever le verrou séquentiel.
-      const levelOrder = ['A1', 'A2', 'B1', 'B2', 'C1']
+      // A0 (Fondations) et A1 démarrent directement — aucune base à vérifier.
+      // À partir de A2, un test de positionnement est obligatoire avant de
+      // déverrouiller quoi que ce soit, pour confirmer le niveau revendiqué.
+      const levelOrder = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
       const targetIndex = levelOrder.indexOf(level)
+
+      if (targetIndex > 1) {
+        navigate(`/placement-test/${level}`, { replace: true })
+        return
+      }
 
       let firstLessonId = null
 
-      if (targetIndex > 0) {
-        const levelsToUnlock = levelOrder.slice(0, targetIndex)
+      if (targetIndex === 1) {
+        // A1 sans test : on déverrouille juste A0 s'il existe, sans vérification.
         const { data: unitsToUnlock } = await supabase
           .from('units').select('id')
-          .eq('language_id', language.id)
-          .in('cecr_level', levelsToUnlock)
+          .eq('language_id', language.id).eq('cecr_level', 'A0')
         const unitIds = (unitsToUnlock || []).map((u) => u.id)
-
         if (unitIds.length > 0) {
           const { data: lessonsToUnlock } = await supabase
             .from('lessons').select('id, unit_id').in('unit_id', unitIds)
-
           const bypassRows = (lessonsToUnlock || []).map((l) => ({
-            user_id: user.id,
-            language_id: language.id,
-            unit_id: l.unit_id,
-            lesson_id: l.id,
-            status: 'completed',
-            best_score: 1,
+            user_id: user.id, language_id: language.id, unit_id: l.unit_id, lesson_id: l.id,
+            status: 'completed', best_score: 1,
           }))
           if (bypassRows.length > 0) {
-            await supabase.from('user_progress')
-              .upsert(bypassRows, { onConflict: 'user_id,language_id,unit_id,lesson_id' })
+            await supabase.from('user_progress').upsert(bypassRows, { onConflict: 'user_id,language_id,unit_id,lesson_id' })
           }
         }
-
         const { data: firstUnitAtLevel } = await supabase
           .from('units').select('id')
           .eq('language_id', language.id).eq('cecr_level', level)
           .order('position').limit(1).single()
-
         if (firstUnitAtLevel) {
           const { data: lesson } = await supabase
-            .from('lessons').select('id')
-            .eq('unit_id', firstUnitAtLevel.id).order('position').limit(1).single()
+            .from('lessons').select('id').eq('unit_id', firstUnitAtLevel.id).order('position').limit(1).single()
           firstLessonId = lesson?.id || null
         }
       } else {
-        const { data: firstLesson } = await supabase
-          .from('lessons')
-          .select('id, unit_id, units!inner(position, language_id)')
-          .eq('units.language_id', language.id)
-          .eq('units.position', 1)
-          .eq('position', 1)
-          .single()
-        firstLessonId = firstLesson?.id || null
+        const { data: firstUnitAtLevel } = await supabase
+          .from('units').select('id')
+          .eq('language_id', language.id).eq('cecr_level', level)
+          .order('position').limit(1).single()
+        if (firstUnitAtLevel) {
+          const { data: lesson } = await supabase
+            .from('lessons').select('id').eq('unit_id', firstUnitAtLevel.id).order('position').limit(1).single()
+          firstLessonId = lesson?.id || null
+        }
       }
 
       navigate(firstLessonId ? `/lesson/${firstLessonId}` : '/dashboard', { replace: true })

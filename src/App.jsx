@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard.jsx'
 import UnitDetail from './pages/UnitDetail.jsx'
 import UnitTest from './pages/UnitTest.jsx'
 import LevelUpTest from './pages/LevelUpTest.jsx'
+import PlacementTest from './pages/PlacementTest.jsx'
 import LevelPath from './pages/LevelPath.jsx'
 import Lesson from './pages/Lesson.jsx'
 import Profile from './pages/Profile.jsx'
@@ -45,6 +46,7 @@ function App() {
             <Route path="/unit/:unitId" element={<ProtectedRoute><UnitDetail /></ProtectedRoute>} />
             <Route path="/unit/:unitId/test" element={<ProtectedRoute><UnitTest /></ProtectedRoute>} />
             <Route path="/level-up-test/:fromLevel" element={<ProtectedRoute><LevelUpTest /></ProtectedRoute>} />
+            <Route path="/placement-test/:targetLevel" element={<ProtectedRoute><PlacementTest /></ProtectedRoute>} />
             <Route path="/level/:levelCode" element={<ProtectedRoute><LevelPath /></ProtectedRoute>} />
             <Route path="/lesson/:lessonId" element={<ProtectedRoute><Lesson /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

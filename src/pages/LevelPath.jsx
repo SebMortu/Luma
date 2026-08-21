@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
 
 const CECR_TITLES = {
+  A0: 'Fondations · Premiers pas',
   A1: 'A1 · Débutant complet',
   A2: 'A2 · Élémentaire',
   B1: 'B1 · Intermédiaire',
@@ -13,9 +14,10 @@ const CECR_TITLES = {
   C1: 'C1 · Avancé',
 }
 
-// Petits détails d'ambiance qui évoluent avec le niveau — du lever du jour (A1)
-// à la nuit tombée (C1), sans image, juste une teinte de fond + un astre.
+// Petits détails d'ambiance qui évoluent avec le niveau — de l'aube naissante
+// (Fondations) au lever du jour (A1), jusqu'à la nuit tombée (C1).
 const LEVEL_SKY = {
+  A0: { gradient: 'linear-gradient(180deg, #322a4a 0%, #55446a 35%, #8a6a78 65%, #d9a888 100%)', orb: '#FFF0D8', orbGlow: 'rgba(255,235,180,0.55)', orbTop: '86%' },
   A1: { gradient: 'linear-gradient(180deg, #2a2340 0%, #4a3a5e 35%, #7a5a6e 65%, #c98a6e 100%)', orb: '#FFE9C4', orbGlow: 'rgba(255,220,150,0.5)', orbTop: '78%' },
   A2: { gradient: 'linear-gradient(180deg, #241f3a 0%, #453a5c 35%, #7a5478 65%, #c07666 100%)', orb: '#FFE0B0', orbGlow: 'rgba(255,200,130,0.45)', orbTop: '62%' },
   B1: { gradient: 'linear-gradient(180deg, #1c1830 0%, #362c52 35%, #6a3f66 65%, #a85560 100%)', orb: '#FFD79A', orbGlow: 'rgba(255,180,110,0.4)', orbTop: '46%' },
@@ -24,7 +26,7 @@ const LEVEL_SKY = {
 }
 
 const STATUS_ICON = { completed: '✓', current: '▶', available: '📖', locked: '🔒' }
-const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1']
+const LEVEL_ORDER = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
 
 function LevelPath() {
   const { levelCode } = useParams()
