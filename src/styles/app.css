@@ -1,3 +1,12 @@
+/* Tokens de rayon partagés — cohérence entre toutes les cartes principales */
+:root {
+  --radius-card: 16px;
+  --radius-control: 14px;
+  --radius-input: 10px;
+  --radius-pill: 999px;
+  --pad-card: 1.1rem;
+}
+
 /* Auth */
 .auth-page {
   text-align: center;
@@ -18,7 +27,7 @@
 .auth-input {
   background: var(--bg-surface);
   border: 1.5px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-input);
   color: var(--text-primary);
   padding: 12px;
   font-size: 15px;
@@ -218,8 +227,8 @@
 /* Streak week calendar */
 .streak-card {
   background: var(--bg-surface);
-  border-radius: 18px;
-  padding: 1.1rem;
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
   margin-bottom: 1.25rem;
 }
 
@@ -361,7 +370,7 @@
 .book-card {
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   overflow: hidden;
   cursor: pointer;
   display: flex;
@@ -390,7 +399,7 @@
   font-size: 11px;
   font-weight: 700;
   padding: 3px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .book-card-info { padding: 12px 14px 16px; }
@@ -428,7 +437,7 @@
   font-weight: 600;
   text-align: center;
   padding: 3px 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .book-volumes-list {
@@ -581,7 +590,7 @@
   gap: 8px;
   background: var(--bg-surface);
   border: 1.5px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   padding: 16px 10px;
   cursor: pointer;
   text-align: center;
@@ -617,7 +626,7 @@
   gap: 14px;
   background: var(--bg-surface);
   border: 1.5px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   padding: 14px 16px;
   margin-bottom: 1rem;
 }
@@ -743,8 +752,8 @@
 .review-prompt-card {
   background: var(--bg-surface);
   border: 1.5px solid var(--accent);
-  border-radius: 16px;
-  padding: 18px;
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
   margin-bottom: 16px;
 }
 
@@ -893,7 +902,7 @@
 .vocab-flashcard {
   background: var(--bg-surface);
   border: 1.5px solid var(--border);
-  border-radius: 18px;
+  border-radius: var(--radius-card);
   padding: 40px 24px;
   text-align: center;
   cursor: pointer;
@@ -968,7 +977,7 @@
   background: var(--bg-surface-alt);
   color: var(--text-primary);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   padding: 14px;
   font-size: 15px;
   font-weight: 600;
@@ -1028,8 +1037,8 @@
 /* Progression card */
 .progress-card {
   background: var(--bg-surface);
-  border-radius: 18px;
-  padding: 1.1rem;
+  border-radius: var(--radius-card);
+  padding: var(--pad-card);
   margin-bottom: 1.25rem;
 }
 
@@ -1152,7 +1161,7 @@
 
 .verb-card {
   background: var(--bg-surface);
-  border-radius: 20px;
+  border-radius: var(--radius-card);
   padding: 3rem 1.5rem;
   text-align: center;
   cursor: pointer;
@@ -1642,7 +1651,7 @@
   align-items: center;
   gap: 12px;
   background: var(--bg-surface);
-  border-radius: 14px;
+  border-radius: var(--radius-card);
   padding: 12px 14px;
   opacity: 0.65;
 }
@@ -1672,7 +1681,7 @@
 .level-card {
   background: var(--bg-surface);
   border: 1.5px solid var(--border);
-  border-radius: 18px;
+  border-radius: var(--radius-card);
   padding: 1rem 1.1rem;
 }
 
@@ -1851,7 +1860,7 @@
   gap: 12px;
   background: var(--bg-surface);
   border: 1.5px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   padding: 12px 14px;
 }
 

@@ -79,7 +79,7 @@
 .exercise-input {
   background: var(--bg-surface-alt);
   border: 1.5px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-input);
   color: var(--text-primary);
   padding: 4px 8px;
   font-size: 14px;
