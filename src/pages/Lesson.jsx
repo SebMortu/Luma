@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient.js'
 import Confetti from '../components/Confetti.jsx'
 import { estimateMinutesRemaining } from '../lib/level.js'
 import { recordLessonCompletion } from '../lib/progress.js'
+import { getMascot } from '../lib/characters.js'
+import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import ExerciseQCM from '../components/exercises/ExerciseQCM.jsx'
 import ExerciseFillBlank from '../components/exercises/ExerciseFillBlank.jsx'
@@ -64,6 +66,11 @@ function Lesson() {
   const [exercises, setExercises] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [mascot, setMascot] = useState(null)
+
+  useEffect(() => {
+    getMascot().then(setMascot).catch(() => setMascot(null))
+  }, [])
 
   const [phase, setPhase] = useState('explanation')
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -228,6 +235,16 @@ function Lesson() {
         </p>
         {ex._requeued && <p className="requeued-badge">🔁 On retente celui-ci, tu l'avais raté tout à l'heure</p>}
 
+        {mascot && (
+          <div className="lesson-mascot-row">
+            <CharacterAvatar
+              character={mascot}
+              state={!hasAnsweredCurrent ? 'thinking' : (results[ex.id] ? 'happy' : 'sad')}
+              size={52}
+            />
+          </div>
+        )}
+
         {!EXERCISE_COMPONENTS[ex.type] && <p>Type d'exercice inconnu : {ex.type}</p>}
         {Component && (
           <Component
@@ -259,6 +276,15 @@ function Lesson() {
   return (
     <div className="page" style={{ position: 'relative' }}>
       {xpGained !== null && !alreadyCompleted && (correctCount / exercises.length) >= 0.8 && <Confetti />}
+      {mascot && (
+        <div className="lesson-mascot-row" style={{ justifyContent: 'center', marginBottom: '0.5rem' }}>
+          <CharacterAvatar
+            character={mascot}
+            state={xpGained !== null && (correctCount / exercises.length) >= 0.8 ? 'celebrating' : 'neutral'}
+            size={72}
+          />
+        </div>
+      )}
       <h1>{lesson.title}</h1>
       <div className="lesson-summary">
         <p>Score : {correctCount} / {exercises.length}</p>

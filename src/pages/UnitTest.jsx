@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient.js'
 import { estimateMinutesRemaining } from '../lib/level.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { awardProgress } from '../lib/progress.js'
+import { getMascot } from '../lib/characters.js'
+import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import ExerciseQCM from '../components/exercises/ExerciseQCM.jsx'
 import ExerciseFillBlank from '../components/exercises/ExerciseFillBlank.jsx'
 import ExerciseTrueFalse from '../components/exercises/ExerciseTrueFalse.jsx'
@@ -46,6 +48,11 @@ function UnitTest() {
   const [finished, setFinished] = useState(false)
   const [saving, setSaving] = useState(false)
   const [passed, setPassed] = useState(false)
+  const [mascot, setMascot] = useState(null)
+
+  useEffect(() => {
+    getMascot().then(setMascot).catch(() => setMascot(null))
+  }, [])
   const [xpGained, setXpGained] = useState(null)
 
   useEffect(() => {
@@ -166,6 +173,16 @@ function UnitTest() {
           📝 Test de sortie · Unité {unit?.position} — {unit?.title}
           <strong> · {Math.round(PASS_THRESHOLD * 100)}% de réussite valide toute l'unité</strong>
         </p>
+
+        {mascot && (
+          <div className="lesson-mascot-row">
+            <CharacterAvatar
+              character={mascot}
+              state={!hasAnsweredCurrent ? 'thinking' : (results[ex.id] ? 'happy' : 'sad')}
+              size={52}
+            />
+          </div>
+        )}
 
         {!Component && <p>Type d'exercice inconnu : {ex.type}</p>}
         {Component && (

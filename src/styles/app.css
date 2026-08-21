@@ -862,6 +862,12 @@
   60% { transform: scale(1.15) rotate(3deg); }
 }
 
+.lesson-mascot-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+
 .mascot-settings-row {
   display: flex;
   align-items: center;
