@@ -28,7 +28,7 @@ const TIMES = [
   { value: 20, label: '20 min / jour', desc: 'Sérieux' },
 ]
 
-const SWATCH_PREVIEW = { lumen: '#0B0E14', 'lumen-light': '#FAF8F4' }
+const SWATCH_PREVIEW = { lumen: '#0D1B2E', 'lumen-light': '#F5F9FF' }
 
 const TOUR_SLIDES = [
   {

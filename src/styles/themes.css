@@ -1,47 +1,49 @@
 /* ============================================
-   LUMA — Identité "Lumen" unique, déclinée en deux variantes :
-   sombre (par défaut) et claire. Même palette d'accent, mêmes polices,
-   mêmes effets de halo — seul le fond/texte change entre les deux.
+   LUMA — Identité "Azur" (palette C : bleu vif ludique)
+   Bleu vif comme couleur de marque, citron vert pour la progression/réussite,
+   corail chaud pour les récompenses (streak). Clair par défaut, sombre en option.
+   Les noms de classes ("lumen"/"lumen-light") sont conservés pour ne pas casser
+   le reste du code — seules les couleurs qu'ils représentent ont changé.
    ============================================ */
 
-[data-theme="lumen"] {
-  --bg-page: #0B0E14;
-  --bg-surface: #151A24;
-  --bg-surface-alt: #1D2330;
-  --text-primary: #F4F5F8;
-  --text-secondary: #8B93A7;
-  --accent: #FFB648;
-  --accent-contrast: #1A0F00;
-  --accent-warm: #F2872F;
-  --accent-blue: #2FE6C0;
-  --accent-violet: #8B7CF6;
-  --border: #262C3B;
-  --success-bg: #12332C;
-  --success-text: #3CE6C4;
-  --danger-bg: #3A1616;
-  --danger-text: #FF7A7A;
+[data-theme="lumen-light"] {
+  --bg-page: #F5F9FF;
+  --bg-surface: #FFFFFF;
+  --bg-surface-alt: #E9F1FC;
+  --text-primary: #0D1B2E;
+  --text-secondary: #45607F;
+  --accent: #3B82F6;
+  --accent-contrast: #FFFFFF;
+  --accent-warm: #2563EB;
+  --accent-lime: #65A30D;
+  --accent-coral: #E4573F;
+  --border: #D8E4F2;
+  --success-bg: #EAF7D9;
+  --success-text: #4D7C0F;
+  --danger-bg: #FDEAEA;
+  --danger-text: #C23B3B;
 
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 
-[data-theme="lumen-light"] {
-  --bg-page: #FAF8F4;
-  --bg-surface: #FFFFFF;
-  --bg-surface-alt: #F0EDE5;
-  --text-primary: #1A1712;
-  --text-secondary: #6B6558;
-  --accent: #E08A1E;
+[data-theme="lumen"] {
+  --bg-page: #0D1B2E;
+  --bg-surface: #14263D;
+  --bg-surface-alt: #1C324D;
+  --text-primary: #EAF2FF;
+  --text-secondary: #7FA3D1;
+  --accent: #3B82F6;
   --accent-contrast: #FFFFFF;
-  --accent-warm: #D9691F;
-  --accent-blue: #159E82;
-  --accent-violet: #6B57D6;
-  --border: #E4E0D5;
-  --success-bg: #E1F5EE;
-  --success-text: #0F8A6C;
-  --danger-bg: #FBE8E5;
-  --danger-text: #C4453A;
+  --accent-warm: #2563EB;
+  --accent-lime: #A3E635;
+  --accent-coral: #FF6B5B;
+  --border: #223752;
+  --success-bg: #1D3320;
+  --success-text: #A3E635;
+  --danger-bg: #3A1E1B;
+  --danger-text: #FF6B5B;
 
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -86,53 +88,56 @@
   font-family: var(--font-mono);
 }
 
-/* Signature "halo lumineux" — boutons et carte de streak, partagée */
+/* Signature "halo bleu" — boutons et carte de streak, partagée */
 [data-theme="lumen"] .btn-primary,
 [data-theme="lumen-light"] .btn-primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-warm));
-  box-shadow: 0 0 0 rgba(255, 182, 72, 0);
+  box-shadow: 0 0 0 rgba(59, 130, 246, 0);
   transition: box-shadow 0.25s ease, transform 0.15s ease;
   font-weight: 600;
+  color: var(--accent-contrast);
 }
 [data-theme="lumen"] .btn-primary:hover {
-  box-shadow: 0 0 24px rgba(255, 182, 72, 0.35);
+  box-shadow: 0 0 24px rgba(59, 130, 246, 0.4);
   transform: translateY(-1px);
 }
 [data-theme="lumen-light"] .btn-primary:hover {
-  box-shadow: 0 0 20px rgba(224, 138, 30, 0.3);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
   transform: translateY(-1px);
 }
+/* Carte de streak : légère teinte corail (récompense) sur fond neutre */
 [data-theme="lumen"] .streak-card {
-  background: linear-gradient(160deg, rgba(255, 182, 72, 0.10), rgba(139, 124, 246, 0.05));
-  border: 1px solid rgba(255, 182, 72, 0.2);
+  background: linear-gradient(160deg, rgba(255, 107, 91, 0.10), rgba(59, 130, 246, 0.06));
+  border: 1px solid rgba(255, 107, 91, 0.2);
   position: relative;
   overflow: hidden;
 }
 [data-theme="lumen-light"] .streak-card {
-  background: linear-gradient(160deg, rgba(224, 138, 30, 0.08), rgba(107, 87, 214, 0.04));
-  border: 1px solid rgba(224, 138, 30, 0.18);
+  background: linear-gradient(160deg, rgba(228, 87, 63, 0.08), rgba(59, 130, 246, 0.05));
+  border: 1px solid rgba(228, 87, 63, 0.18);
   position: relative;
   overflow: hidden;
 }
 [data-theme="lumen"] .streak-day-dot.active {
-  box-shadow: 0 0 10px rgba(255, 182, 72, 0.6);
+  box-shadow: 0 0 10px rgba(255, 107, 91, 0.55);
 }
 [data-theme="lumen-light"] .streak-day-dot.active {
-  box-shadow: 0 0 8px rgba(224, 138, 30, 0.4);
+  box-shadow: 0 0 8px rgba(228, 87, 63, 0.35);
 }
 [data-theme="lumen"] .path-node.current {
-  box-shadow: 0 0 0 8px rgba(255, 182, 72, 0.18), 0 6px 18px rgba(0,0,0,0.4);
+  box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.2), 0 6px 18px rgba(0,0,0,0.4);
 }
 [data-theme="lumen-light"] .path-node.current {
-  box-shadow: 0 0 0 8px rgba(224, 138, 30, 0.15), 0 4px 14px rgba(0,0,0,0.1);
+  box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.15), 0 4px 14px rgba(0,0,0,0.1);
 }
+/* Réussite/complétion : citron vert plutôt que teal */
 [data-theme="lumen"] .exercise-option.correct,
 [data-theme="lumen"] .path-node.completed,
 [data-theme="lumen"] .unit-icon.completed {
-  box-shadow: 0 0 14px rgba(60, 230, 196, 0.25);
+  box-shadow: 0 0 14px rgba(163, 230, 53, 0.3);
 }
 [data-theme="lumen-light"] .exercise-option.correct,
 [data-theme="lumen-light"] .path-node.completed,
 [data-theme="lumen-light"] .unit-icon.completed {
-  box-shadow: 0 0 10px rgba(15, 138, 108, 0.18);
+  box-shadow: 0 0 10px rgba(101, 163, 13, 0.2);
 }

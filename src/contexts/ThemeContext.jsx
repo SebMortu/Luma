@@ -3,8 +3,8 @@ import { createContext, useContext, useEffect, useState } from 'react'
 const ThemeContext = createContext(null)
 
 export const THEMES = [
-  { value: 'lumen', label: 'Lumen', desc: 'Sombre et lumineux (par défaut)' },
-  { value: 'lumen-light', label: 'Lumen Clair', desc: 'Même identité, fond clair' },
+  { value: 'lumen-light', label: 'Azur clair', desc: 'Lumineux et énergique (par défaut)' },
+  { value: 'lumen', label: 'Azur sombre', desc: 'Même identité, fond sombre' },
 ]
 
 export const TEXT_SCALES = [
@@ -16,8 +16,8 @@ export const TEXT_SCALES = [
 export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState(() => {
     const saved = localStorage.getItem('luma-theme')
-    // Migration douce : les anciens thèmes retirés retombent sur Lumen sombre
-    return saved === 'lumen' || saved === 'lumen-light' ? saved : 'lumen'
+    // Migration douce : les anciens thèmes retirés retombent sur Azur clair (nouveau défaut)
+    return saved === 'lumen' || saved === 'lumen-light' ? saved : 'lumen-light'
   })
 
   const [textScale, setTextScaleState] = useState(() => {

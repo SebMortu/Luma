@@ -8,8 +8,8 @@ import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import AppLayout from '../components/AppLayout.jsx'
 
 const SWATCH_PREVIEW = {
-  lumen: 'linear-gradient(135deg, #0B0E14, #1D2330 55%, #FFB648)',
-  'lumen-light': 'linear-gradient(135deg, #FAF8F4, #F0EDE5 55%, #E08A1E)',
+  lumen: 'linear-gradient(135deg, #0D1B2E, #14263D 55%, #3B82F6)',
+  'lumen-light': 'linear-gradient(135deg, #F5F9FF, #E9F1FC 55%, #3B82F6)',
 }
 
 const TIME_OPTIONS = [5, 10, 20]

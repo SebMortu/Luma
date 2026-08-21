@@ -11,8 +11,8 @@ export default defineConfig({
         name: 'Luma',
         short_name: 'Luma',
         description: 'Apprends une langue de façon ludique',
-        theme_color: '#1a1a1a',
-        background_color: '#1a1a1a',
+        theme_color: '#3B82F6',
+        background_color: '#F5F9FF',
         display: 'standalone',
         start_url: '/',
         icons: [
