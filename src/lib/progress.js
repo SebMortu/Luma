@@ -178,7 +178,7 @@ export async function reviewVocabItem(itemId, remembered) {
   if (updateErr) throw updateErr
 }
 
-export async function recordLessonCompletion({ userId, languageId, unitId, lessonId, score, secondsSpent = 0 }) {
+export async function recordLessonCompletion({ userId, languageId, unitId, lessonId, score, secondsSpent = 0, lessonTitle = null, vocabTable = null }) {
   // 1. Vérifier si cette leçon avait déjà été terminée avant (pour ne pas re-donner d'XP)
   const { data: existing } = await supabase
     .from('user_progress').select('status, best_score')
@@ -201,6 +201,27 @@ export async function recordLessonCompletion({ userId, languageId, unitId, lesso
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id,language_id,unit_id,lesson_id' })
   if (upsertErr) throw upsertErr
+
+  // Vocabulaire de la leçon -> file de révision espacée, uniquement à la toute
+  // première réussite (pas à chaque révision, pour ne pas repousser sa date).
+  // Silencieux en cas d'échec : ça ne doit jamais bloquer la complétion de la leçon.
+  if (!alreadyCompleted && Array.isArray(vocabTable) && vocabTable.length > 0) {
+    const rows = vocabTable
+      .filter((entry) => entry?.subject && entry?.affirmative)
+      .map((entry) => ({
+        user_id: userId,
+        item_type: 'vocabulary',
+        item_id: null,
+        content_en: entry.subject,
+        content_fr: entry.affirmative,
+        source_label: lessonTitle ? `Leçon : ${lessonTitle}` : 'Leçon',
+        next_review_date: new Date().toISOString().slice(0, 10),
+      }))
+    if (rows.length > 0) {
+      // onConflict correspond à l'index unique (user_id, content_en) posé en migration
+      await supabase.from('user_review_queue').upsert(rows, { onConflict: 'user_id,content_en', ignoreDuplicates: true })
+    }
+  }
 
   // L'XP n'est attribué qu'à la première réussite d'une leçon — les révisions
   // ne permettent pas de farmer l'XP (mais comptent quand même le temps passé)

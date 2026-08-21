@@ -151,6 +151,8 @@ function Lesson() {
           lessonId: lesson.id,
           score,
           secondsSpent,
+          lessonTitle: lesson.title,
+          vocabTable: lesson.content?.table,
         })
         setXpGained(result.xpGained)
         setNewStreak(result.newStreak)
