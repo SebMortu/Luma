@@ -9,6 +9,7 @@ import ExerciseFillBlank from '../components/exercises/ExerciseFillBlank.jsx'
 import ExerciseTrueFalse from '../components/exercises/ExerciseTrueFalse.jsx'
 import ExerciseMatching from '../components/exercises/ExerciseMatching.jsx'
 import ExerciseReorder from '../components/exercises/ExerciseReorder.jsx'
+import ExerciseDictation from '../components/exercises/ExerciseDictation.jsx'
 
 const EXERCISE_COMPONENTS = {
   qcm: ExerciseQCM,
@@ -16,6 +17,7 @@ const EXERCISE_COMPONENTS = {
   true_false: ExerciseTrueFalse,
   matching: ExerciseMatching,
   reorder: ExerciseReorder,
+  dictation: ExerciseDictation,
 }
 
 const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1']

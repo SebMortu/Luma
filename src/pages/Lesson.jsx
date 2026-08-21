@@ -9,6 +9,7 @@ import ExerciseFillBlank from '../components/exercises/ExerciseFillBlank.jsx'
 import ExerciseTrueFalse from '../components/exercises/ExerciseTrueFalse.jsx'
 import ExerciseMatching from '../components/exercises/ExerciseMatching.jsx'
 import ExerciseReorder from '../components/exercises/ExerciseReorder.jsx'
+import ExerciseDictation from '../components/exercises/ExerciseDictation.jsx'
 import ExerciseSpeakingPractice from '../components/exercises/ExerciseSpeakingPractice.jsx'
 
 const EXERCISE_COMPONENTS = {
@@ -17,6 +18,7 @@ const EXERCISE_COMPONENTS = {
   true_false: ExerciseTrueFalse,
   matching: ExerciseMatching,
   reorder: ExerciseReorder,
+  dictation: ExerciseDictation,
   speaking_practice: ExerciseSpeakingPractice,
 }
 
@@ -118,6 +120,20 @@ function Lesson() {
   const handleAnswered = (exerciseId, correct) => {
     setResults((prev) => ({ ...prev, [exerciseId]: correct }))
     setHasAnsweredCurrent(true)
+
+    // Adaptivité légère : un exercice raté revient plus tard dans la même
+    // session (quelques questions plus loin), pour que l'utilisateur le
+    // retente une fois qu'il a eu le temps de digérer la correction —
+    // plutôt que de simplement passer à la suite et l'oublier.
+    if (!correct) {
+      const failedEx = exercises[currentIndex]
+      setExercises((prev) => {
+        const insertAt = Math.min(currentIndex + 1 + 3, prev.length)
+        const next = [...prev]
+        next.splice(insertAt, 0, { ...failedEx, _requeued: true })
+        return next
+      })
+    }
   }
 
   const goToNext = () => {
@@ -209,6 +225,7 @@ function Lesson() {
             return mins ? ` · ~${mins} min restante${mins > 1 ? 's' : ''}` : ''
           })()}
         </p>
+        {ex._requeued && <p className="requeued-badge">🔁 On retente celui-ci, tu l'avais raté tout à l'heure</p>}
 
         {!EXERCISE_COMPONENTS[ex.type] && <p>Type d'exercice inconnu : {ex.type}</p>}
         {Component && (
