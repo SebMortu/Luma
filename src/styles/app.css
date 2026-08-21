@@ -740,6 +740,70 @@
   border-radius: 4px;
 }
 
+.review-prompt-card {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--accent);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.review-prompt-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.review-prompt-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+}
+
+.review-prompt-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.review-prompt-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-surface-alt);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+.review-prompt-option:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.review-prompt-emoji {
+  font-size: 22px;
+}
+
+.review-prompt-skip {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px;
+}
+
 .exercise-instruction {
   font-size: 12px;
   font-weight: 700;

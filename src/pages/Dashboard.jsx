@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
 import RingProgress from '../components/RingProgress.jsx'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
+import DailyReviewPrompt from '../components/DailyReviewPrompt.jsx'
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const CECR_TITLES = {
@@ -119,6 +120,8 @@ function Dashboard() {
             </div>
           )
         })()}
+
+        <DailyReviewPrompt />
 
         <div className="streak-card">
           <p className="streak-card-title">Série actuelle 🔥</p>

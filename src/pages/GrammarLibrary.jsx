@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
@@ -11,10 +11,13 @@ const CECR_TITLES = {
   B2: 'B2 · Intermédiaire avancé',
   C1: 'C1 · Avancé',
 }
+const CECR_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1']
 
 function GrammarLibrary() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const isReviewMode = searchParams.get('review') === '1'
   const [fiches, setFiches] = useState([])
   const [search, setSearch] = useState('')
   const [levelFilter, setLevelFilter] = useState('all')
@@ -26,10 +29,24 @@ function GrammarLibrary() {
       const { data } = await supabase.from('grammar_fiches').select('id, cecr_level, position, title')
         .eq('language_id', settings.active_language_id).order('position')
       setFiches(data || [])
+
+      // En mode révision, on ne montre par défaut que ce qui a déjà été appris :
+      // le niveau le plus avancé où l'utilisateur a complété au moins une leçon.
+      if (isReviewMode) {
+        const { data: completed } = await supabase
+          .from('user_progress')
+          .select('units(cecr_level)')
+          .eq('user_id', user.id)
+          .eq('status', 'completed')
+        const reachedLevels = new Set((completed || []).map((c) => c.units?.cecr_level).filter(Boolean))
+        const highest = [...CECR_ORDER].reverse().find((lvl) => reachedLevels.has(lvl))
+        if (highest) setLevelFilter(highest)
+      }
+
       setLoading(false)
     }
     load()
-  }, [user.id])
+  }, [user.id, isReviewMode])
 
   const filtered = fiches.filter((f) => {
     const matchLevel = levelFilter === 'all' || f.cecr_level === levelFilter
