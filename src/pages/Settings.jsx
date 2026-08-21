@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useTheme, THEMES, TEXT_SCALES } from '../contexts/ThemeContext.jsx'
-import { getSelectableCharacters, setGuideCharacter } from '../lib/characters.js'
+import { getMascot } from '../lib/characters.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import AppLayout from '../components/AppLayout.jsx'
 
@@ -29,7 +29,7 @@ function Settings() {
   const { user, signOut } = useAuth()
   const { theme, setTheme, textScale, setTextScale } = useTheme()
   const [settings, setSettings] = useState(null)
-  const [characters, setCharacters] = useState([])
+  const [mascot, setMascot] = useState(null)
   const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('luma-notifications') === 'true')
   const [soundsEnabled, setSoundsEnabled] = useState(() => localStorage.getItem('luma-sounds') !== 'false')
   const [saving, setSaving] = useState(false)
@@ -38,7 +38,7 @@ function Settings() {
     async function load() {
       const { data } = await supabase.from('user_settings').select('*').eq('user_id', user.id).single()
       setSettings(data)
-      getSelectableCharacters().then(setCharacters).catch(() => setCharacters([]))
+      getMascot().then(setMascot).catch(() => setMascot(null))
     }
     load()
   }, [user.id])
@@ -60,11 +60,6 @@ function Settings() {
     setSettings((prev) => ({ ...prev, [field]: value }))
     await supabase.from('user_settings').update({ [field]: value }).eq('user_id', user.id)
     setSaving(false)
-  }
-
-  const changeGuide = async (characterId) => {
-    setSettings((prev) => ({ ...prev, guide_character_id: characterId }))
-    await setGuideCharacter(user.id, characterId)
   }
 
   if (!settings) return <AppLayout><div className="page"><p>Chargement...</p></div></AppLayout>
@@ -90,18 +85,13 @@ function Settings() {
           <span>{soundsEnabled ? '🔊 Activés' : '🔇 Désactivés'}</span>
         </button>
 
-        <h2>Ton guide</h2>
-        <div className="character-picker-grid">
-          {characters.map((c) => (
-            <button
-              key={c.id}
-              className={`character-picker-card ${settings.guide_character_id === c.id ? 'selected' : ''}`}
-              onClick={() => changeGuide(c.id)}
-            >
-              <CharacterAvatar character={c} state={settings.guide_character_id === c.id ? 'happy' : 'neutral'} size={56} />
-              <p className="character-picker-name">{c.name}</p>
-            </button>
-          ))}
+        <h2>Ta mascotte</h2>
+        <div className="mascot-settings-row">
+          {mascot && <CharacterAvatar character={mascot} state="happy" size={56} />}
+          <div>
+            <p className="onboarding-option-title">{mascot?.name || 'Echo'}</p>
+            <p className="progress-card-sub">{mascot?.description}</p>
+          </div>
         </div>
 
         <h2>Apparence</h2>

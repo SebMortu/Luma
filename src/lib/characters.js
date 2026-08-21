@@ -1,5 +1,13 @@
 import { supabase } from './supabaseClient.js'
 
+/** Retourne la mascotte unique de l'app (il n'y a plus de choix multiple). */
+export async function getMascot() {
+  const { data, error } = await supabase
+    .from('characters').select('*').eq('slug', 'mascot').single()
+  if (error) throw error
+  return data
+}
+
 export async function getSelectableCharacters() {
   const { data, error } = await supabase
     .from('characters').select('*').eq('is_selectable_as_guide', true).order('position')

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useTheme, THEMES, TEXT_SCALES } from '../contexts/ThemeContext.jsx'
-import { getSelectableCharacters } from '../lib/characters.js'
+import { getMascot } from '../lib/characters.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
 
 const LEVELS = [
@@ -57,13 +57,12 @@ function Onboarding() {
   const [level, setLevel] = useState(null)
   const [goal, setGoal] = useState(null)
   const [time, setTime] = useState(null)
-  const [characters, setCharacters] = useState([])
-  const [guideId, setGuideId] = useState(null)
+  const [mascot, setMascot] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    getSelectableCharacters().then(setCharacters).catch(() => setCharacters([]))
+    getMascot().then(setMascot).catch(() => setMascot(null))
   }, [])
 
   const selectAndAdvance = (setter, value, nextStep) => {
@@ -86,7 +85,7 @@ function Onboarding() {
           level,
           objective: goal,
           daily_goal_minutes: time,
-          guide_character_id: guideId,
+          guide_character_id: mascot?.id || null,
         })
         .eq('user_id', user.id)
       if (updateErr) throw updateErr
@@ -157,7 +156,6 @@ function Onboarding() {
         <div className={`bar ${step >= 3 ? 'active' : ''}`} />
         <div className={`bar ${step >= 4 ? 'active' : ''}`} />
         <div className={`bar ${step >= 5 ? 'active' : ''}`} />
-        <div className={`bar ${step >= 6 ? 'active' : ''}`} />
       </div>
 
       {step === 1 && (
@@ -265,44 +263,26 @@ function Onboarding() {
       )}
 
       {step === 5 && (
-        <>
-          <div className="onboarding-back-row">
-            <button className="onboarding-back" onClick={() => setStep(4)}>←</button>
-          </div>
-          <h2>Choisis ton guide</h2>
-          <p className="onboarding-subtitle">Il t'accompagnera tout au long de ton apprentissage.</p>
-          <div className="character-picker-grid">
-            {characters.map((c) => (
-              <button
-                key={c.id}
-                className={`character-picker-card ${guideId === c.id ? 'selected' : ''}`}
-                onClick={() => setGuideId(c.id)}
-              >
-                <CharacterAvatar character={c} state={guideId === c.id ? 'happy' : 'neutral'} size={64} />
-                <p className="character-picker-name">{c.name}</p>
-                <p className="character-picker-desc">{c.description}</p>
-              </button>
-            ))}
-          </div>
-          <button className="btn-primary" style={{ marginTop: '1.5rem' }} disabled={!guideId} onClick={() => setStep(6)}>
-            Continuer avec {characters.find((c) => c.id === guideId)?.name || 'ce guide'}
-          </button>
-        </>
-      )}
-
-      {step === 6 && (
         <div className="onboarding-tour">
-          <div className="onboarding-tour-slide">
-            <div className="onboarding-tour-emoji">{TOUR_SLIDES[tourIndex].emoji}</div>
-            <h2>{TOUR_SLIDES[tourIndex].title}</h2>
-            <p className="onboarding-subtitle">{TOUR_SLIDES[tourIndex].text}</p>
-          </div>
+          {tourIndex === 0 && mascot ? (
+            <div className="onboarding-tour-slide">
+              <CharacterAvatar character={mascot} state="waving" size={96} />
+              <h2 style={{ marginTop: '1rem' }}>Voici {mascot.name} !</h2>
+              <p className="onboarding-subtitle">{mascot.description || "Il t'accompagnera tout au long de ton apprentissage."}</p>
+            </div>
+          ) : (
+            <div className="onboarding-tour-slide">
+              <div className="onboarding-tour-emoji">{TOUR_SLIDES[tourIndex - 1].emoji}</div>
+              <h2>{TOUR_SLIDES[tourIndex - 1].title}</h2>
+              <p className="onboarding-subtitle">{TOUR_SLIDES[tourIndex - 1].text}</p>
+            </div>
+          )}
           <div className="onboarding-tour-dots">
-            {TOUR_SLIDES.map((_, i) => (
+            {[mascot, ...TOUR_SLIDES].map((_, i) => (
               <span key={i} className={`onboarding-tour-dot ${i === tourIndex ? 'active' : ''}`} />
             ))}
           </div>
-          {tourIndex < TOUR_SLIDES.length - 1 ? (
+          {tourIndex < TOUR_SLIDES.length ? (
             <button className="btn-primary" onClick={() => setTourIndex(tourIndex + 1)}>Suivant</button>
           ) : (
             <button className="btn-primary" disabled={saving} onClick={finish}>

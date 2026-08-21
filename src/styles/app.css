@@ -862,6 +862,15 @@
   60% { transform: scale(1.15) rotate(3deg); }
 }
 
+.mascot-settings-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-surface-alt);
+  border-radius: var(--radius-card);
+  padding: 14px 16px;
+}
+
 .streak-flame-pulse {
   display: inline-block;
   animation: flame-pulse 0.7s ease-in-out 0.4s;
