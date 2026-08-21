@@ -7,6 +7,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
+      injectManifest: {
+        swSrc: 'src/sw.js',
+        swDest: 'dist/sw.js',
+      },
       manifest: {
         name: 'Luma',
         short_name: 'Luma',

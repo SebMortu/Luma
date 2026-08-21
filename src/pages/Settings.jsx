@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useTheme, THEMES, TEXT_SCALES } from '../contexts/ThemeContext.jsx'
 import { getMascot } from '../lib/characters.js'
+import { getPushSubscriptionStatus, subscribeToPush, unsubscribeFromPush } from '../lib/push.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import AppLayout from '../components/AppLayout.jsx'
 
@@ -30,7 +31,8 @@ function Settings() {
   const { theme, setTheme, textScale, setTextScale } = useTheme()
   const [settings, setSettings] = useState(null)
   const [mascot, setMascot] = useState(null)
-  const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('luma-notifications') === 'true')
+  const [pushStatus, setPushStatus] = useState('checking') // 'unsupported' | 'denied' | 'subscribed' | 'not-subscribed'
+  const [pushError, setPushError] = useState('')
   const [soundsEnabled, setSoundsEnabled] = useState(() => localStorage.getItem('luma-sounds') !== 'false')
   const [saving, setSaving] = useState(false)
 
@@ -39,14 +41,25 @@ function Settings() {
       const { data } = await supabase.from('user_settings').select('*').eq('user_id', user.id).single()
       setSettings(data)
       getMascot().then(setMascot).catch(() => setMascot(null))
+      getPushSubscriptionStatus().then(setPushStatus).catch(() => setPushStatus('unsupported'))
     }
     load()
   }, [user.id])
 
-  const toggleNotifications = () => {
-    const newValue = !notifEnabled
-    setNotifEnabled(newValue)
-    localStorage.setItem('luma-notifications', String(newValue))
+  const toggleNotifications = async () => {
+    setPushError('')
+    if (pushStatus === 'subscribed') {
+      await unsubscribeFromPush(user.id)
+      setPushStatus('not-subscribed')
+    } else {
+      try {
+        await subscribeToPush(user.id)
+        setPushStatus('subscribed')
+      } catch (err) {
+        setPushError(err.message)
+        setPushStatus(await getPushSubscriptionStatus())
+      }
+    }
   }
 
   const toggleSounds = () => {
@@ -71,12 +84,21 @@ function Settings() {
         <h1>⚙️ Réglages</h1>
 
         <h2>Notifications</h2>
-        <button className="setting-row" onClick={toggleNotifications}>
+        <button className="setting-row" onClick={toggleNotifications} disabled={pushStatus === 'unsupported' || pushStatus === 'denied'}>
           <span>Rappels quotidiens</span>
-          <span>{notifEnabled ? '🔔 Activées' : '🔕 Désactivées'}</span>
+          <span>
+            {pushStatus === 'checking' && '...'}
+            {pushStatus === 'subscribed' && '🔔 Activées'}
+            {pushStatus === 'not-subscribed' && '🔕 Désactivées'}
+            {pushStatus === 'denied' && '🚫 Bloquées par le navigateur'}
+            {pushStatus === 'unsupported' && '— Non disponible'}
+          </span>
         </button>
+        {pushError && <p className="feedback incorrect">{pushError}</p>}
         <p className="setting-note">
-          Enregistre ta préférence dès maintenant — l'envoi effectif des notifications arrivera dans une prochaine mise à jour.
+          {pushStatus === 'denied'
+            ? "Tu as refusé les notifications pour ce site — change ça dans les réglages de ton navigateur pour les réactiver."
+            : "Un petit rappel si tu n'as pas encore fait ta leçon du jour, pour ne pas perdre ta série."}
         </p>
 
         <h2>Sons</h2>
