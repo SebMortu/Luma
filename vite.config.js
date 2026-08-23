@@ -10,6 +10,7 @@ export default defineConfig({
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.js',
+      manifestFilename: 'manifest-v3.webmanifest',
       injectManifest: {
         swSrc: 'src/sw.js',
         swDest: 'dist/sw.js',
