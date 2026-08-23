@@ -26,8 +26,8 @@ self.addEventListener('push', (event) => {
   const title = payload.title || 'Luma'
   const options = {
     body: payload.body || '',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    icon: '/icons/icon-192-v3.png',
+    badge: '/icons/icon-192-v3.png',
     data: { url: payload.url || '/dashboard' },
     tag: payload.tag || 'luma-reminder',
     renotify: true,
