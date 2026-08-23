@@ -14,3 +14,6 @@ dist/
 .DS_Store
 *.log
 dev-dist/
+
+# Fichiers techniques locaux de la CLI Supabase (jamais à versionner)
+supabase/.temp/
