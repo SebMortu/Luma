@@ -127,6 +127,11 @@ function Dashboard() {
         <div className="streak-card">
           <p className="streak-card-title">Série actuelle 🔥</p>
           <p className="streak-card-value">{settings.current_streak} jour{settings.current_streak > 1 ? 's' : ''}</p>
+          {settings.streak_freezes > 0 && (
+            <p className="streak-freeze-count">
+              🧊 {settings.streak_freezes} gel{settings.streak_freezes > 1 ? 's' : ''} de série disponible{settings.streak_freezes > 1 ? 's' : ''}
+            </p>
+          )}
           <div className="streak-week">
             {DAY_LABELS.map((label, i) => (
               <div key={label} className="streak-day">

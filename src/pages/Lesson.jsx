@@ -81,6 +81,8 @@ function Lesson() {
   const [saving, setSaving] = useState(false)
   const [xpGained, setXpGained] = useState(null)
   const [newStreak, setNewStreak] = useState(null)
+  const [freezeUsed, setFreezeUsed] = useState(false)
+  const [freezeGained, setFreezeGained] = useState(false)
   const [alreadyCompleted, setAlreadyCompleted] = useState(false)
   const [goalInfo, setGoalInfo] = useState(null)
   const startTimeRef = useRef(Date.now())
@@ -180,6 +182,8 @@ function Lesson() {
         })
         setXpGained(result.xpGained)
         setNewStreak(result.newStreak)
+        setFreezeUsed(result.freezeUsed)
+        setFreezeGained(result.freezeGained)
         setAlreadyCompleted(result.alreadyCompleted)
         setGoalInfo({ goalMetNow: result.goalMetNow, xpToday: result.xpToday, threshold: result.threshold })
       } catch (err) {
@@ -295,6 +299,12 @@ function Lesson() {
               <p className="feedback correct">Révision enregistrée · Streak : {newStreak} 🔥</p>
             ) : (
               <p className="feedback correct"><span className="xp-pop">+{xpGained} XP</span> · Streak : {newStreak} <span className="streak-flame-pulse">🔥</span></p>
+            )}
+            {freezeUsed && (
+              <p className="streak-freeze-message">🧊 Tu avais manqué un jour, mais un gel de série a protégé ta série automatiquement !</p>
+            )}
+            {freezeGained && (
+              <p className="streak-freeze-message">🎉 Nouveau gel de série gagné (7 jours d'affilée) ! Il protégera ta série si jamais tu manques un jour.</p>
             )}
             {goalInfo && (
               <div className="goal-progress-mini">

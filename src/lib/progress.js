@@ -112,6 +112,9 @@ export async function awardProgress(userId, { xpGained = 0, secondsSpent = 0 }) 
     goalMetNow: result.goal_met_now,
     xpToday: result.xp_today,
     threshold: result.threshold,
+    freezeUsed: result.freeze_used,
+    freezeGained: result.freeze_gained,
+    streakFreezes: result.streak_freezes,
   }
 }
 
