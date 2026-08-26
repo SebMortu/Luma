@@ -24,6 +24,13 @@ export function speak(text, { rate = 0.9 } = {}) {
   window.speechSynthesis.speak(utterance)
 }
 
+// Vrai si le texte contient au moins une lettre — sert à ignorer les emoji/symboles
+// purs (ex. 🔟, 1️⃣), que certains moteurs vocaux prononcent par leur description
+// technique ("keycap one") au lieu de simplement les ignorer.
+function hasRealLetters(str) {
+  return /[a-zA-Zà-üÀ-Ü]/.test(str || '')
+}
+
 function SpeakButton({ text, size = 'normal', className = '' }) {
   const [supported, setSupported] = useState(true)
   const [speaking, setSpeaking] = useState(false)
@@ -32,7 +39,7 @@ function SpeakButton({ text, size = 'normal', className = '' }) {
     setSupported(!!window.speechSynthesis)
   }, [])
 
-  if (!supported || !text) return null
+  if (!supported || !text || !hasRealLetters(text)) return null
 
   const handleClick = (e) => {
     e.stopPropagation()
