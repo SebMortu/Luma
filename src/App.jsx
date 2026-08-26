@@ -18,6 +18,7 @@ import Settings from './pages/Settings.jsx'
 import Verbs from './pages/Verbs.jsx'
 import GrammarLibrary from './pages/GrammarLibrary.jsx'
 import Learn from './pages/Learn.jsx'
+import Friends from './pages/Friends.jsx'
 import Practice from './pages/Practice.jsx'
 import GrammarDetail from './pages/GrammarDetail.jsx'
 import ToeicTest from './pages/ToeicTest.jsx'
@@ -55,6 +56,7 @@ function App() {
             <Route path="/grammar" element={<ProtectedRoute><GrammarLibrary /></ProtectedRoute>} />
             <Route path="/learn" element={<ProtectedRoute><Learn /></ProtectedRoute>} />
             <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
+            <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
             <Route path="/grammar/:ficheId" element={<ProtectedRoute><GrammarDetail /></ProtectedRoute>} />
             <Route path="/toeic-test" element={<ProtectedRoute><ToeicTest /></ProtectedRoute>} />
             <Route path="/scenarios" element={<ProtectedRoute><ScenariosLibrary /></ProtectedRoute>} />

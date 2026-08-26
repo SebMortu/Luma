@@ -887,6 +887,63 @@
   animation: xp-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.friend-search-results, .friend-search-row {
+  margin-bottom: 8px;
+}
+
+.friend-search-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface-alt);
+  border-radius: var(--radius-card);
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.leaderboard-row.is-me {
+  border-color: var(--accent);
+  background: var(--bg-surface-alt);
+}
+
+.leaderboard-rank {
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.leaderboard-name {
+  font-weight: 600;
+}
+
+.leaderboard-streak {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.leaderboard-xp {
+  font-weight: 700;
+  color: var(--accent);
+}
+
 .streak-freeze-message {
   background: var(--bg-surface-alt);
   border: 1px solid var(--accent);

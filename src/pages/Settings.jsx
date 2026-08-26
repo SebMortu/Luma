@@ -30,6 +30,9 @@ function Settings() {
   const { user, signOut } = useAuth()
   const { theme, setTheme, textScale, setTextScale } = useTheme()
   const [settings, setSettings] = useState(null)
+  const [usernameInput, setUsernameInput] = useState('')
+  const [usernameError, setUsernameError] = useState('')
+  const [usernameSaved, setUsernameSaved] = useState(false)
   const [mascot, setMascot] = useState(null)
   const [pushStatus, setPushStatus] = useState('checking') // 'unsupported' | 'denied' | 'subscribed' | 'not-subscribed'
   const [pushError, setPushError] = useState('')
@@ -40,6 +43,7 @@ function Settings() {
     async function load() {
       const { data } = await supabase.from('user_settings').select('*').eq('user_id', user.id).single()
       setSettings(data)
+      setUsernameInput(data?.username || '')
       getMascot().then(setMascot).catch(() => setMascot(null))
       getPushSubscriptionStatus().then(setPushStatus).catch(() => setPushStatus('unsupported'))
     }
@@ -77,6 +81,24 @@ function Settings() {
 
   if (!settings) return <AppLayout><div className="page"><p>Chargement...</p></div></AppLayout>
 
+  const handleSaveUsername = async () => {
+    setUsernameError('')
+    setUsernameSaved(false)
+    const trimmed = usernameInput.trim()
+    if (trimmed.length < 3) {
+      setUsernameError('Au moins 3 caractères.')
+      return
+    }
+    const { error } = await supabase.from('user_settings').update({ username: trimmed }).eq('user_id', user.id)
+    if (error) {
+      setUsernameError(error.message.includes('duplicate') ? 'Ce pseudo est déjà pris.' : error.message)
+    } else {
+      setSettings((prev) => ({ ...prev, username: trimmed }))
+      setUsernameSaved(true)
+      setTimeout(() => setUsernameSaved(false), 2000)
+    }
+  }
+
   return (
     <AppLayout>
       <div className="page">
@@ -106,6 +128,23 @@ function Settings() {
           <span>Sons de réponse</span>
           <span>{soundsEnabled ? '🔊 Activés' : '🔇 Désactivés'}</span>
         </button>
+
+        <h2>Ton pseudo</h2>
+        <p className="progress-card-sub">Utilisé par tes amis pour te retrouver.</p>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
+          <input
+            type="text"
+            className="auth-input"
+            value={usernameInput}
+            onChange={(e) => setUsernameInput(e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <button className="btn-secondary" style={{ width: 'auto', padding: '0 16px' }} onClick={handleSaveUsername}>
+            Enregistrer
+          </button>
+        </div>
+        {usernameError && <p className="feedback incorrect">{usernameError}</p>}
+        {usernameSaved && <p className="feedback correct">Pseudo mis à jour !</p>}
 
         <h2>Ta mascotte</h2>
         <div className="mascot-settings-row">
