@@ -3,11 +3,30 @@ import { sanitizeForSpeech } from '../lib/speech.js'
 
 // Sélectionne la meilleure voix anglaise disponible, une fois que le navigateur
 // a fini de charger sa liste de voix (asynchrone sur certains navigateurs).
+// Priorité aux voix "premium"/neurales connues (nettement plus naturelles que
+// la voix par défaut du système), avant de retomber sur n'importe quelle voix
+// anglaise disponible.
+const PREFERRED_VOICE_NAMES = [
+  // iOS/macOS — voix "Améliorée"/"Premium" (Siri) si installées
+  'Ava (Premium)', 'Ava', 'Samantha (Enhanced)', 'Samantha',
+  // Android/Chrome — voix Google WaveNet, très naturelles
+  'Google US English', 'Google UK English Female',
+  // Windows Edge — voix neurales Microsoft
+  'Microsoft Aria Online (Natural)', 'Microsoft Jenny Online (Natural)', 'Microsoft Guy Online (Natural)',
+]
+
 function pickEnglishVoice() {
   const voices = window.speechSynthesis?.getVoices() || []
+  const englishVoices = voices.filter((v) => v.lang?.startsWith('en'))
+
+  for (const name of PREFERRED_VOICE_NAMES) {
+    const match = englishVoices.find((v) => v.name === name)
+    if (match) return match
+  }
+
   return (
-    voices.find((v) => v.lang === 'en-US') ||
-    voices.find((v) => v.lang?.startsWith('en')) ||
+    englishVoices.find((v) => v.lang === 'en-US') ||
+    englishVoices[0] ||
     null
   )
 }
