@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import Confetti from '../components/Confetti.jsx'
+import ReportButton from '../components/ReportButton.jsx'
 import { estimateMinutesRemaining } from '../lib/level.js'
 import { recordLessonCompletion } from '../lib/progress.js'
 import { getMascot } from '../lib/characters.js'
@@ -229,6 +230,12 @@ function Lesson() {
             <div className="progress-bar-fill" style={{ width: `${progressPct}%` }} />
           </div>
           <button className="lesson-explain-icon" onClick={() => setShowExplanationOverlay(true)} aria-label="Revoir l'explication">📖</button>
+          <ReportButton
+            contentType="exercise"
+            contentId={ex.id}
+            lessonTitle={lesson?.title}
+            questionSnippet={ex.content?.question || ex.content?.statement || ex.content?.sentence || ''}
+          />
         </div>
         <p className="verb-progress">
           {currentIndex + 1} / {exercises.length}

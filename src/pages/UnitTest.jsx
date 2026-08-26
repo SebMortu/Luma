@@ -12,6 +12,7 @@ import ExerciseTrueFalse from '../components/exercises/ExerciseTrueFalse.jsx'
 import ExerciseMatching from '../components/exercises/ExerciseMatching.jsx'
 import ExerciseReorder from '../components/exercises/ExerciseReorder.jsx'
 import ExerciseDictation from '../components/exercises/ExerciseDictation.jsx'
+import ReportButton from '../components/ReportButton.jsx'
 
 const EXERCISE_COMPONENTS = {
   qcm: ExerciseQCM,
@@ -161,6 +162,12 @@ function UnitTest() {
           <div className="progress-bar-track" style={{ flex: 1 }}>
             <div className="progress-bar-fill" style={{ width: `${progressPct}%` }} />
           </div>
+          <ReportButton
+            contentType="exercise"
+            contentId={testExercises[currentIndex]?.id}
+            lessonTitle={unit?.title}
+            questionSnippet={testExercises[currentIndex]?.content?.question || testExercises[currentIndex]?.content?.statement || ''}
+          />
         </div>
         <p className="verb-progress">
           {currentIndex + 1} / {testExercises.length}
