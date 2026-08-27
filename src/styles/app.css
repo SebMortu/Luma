@@ -887,6 +887,29 @@
   animation: xp-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.auth-password-row {
+  position: relative;
+}
+.auth-password-row .auth-input {
+  width: 100%;
+  padding-right: 44px;
+}
+.auth-password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 17px;
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0.7;
+}
+.auth-password-toggle:hover {
+  opacity: 1;
+}
+
 .report-btn {
   background: var(--bg-surface-alt);
   border: 1.5px solid var(--border);

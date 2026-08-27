@@ -11,6 +11,7 @@ function ResetPassword() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -49,17 +50,27 @@ function ResetPassword() {
       <p className="auth-subtitle">Choisis un nouveau mot de passe</p>
 
       <form onSubmit={handleSubmit} className="auth-form">
+        <div className="auth-password-row">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Nouveau mot de passe"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+            className="auth-input"
+          />
+          <button
+            type="button"
+            className="auth-password-toggle"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+          >
+            {showPassword ? '🙈' : '👁️'}
+          </button>
+        </div>
         <input
-          type="password"
-          placeholder="Nouveau mot de passe"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          minLength={6}
-          className="auth-input"
-        />
-        <input
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           placeholder="Confirme le mot de passe"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
