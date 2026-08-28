@@ -11,7 +11,10 @@ export async function getLevelPath(userId, languageId, cecrLevel) {
     .from('units').select('*').eq('language_id', languageId).order('position')
   if (unitsErr) throw unitsErr
 
-  const allStates = await computeUnitStates(userId, languageId, allUnits)
+  const { data: settings } = await supabase
+    .from('user_settings').select('unlocked_level').eq('user_id', userId).single()
+
+  const allStates = await computeUnitStates(userId, languageId, allUnits, settings?.unlocked_level)
   const levelStates = allStates.filter((s) => s.unit.cecr_level === cecrLevel)
   const levelUnitIds = levelStates.map((s) => s.unit.id)
 

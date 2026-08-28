@@ -7,6 +7,8 @@ export function sanitizeForSpeech(text) {
   return text
     .replace(/^(complète|complete|choisis|traduis|traduisez|complétez|sélectionne|select|translate)\s*:\s*/i, '')
     .replace(/_{2,}(\s*_{2,})*/g, '...') // pause silencieuse plutôt qu'un mot prononcé
+    .replace(/\s*=\s*\?\s*$/g, '') // retire le "= ?" de fin (ex: "🐶 = ?"), lu à tort comme "equals"
+    .replace(/=/g, '') // tout autre "=" isolé, jamais destiné à être prononcé
     .replace(/\s{2,}/g, ' ')
     .trim()
 }

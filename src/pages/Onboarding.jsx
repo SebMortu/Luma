@@ -104,22 +104,9 @@ function Onboarding() {
       let firstLessonId = null
 
       if (targetIndex === 1) {
-        // A1 sans test : on déverrouille juste A0 s'il existe, sans vérification.
-        const { data: unitsToUnlock } = await supabase
-          .from('units').select('id')
-          .eq('language_id', language.id).eq('cecr_level', 'A0')
-        const unitIds = (unitsToUnlock || []).map((u) => u.id)
-        if (unitIds.length > 0) {
-          const { data: lessonsToUnlock } = await supabase
-            .from('lessons').select('id, unit_id').in('unit_id', unitIds)
-          const bypassRows = (lessonsToUnlock || []).map((l) => ({
-            user_id: user.id, language_id: language.id, unit_id: l.unit_id, lesson_id: l.id,
-            status: 'completed', best_score: 1,
-          }))
-          if (bypassRows.length > 0) {
-            await supabase.from('user_progress').upsert(bypassRows, { onConflict: 'user_id,language_id,unit_id,lesson_id' })
-          }
-        }
+        // A1 sans test : on confirme juste que A0 est accessible, sans le
+        // marquer comme "fait" — juste débloqué, pas complété.
+        await supabase.from('user_settings').update({ unlocked_level: 'A0' }).eq('user_id', user.id)
         const { data: firstUnitAtLevel } = await supabase
           .from('units').select('id')
           .eq('language_id', language.id).eq('cecr_level', level)

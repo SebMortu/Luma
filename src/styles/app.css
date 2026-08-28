@@ -1004,6 +1004,24 @@
   width: auto;
 }
 
+.dashboard-friends-shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+.dashboard-friends-shortcut:hover {
+  border-color: var(--accent);
+}
+
 .friend-search-results, .friend-search-row {
   margin-bottom: 8px;
 }

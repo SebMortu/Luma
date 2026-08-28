@@ -46,7 +46,7 @@ function Profile() {
 
       const { data: unitsData } = await supabase
         .from('units').select('*').eq('language_id', settingsData.active_language_id).order('position')
-      const states = await computeUnitStates(user.id, settingsData.active_language_id, unitsData || [])
+      const states = await computeUnitStates(user.id, settingsData.active_language_id, unitsData || [], settingsData.unlocked_level)
 
       const grouped = []
       states.forEach((s) => {

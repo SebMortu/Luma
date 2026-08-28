@@ -45,7 +45,7 @@ function Dashboard() {
           .order('position')
         if (unitsErr) throw unitsErr
 
-        const states = await computeUnitStates(user.id, settingsData.active_language_id, unitsData)
+        const states = await computeUnitStates(user.id, settingsData.active_language_id, unitsData, settingsData.unlocked_level)
         setUnitStates(states)
 
         const next = await getNextLesson(user.id, settingsData.active_language_id)
@@ -152,6 +152,11 @@ function Dashboard() {
                 : `Objectif du jour : ${todayXp}/${goalThreshold} XP`}
             </p>
           </div>
+        </div>
+
+        <div className="dashboard-friends-shortcut" onClick={() => navigate('/friends')}>
+          <span>👥 Amis & classement de la semaine</span>
+          <span>→</span>
         </div>
 
         <div className="progress-card">

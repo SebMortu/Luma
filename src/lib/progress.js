@@ -41,7 +41,9 @@ export async function getNextLesson(userId, languageId) {
  * Une unité est débloquée si l'unité précédente est "validée" :
  * toutes ses leçons terminées avec un score ≥ 80% chacune.
  */
-export async function computeUnitStates(userId, languageId, units) {
+const LEVEL_ORDER = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
+
+export async function computeUnitStates(userId, languageId, units, unlockedLevel = null) {
   const { data: allLessons, error: lessonsErr } = await supabase
     .from('lessons').select('id, unit_id')
     .in('unit_id', units.map((u) => u.id))
@@ -61,6 +63,11 @@ export async function computeUnitStates(userId, languageId, units) {
   const progressByLesson = {}
   allProgress.forEach((p) => { progressByLesson[p.lesson_id] = p })
 
+  // Déblocage confirmé par test de positionnement : indépendant de la
+  // progression réelle des leçons, pour ne jamais les afficher comme "faites"
+  // alors qu'elles ne l'ont jamais été.
+  const unlockedIdx = unlockedLevel ? LEVEL_ORDER.indexOf(unlockedLevel) : -1
+
   let previousUnitPassed = true // la première unité est toujours accessible
 
   return units.map((unit) => {
@@ -69,7 +76,10 @@ export async function computeUnitStates(userId, languageId, units) {
     const allCompleted = lessons.length > 0 && completions.length === lessons.length
     const passed = allCompleted && completions.every((c) => (c.best_score ?? 0) >= 0.8)
 
-    const isLocked = !previousUnitPassed
+    const unitLevelIdx = LEVEL_ORDER.indexOf(unit.cecr_level)
+    const confirmedByPlacement = unlockedIdx >= 0 && unitLevelIdx <= unlockedIdx
+
+    const isLocked = !previousUnitPassed && !confirmedByPlacement
     const status = isLocked
       ? 'locked'
       : allCompleted

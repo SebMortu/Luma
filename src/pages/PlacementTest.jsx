@@ -142,25 +142,9 @@ function PlacementTest() {
     const finalLevel = LEVEL_ORDER[Math.max(0, Math.min(avgIdx, LEVEL_ORDER.length - 1))]
     setEstimatedLevel(finalLevel)
 
-    const finalIdx = LEVEL_ORDER.indexOf(finalLevel)
-    if (finalIdx > 0) {
-      const levelsToUnlock = LEVEL_ORDER.slice(0, finalIdx)
-      const { data: unitsToUnlock } = await supabase
-        .from('units').select('id').eq('language_id', languageId).in('cecr_level', levelsToUnlock)
-      const unitIds = (unitsToUnlock || []).map((u) => u.id)
-      if (unitIds.length > 0) {
-        const { data: lessonsToUnlock } = await supabase.from('lessons').select('id, unit_id').in('unit_id', unitIds)
-        const bypassRows = (lessonsToUnlock || []).map((l) => ({
-          user_id: user.id, language_id: languageId, unit_id: l.unit_id, lesson_id: l.id,
-          status: 'completed', best_score: 1,
-        }))
-        if (bypassRows.length > 0) {
-          await supabase.from('user_progress').upsert(bypassRows, { onConflict: 'user_id,language_id,unit_id,lesson_id' })
-        }
-      }
-    }
-
-    await supabase.from('user_settings').update({ level: finalLevel }).eq('user_id', user.id)
+    // Débloque tous les niveaux jusqu'au niveau confirmé INCLUS — accessibles,
+    // mais pas marqués comme "faits" (l'utilisateur n'a réellement rien complété).
+    await supabase.from('user_settings').update({ level: finalLevel, unlocked_level: finalLevel }).eq('user_id', user.id)
     setSaving(false)
   }
 

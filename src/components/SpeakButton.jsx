@@ -50,7 +50,7 @@ function hasRealLetters(str) {
   return /[a-zA-Zà-üÀ-Ü]/.test(str || '')
 }
 
-function SpeakButton({ text, size = 'normal', className = '' }) {
+function SpeakButton({ text, size = 'normal', className = '', rate = 0.9, label = '🔊' }) {
   const [supported, setSupported] = useState(true)
   const [speaking, setSpeaking] = useState(false)
 
@@ -63,10 +63,11 @@ function SpeakButton({ text, size = 'normal', className = '' }) {
   const handleClick = (e) => {
     e.stopPropagation()
     setSpeaking(true)
-    speak(text)
+    speak(text, { rate })
     // Pas d'événement fiable multi-navigateurs pour "fin de lecture" ; on
-    // retire l'état visuel "en cours" après une durée estimée.
-    const estimatedMs = Math.max(600, text.length * 60)
+    // retire l'état visuel "en cours" après une durée estimée (plus long à
+    // vitesse réduite).
+    const estimatedMs = Math.max(600, (text.length * 60) / rate)
     setTimeout(() => setSpeaking(false), estimatedMs)
   }
 
@@ -77,7 +78,7 @@ function SpeakButton({ text, size = 'normal', className = '' }) {
       aria-label="Écouter"
       type="button"
     >
-      🔊
+      {label}
     </button>
   )
 }
