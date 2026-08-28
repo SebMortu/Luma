@@ -136,8 +136,10 @@ function Lesson() {
     // session (quelques questions plus loin), pour que l'utilisateur le
     // retente une fois qu'il a eu le temps de digérer la correction —
     // plutôt que de simplement passer à la suite et l'oublier.
-    if (!correct) {
-      const failedEx = exercises[currentIndex]
+    // Plafonné à UNE seule réinjection par exercice : s'il est raté à nouveau
+    // sur sa version réinjectée, on ne le réinjecte pas indéfiniment.
+    const failedEx = exercises[currentIndex]
+    if (!correct && !failedEx._requeued) {
       setExercises((prev) => {
         const insertAt = Math.min(currentIndex + 1 + 3, prev.length)
         const next = [...prev]

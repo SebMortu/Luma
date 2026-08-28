@@ -20,7 +20,7 @@ const EXERCISE_COMPONENTS = {
   dictation: ExerciseDictation,
 }
 
-const LEVEL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1']
+const LEVEL_ORDER = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
 const PASS_THRESHOLD = 0.9
 const QUESTIONS_PER_LESSON = 4 // le double du test de sortie classique (2)
 const MAX_QUESTIONS = 45 // évite un test de plusieurs centaines de questions sur les gros niveaux

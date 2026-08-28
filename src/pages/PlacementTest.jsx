@@ -97,6 +97,17 @@ function PlacementTest() {
     if (loading || !languageId || finished) return
     async function loadNext() {
       const ex = await nextExerciseAtLevel(currentLevelIdx)
+      if (!ex) {
+        // Filet de sécurité : si un niveau se retrouve sans exercice disponible,
+        // on termine le test avec l'historique déjà accumulé plutôt que de
+        // rester bloqué indéfiniment sur l'écran de chargement.
+        if (levelHistory.length > 0) {
+          finish(levelHistory)
+        } else {
+          navigate('/dashboard', { replace: true })
+        }
+        return
+      }
       setCurrentExercise(ex)
       setLevelHistory((prev) => [...prev, currentLevelIdx])
     }
