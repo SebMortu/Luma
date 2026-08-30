@@ -36,7 +36,12 @@ function ExerciseReorder({ content, onAnswered }) {
 
   const handleSubmit = () => {
     const builtSentence = selected.map((w) => w.word).join(' ')
-    const correct = builtSentence === content.words.join(' ')
+    // Accepte soit l'ordre de référence (content.words), soit toute autre
+    // reformulation explicitement listée comme valide (ex: complément de
+    // temps en tête de phrase — "Yesterday I worked" est aussi correct que
+    // "I worked yesterday").
+    const acceptedOrders = [content.words.join(' '), ...(content.alternate_orders || [])]
+    const correct = acceptedOrders.includes(builtSentence)
     setIsCorrect(correct)
     setAnswered(true)
     correct ? playCorrect() : playIncorrect()
