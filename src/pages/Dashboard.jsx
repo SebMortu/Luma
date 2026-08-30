@@ -9,6 +9,7 @@ import AppLayout from '../components/AppLayout.jsx'
 import RingProgress from '../components/RingProgress.jsx'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import DailyReviewPrompt from '../components/DailyReviewPrompt.jsx'
+import DailyReviewPopup from '../components/DailyReviewPopup.jsx'
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const CECR_TITLES = {
@@ -28,6 +29,8 @@ function Dashboard() {
   const [nextLesson, setNextLesson] = useState(null)
   const [dueVocabCount, setDueVocabCount] = useState(0)
   const [guideCharacter, setGuideCharacter] = useState(null)
+  const [activeDays, setActiveDays] = useState(new Set())
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -56,6 +59,16 @@ function Dashboard() {
 
         const guide = await getGuideCharacter(user.id)
         setGuideCharacter(guide)
+
+        // Vraies dates d'activité de la semaine en cours (pour le calendrier
+        // de série), plutôt qu'un recalcul approximatif à partir du compteur.
+        const mondayThisWeek = new Date()
+        mondayThisWeek.setDate(mondayThisWeek.getDate() - ((mondayThisWeek.getDay() + 6) % 7))
+        const mondayStr = mondayThisWeek.toISOString().slice(0, 10)
+        const { data: activityRows } = await supabase
+          .from('user_daily_activity').select('activity_date')
+          .eq('user_id', user.id).gte('activity_date', mondayStr)
+        setActiveDays(new Set((activityRows || []).map((r) => r.activity_date)))
       } catch (err) {
         setError(err.message)
       } finally {
@@ -72,6 +85,11 @@ function Dashboard() {
   const totalCompleted = unitStates.reduce((sum, s) => sum + s.completedCount, 0)
   const progressPct = totalLessons > 0 ? Math.round((totalCompleted / totalLessons) * 100) : 0
   const todayIndex = (new Date().getDay() + 6) % 7
+  const mondayThisWeekStr = (() => {
+    const d = new Date()
+    d.setDate(d.getDate() - todayIndex)
+    return d.toISOString().slice(0, 10)
+  })()
   const todayStr = new Date().toISOString().slice(0, 10)
   const todayXp = settings.xp_today_date === todayStr ? settings.xp_gained_today : 0
   const goalThreshold = dailyXpThreshold(settings.daily_goal_minutes)
@@ -122,7 +140,8 @@ function Dashboard() {
           )
         })()}
 
-        <DailyReviewPrompt />
+        <DailyReviewPopup dueVocabCount={dueVocabCount} />
+        {dueVocabCount > 0 && <DailyReviewPrompt />}
 
         <div className="streak-card">
           <p className="streak-card-title">Série actuelle 🔥</p>
@@ -133,14 +152,20 @@ function Dashboard() {
             </p>
           )}
           <div className="streak-week">
-            {DAY_LABELS.map((label, i) => (
-              <div key={label} className="streak-day">
-                <div className={`streak-day-dot ${i <= todayIndex && i >= todayIndex - (settings.current_streak - 1) ? 'active' : ''}`}>
-                  {i <= todayIndex && i >= todayIndex - (settings.current_streak - 1) ? '✓' : ''}
+            {DAY_LABELS.map((label, i) => {
+              const dayDate = new Date(mondayThisWeekStr)
+              dayDate.setDate(dayDate.getDate() + i)
+              const dayStr = dayDate.toISOString().slice(0, 10)
+              const isActive = activeDays.has(dayStr)
+              return (
+                <div key={label} className="streak-day">
+                  <div className={`streak-day-dot ${isActive ? 'active' : ''}`}>
+                    {isActive ? '✓' : ''}
+                  </div>
+                  <span className="streak-day-label">{label}</span>
                 </div>
-                <span className="streak-day-label">{label}</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
           <div className="goal-progress-mini">
             <div className="progress-bar-track">
