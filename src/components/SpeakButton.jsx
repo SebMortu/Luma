@@ -42,10 +42,14 @@ export async function speak(text, { rate = 0.9 } = {}) {
   if (premiumUrl) {
     const audio = new Audio(premiumUrl)
     audio.playbackRate = rate / PREMIUM_BASE_RATE
-    audio.play().catch(() => {
-      // Lecture bloquée/échouée (rare) -> repli sur la synthèse navigateur
+    let fellBack = false
+    const fallback = () => {
+      if (fellBack) return // évite un double repli (play() ET l'événement error)
+      fellBack = true
       speakWithBrowser(text, rate)
-    })
+    }
+    audio.addEventListener('error', fallback)
+    audio.play().catch(fallback)
     return
   }
 
