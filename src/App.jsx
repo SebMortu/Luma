@@ -19,8 +19,11 @@ import Verbs from './pages/Verbs.jsx'
 import GrammarLibrary from './pages/GrammarLibrary.jsx'
 import Learn from './pages/Learn.jsx'
 import Friends from './pages/Friends.jsx'
+import VocabThemesLibrary from './pages/VocabThemesLibrary.jsx'
+import VocabThemeDetail from './pages/VocabThemeDetail.jsx'
 import Practice from './pages/Practice.jsx'
 import GrammarDetail from './pages/GrammarDetail.jsx'
+import GrammarPractice from './pages/GrammarPractice.jsx'
 import ToeicTest from './pages/ToeicTest.jsx'
 import ScenariosLibrary from './pages/ScenariosLibrary.jsx'
 import ScenarioList from './pages/ScenarioList.jsx'
@@ -57,7 +60,10 @@ function App() {
             <Route path="/learn" element={<ProtectedRoute><Learn /></ProtectedRoute>} />
             <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
             <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
+            <Route path="/vocab-themes" element={<ProtectedRoute><VocabThemesLibrary /></ProtectedRoute>} />
+            <Route path="/vocab-themes/:slug" element={<ProtectedRoute><VocabThemeDetail /></ProtectedRoute>} />
             <Route path="/grammar/:ficheId" element={<ProtectedRoute><GrammarDetail /></ProtectedRoute>} />
+            <Route path="/grammar/:ficheId/practice" element={<ProtectedRoute><GrammarPractice /></ProtectedRoute>} />
             <Route path="/toeic-test" element={<ProtectedRoute><ToeicTest /></ProtectedRoute>} />
             <Route path="/scenarios" element={<ProtectedRoute><ScenariosLibrary /></ProtectedRoute>} />
             <Route path="/scenarios/:themeId" element={<ProtectedRoute><ScenarioList /></ProtectedRoute>} />
