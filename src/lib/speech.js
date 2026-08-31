@@ -13,6 +13,35 @@ export function sanitizeForSpeech(text) {
     .trim()
 }
 
+// Fichiers audio premium (générés via OpenAI TTS) — chargés une seule fois,
+// à la demande. Si une phrase exacte a un fichier pré-généré, on le joue au
+// lieu de la synthèse vocale du navigateur, pour une voix bien plus naturelle.
+let audioManifestPromise = null
+function loadAudioManifest() {
+  if (!audioManifestPromise) {
+    audioManifestPromise = fetch('/audio-manifest.json')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list) => {
+        const map = new Map()
+        list.forEach((entry) => map.set(entry.text, entry.filename))
+        return map
+      })
+      .catch(() => new Map())
+  }
+  return audioManifestPromise
+}
+
+/**
+ * Retourne l'URL du fichier audio premium pour ce texte exact, ou null s'il
+ * n'existe pas encore (fallback vers la synthèse vocale du navigateur).
+ */
+export async function getPremiumAudioUrl(text) {
+  if (!text) return null
+  const manifest = await loadAudioManifest()
+  const filename = manifest.get(text)
+  return filename ? `/audio/${filename}` : null
+}
+
 /**
  * Si le texte contient un fragment entre guillemets (ex: '"He are my brother"
  * est grammaticalement correct.'), on ne veut lire QUE ce fragment anglais,
