@@ -21,8 +21,11 @@ import Learn from './pages/Learn.jsx'
 import Friends from './pages/Friends.jsx'
 import VocabThemesLibrary from './pages/VocabThemesLibrary.jsx'
 import VocabThemeLevels from './pages/VocabThemeLevels.jsx'
+<<<<<<< HEAD
 import VocabTraining from './pages/VocabTraining.jsx'
 import VocabTrainingSession from './pages/VocabTrainingSession.jsx'
+=======
+>>>>>>> d59451b55f0911fa5e3b988a6846c9cef731397f
 import VocabThemeDetail from './pages/VocabThemeDetail.jsx'
 import Practice from './pages/Practice.jsx'
 import GrammarDetail from './pages/GrammarDetail.jsx'
@@ -64,8 +67,11 @@ function App() {
             <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
             <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
             <Route path="/vocab-themes" element={<ProtectedRoute><VocabThemesLibrary /></ProtectedRoute>} />
+<<<<<<< HEAD
             <Route path="/vocab-training" element={<ProtectedRoute><VocabTraining /></ProtectedRoute>} />
             <Route path="/vocab-training/session" element={<ProtectedRoute><VocabTrainingSession /></ProtectedRoute>} />
+=======
+>>>>>>> d59451b55f0911fa5e3b988a6846c9cef731397f
             <Route path="/vocab-themes/:slug" element={<ProtectedRoute><VocabThemeLevels /></ProtectedRoute>} />
             <Route path="/vocab-themes/:slug/:levelPosition" element={<ProtectedRoute><VocabThemeDetail /></ProtectedRoute>} />
             <Route path="/grammar/:ficheId" element={<ProtectedRoute><GrammarDetail /></ProtectedRoute>} />
