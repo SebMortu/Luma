@@ -45,7 +45,7 @@ function ExerciseDictation({ content, onAnswered }) {
 
       <div className="dictation-listen-row">
         <SpeakButton text={content.sentence} size="normal" />
-        <SpeakButton text={content.sentence} size="normal" rate={0.5} label="🐢" />
+        <SpeakButton text={content.sentence} size="normal" rate={0.4} label="🐢" />
         <span className="dictation-listen-hint">Réécoute autant de fois que nécessaire</span>
       </div>
 
