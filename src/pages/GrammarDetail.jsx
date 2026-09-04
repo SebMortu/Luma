@@ -33,6 +33,10 @@ function GrammarDetail() {
           </div>
         </div>
       ))}
+
+      <Link to={`/grammar/${fiche.id}/practice`} className="btn-primary" style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+        ✏️ S'entraîner sur cette fiche
+      </Link>
     </div>
   )
 }

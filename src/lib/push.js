@@ -1,7 +1,7 @@
 import { supabase } from './supabaseClient.js'
 
 // Clé publique VAPID — publique par nature, aucun risque à l'exposer côté client.
-const VAPID_PUBLIC_KEY = 'BDQW9QtR-UPW5ql_LOxO269Z1ujbxFCwNV_SstlaQIQaToAKnKP1dbvskTSOa0ZVBHNK17WDox56eTh6Df-d9Pw'
+const VAPID_PUBLIC_KEY = 'BPGJTsakgJnBlhhRZ1jsEmAG3kcp7H_kfODy0IHF0Dx7gAUg3BYfg4SCqubFnMQb_Ytn_dWEIQvf8Lit5mFsl4s'
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -30,6 +30,18 @@ export async function subscribeToPush(userId) {
 
   const registration = await navigator.serviceWorker.ready
   let subscription = await registration.pushManager.getSubscription()
+  // Si un abonnement existe déjà mais utilise une clé VAPID différente de
+  // l'actuelle (ex: après une régénération de clés), il faut d'abord s'en
+  // désabonner, sinon le navigateur le réutilise tel quel silencieusement.
+  if (subscription) {
+    const currentKey = subscription.options?.applicationServerKey
+      ? btoa(String.fromCharCode(...new Uint8Array(subscription.options.applicationServerKey))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+      : null
+    if (currentKey !== VAPID_PUBLIC_KEY) {
+      await subscription.unsubscribe()
+      subscription = null
+    }
+  }
   if (!subscription) {
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,

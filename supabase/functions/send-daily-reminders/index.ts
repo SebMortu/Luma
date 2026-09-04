@@ -56,6 +56,7 @@ Deno.serve(async (req) => {
   let sent = 0
   let failed = 0
   const staleSubscriptionIds = []
+  const errorDetails = []
 
   for (const sub of subscriptions || []) {
     try {
@@ -66,6 +67,7 @@ Deno.serve(async (req) => {
       sent++
     } catch (err) {
       failed++
+      errorDetails.push({ statusCode: err?.statusCode, message: err?.message || String(err), body: err?.body })
       // 404/410 = l'abonnement n'existe plus côté navigateur (désinstallation,
       // permission révoquée...) -> on le supprime pour ne plus réessayer.
       if (err?.statusCode === 404 || err?.statusCode === 410) {
@@ -78,5 +80,5 @@ Deno.serve(async (req) => {
     await supabase.from('push_subscriptions').delete().in('id', staleSubscriptionIds)
   }
 
-  return new Response(JSON.stringify({ sent, failed, cleaned: staleSubscriptionIds.length }), { status: 200 })
+  return new Response(JSON.stringify({ sent, failed, cleaned: staleSubscriptionIds.length, errorDetails }), { status: 200 })
 })

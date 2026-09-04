@@ -14,6 +14,13 @@ const SWATCH_PREVIEW = {
 }
 
 const TIME_OPTIONS = [5, 10, 20]
+
+// Sur iPhone/iPad, Safari ne permet les notifications push QUE si le site a
+// été "installé" sur l'écran d'accueil (contrainte du système, pas un bug) —
+// dans un simple onglet Safari, l'abonnement échoue silencieusement.
+const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent)
+const isStandalone = typeof navigator !== 'undefined' && (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches)
+
 const LEVEL_OPTIONS = [
   { value: 'debutant', label: 'Débutant complet' },
   { value: 'bases', label: 'Bases acquises' },
@@ -117,6 +124,11 @@ function Settings() {
           </span>
         </button>
         {pushError && <p className="feedback incorrect">{pushError}</p>}
+        {isIOS && !isStandalone && (
+          <p className="setting-note">
+            📲 Sur iPhone/iPad, les notifications ne fonctionnent que si Luma est ajouté à l'écran d'accueil : appuie sur le bouton de partage de Safari, puis "Sur l'écran d'accueil". Ouvre ensuite l'app depuis cette icône plutôt que depuis Safari.
+          </p>
+        )}
         <p className="setting-note">
           {pushStatus === 'denied'
             ? "Tu as refusé les notifications pour ce site — change ça dans les réglages de ton navigateur pour les réactiver."
