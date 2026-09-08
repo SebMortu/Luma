@@ -3,6 +3,7 @@ import AppLayout from '../components/AppLayout.jsx'
 
 const ITEMS = [
   { path: '/scenarios', icon: '🎭', title: 'Scénarios', desc: 'Dialogues interactifs à embranchements, avec traduction.' },
+  { path: '/vocab-themes', icon: '📚', title: 'Vocabulaire par thème', desc: 'Explore le vocabulaire de tes sujets préférés, tous niveaux mélangés.' },
   { path: '/word-games', icon: '🧩', title: 'Jeux de mots', desc: 'Mots croisés et jeux de vocabulaire.' },
   { path: '/vocab-review', icon: '🗂️', title: 'Révision', desc: 'Flashcards de vocabulaire sauvegardé, à réviser régulièrement.' },
   { path: '/friends', icon: '👥', title: 'Amis', desc: "Classement hebdomadaire d'XP entre amis." },

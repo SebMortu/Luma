@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import TranslateToggle from '../TranslateToggle.jsx'
 import SpeakButton from '../SpeakButton.jsx'
+import VocabIcon from '../VocabIcon.jsx'
 import { extractQuotedOrFull } from '../../lib/speech.js'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
 
@@ -19,6 +20,11 @@ function ExerciseQCM({ content, onAnswered }) {
 
   return (
     <div className="exercise">
+      {content.image && (
+        <div style={{ textAlign: 'center', marginBottom: '0.75rem' }}>
+          <VocabIcon value={content.image} size={96} />
+        </div>
+      )}
       <div className="exercise-question-row">
         <p className="exercise-question">{content.question}</p>
         <SpeakButton text={extractQuotedOrFull(content.question)} />
