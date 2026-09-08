@@ -7,6 +7,7 @@ import { estimateMinutesRemaining } from '../lib/level.js'
 import { recordLessonCompletion } from '../lib/progress.js'
 import { getMascot } from '../lib/characters.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
+import VocabIcon from '../components/VocabIcon.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import ExerciseQCM from '../components/exercises/ExerciseQCM.jsx'
 import ExerciseFillBlank from '../components/exercises/ExerciseFillBlank.jsx'
@@ -40,7 +41,7 @@ function LessonExplanation({ lesson }) {
               <tr key={i}>
                 <td>{row.subject}</td>
                 <td>{row.affirmative}</td>
-                <td>{row.negative}</td>
+                <td><VocabIcon value={row.negative} alt={row.subject} /></td>
               </tr>
             ))}
           </tbody>
@@ -143,7 +144,10 @@ function Lesson() {
       setExercises((prev) => {
         const insertAt = Math.min(currentIndex + 1 + 3, prev.length)
         const next = [...prev]
-        next.splice(insertAt, 0, { ...failedEx, _requeued: true })
+        // Identifiant distinct de l'original : deux exercices partageant le
+        // même id dans le tableau perturbaient le suivi des résultats et le
+        // rendu React (clé dupliquée), pouvant bloquer la progression.
+        next.splice(insertAt, 0, { ...failedEx, id: `${failedEx.id}-retry`, _requeued: true, _originalId: failedEx.id })
         return next
       })
     }
@@ -234,7 +238,7 @@ function Lesson() {
           <button className="lesson-explain-icon" onClick={() => setShowExplanationOverlay(true)} aria-label="Revoir l'explication">📖</button>
           <ReportButton
             contentType="exercise"
-            contentId={ex.id}
+            contentId={ex._originalId || ex.id}
             lessonTitle={lesson?.title}
             questionSnippet={ex.content?.question || ex.content?.statement || ex.content?.sentence || ''}
           />
