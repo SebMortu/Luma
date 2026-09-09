@@ -7,6 +7,8 @@ import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import SpeakButton from '../components/SpeakButton.jsx'
 import { awardProgress } from '../lib/progress.js'
 
+const FORMAT_LABELS = { court: 'court', moyen: 'moyen', long: 'long' }
+
 function ScenarioPlayer() {
   const { scenarioId } = useParams()
   const { user } = useAuth()
@@ -19,7 +21,7 @@ function ScenarioPlayer() {
   const [shownTranslations, setShownTranslations] = useState({})
   const [discoveredEndings, setDiscoveredEndings] = useState([])
   const [newEnding, setNewEnding] = useState(false)
-  const [speakerCharacters, setSpeakerCharacters] = useState({}) // speaker_key -> character
+  const [speakerCharacters, setSpeakerCharacters] = useState({})
 
   useEffect(() => {
     async function load() {
@@ -32,8 +34,6 @@ function ScenarioPlayer() {
         .eq('user_id', user.id).eq('scenario_id', scenarioId)
       setDiscoveredEndings((endingsData || []).map((e) => e.ending_label))
 
-      // Optionnel : si des personnages visuels ont été associés aux speakers
-      // de ce scénario, on les charge pour afficher leur avatar animé.
       const { data: mappings } = await supabase
         .from('scenario_speaker_characters').select('speaker_key, characters(*)')
         .eq('scenario_id', scenarioId)
@@ -76,78 +76,110 @@ function ScenarioPlayer() {
   const node = scenario.content.nodes[currentNodeId]
   const speakerName = scenario.content.characters[node.speaker] || node.speaker
   const totalEndings = Object.values(scenario.content.nodes).filter((n) => n.end).length
+  // Estimation raisonnable de la progression : le récit se ramifie, donc pas
+  // de "total" fixe universel — on approxime avec le nombre de nœuds non-fin
+  // du scénario, en repère de longueur plutôt qu'un compte exact.
+  const storyLengthEstimate = Object.values(scenario.content.nodes).filter((n) => !n.end).length
+  const currentStep = Math.min(history.length + 1, storyLengthEstimate)
+  const mainChar = speakerCharacters[node.speaker]
 
   return (
-    <div className="page">
-        <button className="lesson-back" onClick={() => navigate(-1)}>← Quitter le scénario</button>
-        <h1>{scenario.title}</h1>
+    <div className="page sc2-play-page">
+      <div className="sc2-play-header">
+        <div className="sc2-play-header-top">
+          <span className="sc2-play-quit" onClick={() => navigate(-1)}>✕ Quitter le scénario</span>
+          <span className="sc2-play-level-chip">{scenario.cecr_level} · {FORMAT_LABELS[scenario.format] || scenario.format}</span>
+        </div>
+        <div className="sc2-play-title-row">
+          {mainChar ? (
+            <CharacterAvatar character={mainChar} state={node.end ? 'celebrating' : 'waving'} size={58} />
+          ) : (
+            <span className="sc2-play-portrait-placeholder">portrait</span>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="sc2-play-title">{scenario.title}</div>
+            <div className="sc2-play-with">Tu discutes avec <strong>{speakerName}</strong></div>
+          </div>
+        </div>
+        <div className="sc2-play-progress-row">
+          <div className="d2-stat-track" style={{ flex: 1, background: '#EDF1F7' }}>
+            <div style={{ height: '100%', width: `${Math.round((currentStep / storyLengthEstimate) * 100)}%`, background: 'linear-gradient(90deg,#A3E635,#3B82F6)', borderRadius: '5px' }} />
+          </div>
+          <span className="sc2-play-progress-label">{currentStep} / {storyLengthEstimate}</span>
+        </div>
+      </div>
 
-        <div className="dialogue-history">
-          {history.map((h, i) => {
-            const char = speakerCharacters[h.speaker]
-            return (
-              <div key={i} className="dialogue-turn">
-                <div className={char ? 'dialogue-bubble-with-avatar' : ''}>
-                  {char && <CharacterAvatar character={char} state="neutral" size={40} />}
-                  <div className="dialogue-bubble npc">
-                    <p className="dialogue-speaker">{scenario.content.characters[h.speaker] || h.speaker}</p>
+      <div className="sc2-play-body">
+        {history.map((h, i) => {
+          const char = speakerCharacters[h.speaker]
+          return (
+            <div key={i} className="sc2-play-turn">
+              <div className="sc2-play-npc-row">
+                {char ? <CharacterAvatar character={char} state="neutral" size={40} /> : <span className="sc2-play-avatar-placeholder" />}
+                <div style={{ minWidth: 0 }}>
+                  <p className="sc2-play-speaker">{scenario.content.characters[h.speaker] || h.speaker}</p>
+                  <div className="sc2-play-bubble npc">
                     <p>{h.text}</p>
                     <TranslateToggle translation={h.text_fr} />
                   </div>
                 </div>
-                <div className="dialogue-bubble user">
-                  <p>{h.chosenReply}</p>
-                </div>
               </div>
-            )
-          })}
-        </div>
+              <div className="sc2-play-user-row">
+                <div className="sc2-play-bubble user">{h.chosenReply}</div>
+              </div>
+            </div>
+          )
+        })}
 
-        <div className={speakerCharacters[node.speaker] ? 'dialogue-bubble-with-avatar' : ''}>
-          {speakerCharacters[node.speaker] && (
-            <CharacterAvatar character={speakerCharacters[node.speaker]} state={node.end ? 'celebrating' : 'waving'} size={48} />
-          )}
-          <div className="dialogue-bubble npc current">
-            <p className="dialogue-speaker">{speakerName}</p>
-            <p>{node.text}</p>
-            <SpeakButton text={node.text} size="small" />
-            <TranslateToggle translation={node.text_fr} />
+        <div className="sc2-play-turn">
+          <div className="sc2-play-npc-row">
+            {mainChar ? <CharacterAvatar character={mainChar} state={node.end ? 'celebrating' : 'waving'} size={40} /> : <span className="sc2-play-avatar-placeholder" />}
+            <div style={{ minWidth: 0 }}>
+              <p className="sc2-play-speaker">{speakerName}</p>
+              <div className="sc2-play-bubble npc current">
+                <p>{node.text}</p>
+                <SpeakButton text={node.text} size="small" />
+                <TranslateToggle translation={node.text_fr} />
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        {node.end ? (
-          <div className="lesson-summary">
-            <p className="verb-result">{node.ending_label}</p>
-            {newEnding && <p className="feedback correct">🆕 Nouvelle fin découverte !</p>}
-            <p className="feedback correct">+10 XP</p>
-            <p className="progress-card-sub">
-              🔍 {discoveredEndings.length} / {totalEndings} fin{totalEndings > 1 ? 's' : ''} découverte{discoveredEndings.length > 1 ? 's' : ''}
-            </p>
-            <button className="btn-primary" onClick={() => navigate(-1)}>Retour aux scénarios</button>
+      {node.end ? (
+        <div className="sc2-play-footer">
+          <p className="verb-result">{node.ending_label}</p>
+          {newEnding && <p className="feedback correct">🆕 Nouvelle fin découverte !</p>}
+          <p className="feedback correct">+10 XP</p>
+          <p className="progress-card-sub">
+            🔍 {discoveredEndings.length} / {totalEndings} fin{totalEndings > 1 ? 's' : ''} découverte{discoveredEndings.length > 1 ? 's' : ''}
+          </p>
+          <button className="d2-cta" onClick={() => navigate(-1)}>Retour aux scénarios</button>
+        </div>
+      ) : (
+        <div className="sc2-play-footer">
+          <div className="sc2-play-footer-head">
+            <span>À toi de répondre</span>
           </div>
-        ) : (
-          <div className="dialogue-choices">
-            {node.choices.map((choice, i) => (
-              <div key={i} className="dialogue-choice-row">
-                <button className="exercise-option dialogue-choice-btn" onClick={() => chooseOption(choice)}>
-                  {choice.text}
-                </button>
+          {node.choices.map((choice, i) => (
+            <div key={i}>
+              <div className="sc2-play-choice" onClick={() => chooseOption(choice)}>
+                <span className="sc2-play-choice-key">{String.fromCharCode(65 + i)}</span>
+                <span style={{ flex: 1 }}>{choice.text}</span>
                 {choice.text_fr && (
-                  <button
-                    className="dialogue-choice-translate"
+                  <span
+                    className="sc2-play-choice-translate"
                     onClick={(e) => { e.stopPropagation(); setShownTranslations((s) => ({ ...s, [i]: !s[i] })) }}
-                    aria-label="Traduire cette réponse"
                   >
                     🌐
-                  </button>
-                )}
-                {shownTranslations[i] && choice.text_fr && (
-                  <p className="dialogue-choice-fr">🌐 {choice.text_fr}</p>
+                  </span>
                 )}
               </div>
-            ))}
-          </div>
-        )}
+              {shownTranslations[i] && choice.text_fr && <p className="dialogue-choice-fr">🌐 {choice.text_fr}</p>}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
