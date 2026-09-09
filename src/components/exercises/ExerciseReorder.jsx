@@ -36,7 +36,12 @@ function ExerciseReorder({ content, onAnswered }) {
 
   const handleSubmit = () => {
     const builtSentence = selected.map((w) => w.word).join(' ')
-    const correct = builtSentence === content.words.join(' ')
+    // Accepte soit l'ordre de référence (content.words), soit toute autre
+    // reformulation explicitement listée comme valide (ex: complément de
+    // temps en tête de phrase — "Yesterday I worked" est aussi correct que
+    // "I worked yesterday").
+    const acceptedOrders = [content.words.join(' '), ...(content.alternate_orders || [])]
+    const correct = acceptedOrders.includes(builtSentence)
     setIsCorrect(correct)
     setAnswered(true)
     correct ? playCorrect() : playIncorrect()
@@ -44,29 +49,30 @@ function ExerciseReorder({ content, onAnswered }) {
   }
 
   return (
-    <div className="exercise">
-      <p className="exercise-question">{content.instruction}</p>
+    <div className="exercise ex2-reorder">
+      <p className="ex2-reorder-eyebrow">{content.eyebrow || 'Traduis en anglais'}</p>
+      <p className="ex2-reorder-question">{content.instruction}</p>
 
-      <div className="reorder-answer-zone">
-        {selected.length === 0 && <span className="reorder-placeholder">Clique sur les mots ci-dessous, dans l'ordre</span>}
+      <div className="ex2-reorder-zone">
+        {selected.length === 0 && <span className="ex2-reorder-placeholder">Clique sur les mots ci-dessous, dans l'ordre</span>}
         {selected.map((item) => (
-          <button key={item.id} className="reorder-chip selected" onClick={() => removeWord(item)} disabled={answered}>
+          <button key={item.id} className="ex2-chip ex2-chip-placed" onClick={() => removeWord(item)} disabled={answered}>
             {item.word}
           </button>
         ))}
       </div>
 
-      <div className="reorder-bank">
+      <div className="ex2-reorder-bank">
         {bank.map((item) => (
-          <button key={item.id} className="reorder-chip" onClick={() => pickWord(item)} disabled={answered}>
+          <button key={item.id} className="ex2-chip ex2-chip-bank" onClick={() => pickWord(item)} disabled={answered}>
             {item.word}
           </button>
         ))}
       </div>
 
       {!answered && (
-        <button className="exercise-submit" onClick={handleSubmit} disabled={bank.length > 0}>
-          Valider
+        <button className="ex2-verify-btn" onClick={handleSubmit} disabled={bank.length > 0}>
+          Vérifier
         </button>
       )}
 
