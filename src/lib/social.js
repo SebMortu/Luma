@@ -67,7 +67,7 @@ export async function getFriendsLeaderboard(userId) {
 
   const { data: profiles, error: profileErr } = await supabase
     .from('user_settings')
-    .select('user_id, username, weekly_xp, weekly_xp_week_start, current_streak')
+    .select('user_id, username, weekly_xp, weekly_xp_week_start, current_streak, guide_character_id')
     .in('user_id', allIds)
   if (profileErr) throw profileErr
 

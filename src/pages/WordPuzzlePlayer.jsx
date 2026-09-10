@@ -1,15 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
-import { buildCellMap, numberWords } from '../lib/wordPuzzle.js'
+import { buildCellMap, numberWords, formatTime } from '../lib/wordPuzzle.js'
 import { playCorrect } from '../lib/sounds.js'
-
-function formatTime(seconds) {
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
 
 function WordPuzzlePlayer() {
   const { puzzleId } = useParams()
@@ -23,16 +17,15 @@ function WordPuzzlePlayer() {
   const [solved, setSolved] = useState(false)
   const [leaderboard, setLeaderboard] = useState([])
   const [loading, setLoading] = useState(true)
+  const [activeCell, setActiveCell] = useState(null)
   const startTimeRef = useRef(Date.now())
   const solvedRef = useRef(false)
   const inputRefs = useRef({})
-  const directionRef = useRef('across') // direction active pour la navigation auto
+  const directionRef = useRef('across')
 
   useEffect(() => {
     async function load() {
       setLoading(true)
-      // Réinitialisation complète : sans ça, les lettres tapées sur une grille
-      // précédente restaient affichées sur la nouvelle (mauvaises cases).
       setInputs({})
       setSolved(false)
       solvedRef.current = false
@@ -74,9 +67,6 @@ function WordPuzzlePlayer() {
     await loadLeaderboard()
   }
 
-  // Pour une case donnée, indique si elle appartient à un mot horizontal,
-  // vertical, ou les deux (case d'intersection) — sert à savoir dans quel
-  // sens avancer automatiquement après la saisie d'une lettre.
   const directionsForCell = (key) => {
     const [r, c] = key.split(',').map(Number)
     const dirs = new Set()
@@ -90,6 +80,22 @@ function WordPuzzlePlayer() {
     return dirs
   }
 
+  // Le mot (avec sa définition) auquel appartient la case active, dans la
+  // direction en cours — affiché juste au-dessus de la liste des définitions.
+  const activeClue = (() => {
+    if (!activeCell) return null
+    const [r, c] = activeCell.split(',').map(Number)
+    return numberedWords.find((w) => {
+      if (w.direction !== directionRef.current) return false
+      for (let i = 0; i < w.answer.length; i++) {
+        const wr = w.direction === 'down' ? w.row + i : w.row
+        const wc = w.direction === 'across' ? w.col + i : w.col
+        if (wr === r && wc === c) return true
+      }
+      return false
+    })
+  })()
+
   const focusCell = (key) => {
     const el = inputRefs.current[key]
     if (el) el.focus()
@@ -97,9 +103,8 @@ function WordPuzzlePlayer() {
 
   const handleCellFocus = (key) => {
     const dirs = directionsForCell(key)
-    // Si la case n'appartient qu'à une seule direction, on s'y cale.
-    // Si elle appartient aux deux (intersection), on garde la direction en cours.
     if (dirs.size === 1) directionRef.current = [...dirs][0]
+    setActiveCell(key)
   }
 
   const handleInput = (key, value) => {
@@ -118,13 +123,10 @@ function WordPuzzlePlayer() {
       return
     }
 
-    // Case suivante automatique, uniquement si une lettre a bien été saisie
     if (!letter) return
     const [r, c] = key.split(',').map(Number)
     const nextKey = directionRef.current === 'across' ? `${r},${c + 1}` : `${r + 1},${c}`
-    if (nextKey in cellMap) {
-      focusCell(nextKey)
-    }
+    if (nextKey in cellMap) focusCell(nextKey)
   }
 
   if (loading || !puzzle) return <div className="page"><p>Chargement...</p></div>
@@ -139,77 +141,101 @@ function WordPuzzlePlayer() {
   const numberByCell = {}
   numberedWords.forEach((w) => { numberByCell[`${w.row},${w.col}`] = w.number })
 
-  const acrossWords = numberedWords.filter((w) => w.direction === 'across')
-  const downWords = numberedWords.filter((w) => w.direction === 'down')
+  const wordsRemaining = numberedWords.filter((w) => {
+    for (let i = 0; i < w.answer.length; i++) {
+      const wr = w.direction === 'down' ? w.row + i : w.row
+      const wc = w.direction === 'across' ? w.col + i : w.col
+      if (inputs[`${wr},${wc}`] !== cellMap[`${wr},${wc}`]) return true
+    }
+    return false
+  }).length
+
+  const progressPct = Math.round(((numberedWords.length - wordsRemaining) / numberedWords.length) * 100)
 
   return (
-    <div className="page">
-      <button className="lesson-back" onClick={() => navigate('/word-games')}>← Retour aux grilles</button>
-      <h1>{puzzle.title}</h1>
-      {puzzle.type === 'fleche' && (
-        <p className="setting-note">Version simplifiée : définitions listées ci-dessous (le style avec flèches intégrées à la grille arrivera plus tard).</p>
-      )}
-
-      <div className="toeic-header">
-        <span>{solved ? '✅ Terminé' : 'En cours...'}</span>
-        <span className="toeic-timer">⏱ {formatTime(elapsed)}</span>
+    <div className="page wp2-page">
+      <div className="wp2-header">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span className="sc2-back" onClick={() => navigate('/word-games')}>✕ Quitter</span>
+          <div style={{ display: 'flex', gap: '9px' }}>
+            <span className="wp2-level-chip">{puzzle.cecr_level} · {puzzle.rows}×{puzzle.cols}</span>
+            <span className="wp2-timer-chip">⏱ {formatTime(elapsed)}</span>
+          </div>
+        </div>
+        <p className="wp2-title">{puzzle.title}</p>
+        {puzzle.type === 'fleche' && <p className="setting-note">Version simplifiée : définitions listées ci-dessous.</p>}
+        <div className="wp2-progress-row">
+          <div className="d2-stat-track" style={{ flex: 1, background: '#EDF1F7' }}>
+            <div style={{ height: '100%', width: `${progressPct}%`, background: 'linear-gradient(90deg,#A3E635,#3B82F6)', borderRadius: '5px' }} />
+          </div>
+          <span className="wp2-progress-label">{wordsRemaining} mot{wordsRemaining > 1 ? 's' : ''} restant{wordsRemaining > 1 ? 's' : ''}</span>
+        </div>
       </div>
 
-      <div className="crossword-grid" style={{ gridTemplateColumns: `repeat(${puzzle.cols}, 1fr)` }}>
-        {grid.flat().map((key) => {
-          const isOpen = key in cellMap
-          const number = numberByCell[key]
-          if (!isOpen) return <div key={key} className="crossword-cell blocked" />
-          return (
-            <div key={key} className="crossword-cell">
-              {number && <span className="crossword-cell-number">{number}</span>}
-              <input
-                type="text"
-                maxLength={1}
-                value={inputs[key] || ''}
-                disabled={solved}
-                ref={(el) => { inputRefs.current[key] = el }}
-                onFocus={() => handleCellFocus(key)}
-                onChange={(e) => handleInput(key, e.target.value)}
-                className={`crossword-cell-input ${solved ? 'solved' : ''}`}
-              />
-            </div>
-          )
-        })}
+      <div className="wp2-grid-wrap">
+        <div className="wp2-grid" style={{ gridTemplateColumns: `repeat(${puzzle.cols}, 1fr)` }}>
+          {grid.flat().map((key) => {
+            const isOpen = key in cellMap
+            const number = numberByCell[key]
+            if (!isOpen) return <div key={key} className="wp2-cell wp2-cell-blocked" />
+            const isActive = key === activeCell
+            return (
+              <div key={key} className={`wp2-cell ${isActive ? 'active' : ''} ${solved ? 'solved' : ''}`}>
+                {number && <span className="wp2-cell-number">{number}</span>}
+                <input
+                  type="text"
+                  maxLength={1}
+                  value={inputs[key] || ''}
+                  disabled={solved}
+                  ref={(el) => { inputRefs.current[key] = el }}
+                  onFocus={() => handleCellFocus(key)}
+                  onChange={(e) => handleInput(key, e.target.value)}
+                  className="wp2-cell-input"
+                />
+              </div>
+            )
+          })}
+        </div>
       </div>
 
-      <p className="dashboard-section-title" style={{ marginTop: '1.5rem' }}>Définitions</p>
-      {acrossWords.length > 0 && (
-        <>
-          <p className="grammar-section-heading">Horizontal</p>
-          {acrossWords.map((w) => <p key={`a${w.number}`} className="grammar-section-text">{w.number}. {w.clue}</p>)}
-        </>
-      )}
-      {downWords.length > 0 && (
-        <>
-          <p className="grammar-section-heading" style={{ marginTop: '10px' }}>Vertical</p>
-          {downWords.map((w) => <p key={`d${w.number}`} className="grammar-section-text">{w.number}. {w.clue}</p>)}
-        </>
+      {activeClue && !solved && (
+        <div className="wp2-active-clue">
+          <span className="wp2-active-clue-num">{activeClue.number}</span>
+          <span>{activeClue.clue}</span>
+        </div>
       )}
 
       {solved && (
-        <div className="lesson-summary" style={{ marginTop: '1.5rem' }}>
+        <div className="wp2-solved-card">
           <p className="verb-result">🎉 Résolu en {formatTime(elapsed)} !</p>
         </div>
       )}
 
-      <p className="dashboard-section-title" style={{ marginTop: '1.5rem' }}>🏆 Classement</p>
-      <div className="unit-list">
-        {leaderboard.map((s, i) => (
-          <div key={s.id} className="unit-card">
-            <div className="unit-icon">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}</div>
-            <div>
-              <p className="unit-title">{s.display_name}</p>
-              <p className="unit-status">{formatTime(s.time_seconds)}</p>
+      <div className="wp2-clues-card">
+        <div className="wp2-clues-eyebrow">Définitions</div>
+        {numberedWords.map((w) => (
+          <div key={`${w.direction}${w.number}`} className={`wp2-clue-row ${activeClue?.number === w.number && activeClue?.direction === w.direction ? 'active' : ''}`}>
+            <span className="wp2-clue-num">{w.number}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="wp2-clue-dir">{w.direction === 'across' ? 'Horizontal' : 'Vertical'}</div>
+              <div className="wp2-clue-text">{w.clue}</div>
             </div>
           </div>
         ))}
-        {leaderboard.length === 0 && <p>Sois le premier à résoudre cette grille !</p>}
+      </div>
+
+      <div className="wp2-leaderboard-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span className="wp2-clues-eyebrow" style={{ color: 'var(--text-primary)' }}>🏆 Classement de la grille</span>
+        </div>
+        {leaderboard.map((s, i) => (
+          <div key={s.id} className="wp2-lb-row">
+            <span className="wp2-lb-rank">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</span>
+            <span style={{ flex: 1, fontWeight: 700, fontSize: '12.5px', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.display_name}</span>
+            <span style={{ fontWeight: 800, fontSize: '12.5px', color: 'var(--accent,#2563EB)' }}>{formatTime(s.time_seconds)}</span>
+          </div>
+        ))}
+        {leaderboard.length === 0 && <p className="progress-card-sub">Sois le premier à résoudre cette grille !</p>}
       </div>
     </div>
   )

@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { estimateMinutesRemaining } from '../lib/level.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { awardProgress } from '../lib/progress.js'
-import { getMascot } from '../lib/characters.js'
+import { getGuideCharacter } from '../lib/characters.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import ExerciseQCM from '../components/exercises/ExerciseQCM.jsx'
 import ExerciseFillBlank from '../components/exercises/ExerciseFillBlank.jsx'
@@ -52,7 +52,7 @@ function UnitTest() {
   const [mascot, setMascot] = useState(null)
 
   useEffect(() => {
-    getMascot().then(setMascot).catch(() => setMascot(null))
+    getGuideCharacter(user.id).then(setMascot).catch(() => setMascot(null))
   }, [])
   const [xpGained, setXpGained] = useState(null)
 
