@@ -18,6 +18,7 @@ function ExerciseDictation({ content, onAnswered }) {
   const [value, setValue] = useState('')
   const [answered, setAnswered] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
+  const [skipped, setSkipped] = useState(false)
   const hasAutoPlayed = useRef(false)
 
   useEffect(() => {
@@ -39,15 +40,29 @@ function ExerciseDictation({ content, onAnswered }) {
     onAnswered?.(correct)
   }
 
+  const handleCantListen = () => {
+    if (answered) return
+    setIsCorrect(true)
+    setSkipped(true)
+    setAnswered(true)
+    onAnswered?.(true)
+  }
+
   return (
     <div className="exercise">
       <p className="exercise-instruction">🎧 Écoute et écris ce que tu entends</p>
 
       <div className="dictation-listen-row">
         <SpeakButton text={content.sentence} size="normal" />
-        <SpeakButton text={content.sentence} size="normal" rate={0.5} label="🐢" />
+        <SpeakButton text={content.sentence} size="normal" rate={0.4} label="🐢" />
         <span className="dictation-listen-hint">Réécoute autant de fois que nécessaire</span>
       </div>
+
+      {!answered && (
+        <button className="dictation-cant-listen" onClick={handleCantListen}>
+          🔇 Je ne peux pas écouter maintenant
+        </button>
+      )}
 
       {!answered ? (
         <>
@@ -74,7 +89,9 @@ function ExerciseDictation({ content, onAnswered }) {
           </p>
           <TranslateToggle translation={content.sentence_fr} autoReveal />
           <p className={isCorrect ? 'feedback correct' : 'feedback incorrect'}>
-            {isCorrect ? (content.feedback_correct || 'Parfait, tu as bien entendu !') : (content.feedback_incorrect || 'Pas tout à fait — regarde la phrase correcte ci-dessus.')}
+            {skipped
+              ? "Pas de souci, l'exercice a été validé — pense à réessayer avec le son une prochaine fois."
+              : isCorrect ? (content.feedback_correct || 'Parfait, tu as bien entendu !') : (content.feedback_incorrect || 'Pas tout à fait — regarde la phrase correcte ci-dessus.')}
           </p>
         </>
       )}

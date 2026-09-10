@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
-import { sanitizeForSpeech } from '../lib/speech.js'
+import { sanitizeForSpeech, getPremiumAudioUrl } from '../lib/speech.js'
+
+// Vitesse à laquelle les fichiers audio premium ont été générés — sert à
+// calculer le bon ratio de ralenti/accéléré sur un fichier déjà enregistré.
+const PREMIUM_BASE_RATE = 0.95
 
 // Sélectionne la meilleure voix anglaise disponible, une fois que le navigateur
 // a fini de charger sa liste de voix (asynchrone sur certains navigateurs).
@@ -31,7 +35,30 @@ function pickEnglishVoice() {
   )
 }
 
-export function speak(text, { rate = 0.9 } = {}) {
+export async function speak(text, { rate = 0.9 } = {}) {
+  // 1. Cherche un fichier audio premium (voix naturelle pré-générée) pour ce
+  // texte exact — bien plus agréable que la synthèse du navigateur.
+  const premiumUrl = await getPremiumAudioUrl(text)
+  if (premiumUrl) {
+    const audio = new Audio(premiumUrl)
+    audio.playbackRate = rate / PREMIUM_BASE_RATE
+    let fellBack = false
+    const fallback = () => {
+      if (fellBack) return // évite un double repli (play() ET l'événement error)
+      fellBack = true
+      speakWithBrowser(text, rate)
+    }
+    audio.addEventListener('error', fallback)
+    audio.play().catch(fallback)
+    return
+  }
+
+  // 2. Repli : synthèse vocale du navigateur (pour tout ce qui n'a pas
+  // encore de fichier premium généré).
+  speakWithBrowser(text, rate)
+}
+
+function speakWithBrowser(text, rate) {
   const clean = sanitizeForSpeech(text)
   if (!window.speechSynthesis || !clean) return
   window.speechSynthesis.cancel() // évite les lectures qui s'empilent

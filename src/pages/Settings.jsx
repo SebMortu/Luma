@@ -14,6 +14,13 @@ const SWATCH_PREVIEW = {
 }
 
 const TIME_OPTIONS = [5, 10, 20]
+
+// Sur iPhone/iPad, Safari ne permet les notifications push QUE si le site a
+// été "installé" sur l'écran d'accueil (contrainte du système, pas un bug) —
+// dans un simple onglet Safari, l'abonnement échoue silencieusement.
+const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent)
+const isStandalone = typeof navigator !== 'undefined' && (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches)
+
 const LEVEL_OPTIONS = [
   { value: 'debutant', label: 'Débutant complet' },
   { value: 'bases', label: 'Bases acquises' },
@@ -30,8 +37,6 @@ function Settings() {
   const { user, signOut } = useAuth()
   const { theme, setTheme, textScale, setTextScale } = useTheme()
   const [settings, setSettings] = useState(null)
-  const [usernameInput, setUsernameInput] = useState('')
-  const [usernameError, setUsernameError] = useState('')
   const [usernameSaved, setUsernameSaved] = useState(false)
   const [mascot, setMascot] = useState(null)
   const [pushStatus, setPushStatus] = useState('checking') // 'unsupported' | 'denied' | 'subscribed' | 'not-subscribed'
@@ -43,7 +48,6 @@ function Settings() {
     async function load() {
       const { data } = await supabase.from('user_settings').select('*').eq('user_id', user.id).single()
       setSettings(data)
-      setUsernameInput(data?.username || '')
       getMascot().then(setMascot).catch(() => setMascot(null))
       getPushSubscriptionStatus().then(setPushStatus).catch(() => setPushStatus('unsupported'))
     }
@@ -81,24 +85,6 @@ function Settings() {
 
   if (!settings) return <AppLayout><div className="page"><p>Chargement...</p></div></AppLayout>
 
-  const handleSaveUsername = async () => {
-    setUsernameError('')
-    setUsernameSaved(false)
-    const trimmed = usernameInput.trim()
-    if (trimmed.length < 3) {
-      setUsernameError('Au moins 3 caractères.')
-      return
-    }
-    const { error } = await supabase.from('user_settings').update({ username: trimmed }).eq('user_id', user.id)
-    if (error) {
-      setUsernameError(error.message.includes('duplicate') ? 'Ce pseudo est déjà pris.' : error.message)
-    } else {
-      setSettings((prev) => ({ ...prev, username: trimmed }))
-      setUsernameSaved(true)
-      setTimeout(() => setUsernameSaved(false), 2000)
-    }
-  }
-
   return (
     <AppLayout>
       <div className="page">
@@ -117,6 +103,11 @@ function Settings() {
           </span>
         </button>
         {pushError && <p className="feedback incorrect">{pushError}</p>}
+        {isIOS && !isStandalone && (
+          <p className="setting-note">
+            📲 Sur iPhone/iPad, les notifications ne fonctionnent que si Luma est ajouté à l'écran d'accueil : appuie sur le bouton de partage de Safari, puis "Sur l'écran d'accueil". Ouvre ensuite l'app depuis cette icône plutôt que depuis Safari.
+          </p>
+        )}
         <p className="setting-note">
           {pushStatus === 'denied'
             ? "Tu as refusé les notifications pour ce site — change ça dans les réglages de ton navigateur pour les réactiver."
@@ -130,21 +121,28 @@ function Settings() {
         </button>
 
         <h2>Ton pseudo</h2>
-        <p className="progress-card-sub">Utilisé par tes amis pour te retrouver.</p>
+        <p className="progress-card-sub">Utilisé par tes amis pour te retrouver — choisi une fois, non modifiable.</p>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
           <input
             type="text"
             className="auth-input"
-            value={usernameInput}
-            onChange={(e) => setUsernameInput(e.target.value)}
-            style={{ flex: 1 }}
+            value={settings.username || ''}
+            readOnly
+            style={{ flex: 1, opacity: 0.75 }}
           />
-          <button className="btn-secondary" style={{ width: 'auto', padding: '0 16px' }} onClick={handleSaveUsername}>
-            Enregistrer
+          <button
+            className="btn-secondary"
+            style={{ width: 'auto', padding: '0 16px' }}
+            onClick={() => {
+              navigator.clipboard.writeText(settings.username || '')
+              setUsernameSaved(true)
+              setTimeout(() => setUsernameSaved(false), 2000)
+            }}
+          >
+            Copier
           </button>
         </div>
-        {usernameError && <p className="feedback incorrect">{usernameError}</p>}
-        {usernameSaved && <p className="feedback correct">Pseudo mis à jour !</p>}
+        {usernameSaved && <p className="feedback correct">Copié !</p>}
 
         <h2>Ta mascotte</h2>
         <div className="mascot-settings-row">

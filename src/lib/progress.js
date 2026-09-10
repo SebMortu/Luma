@@ -221,6 +221,19 @@ export async function recordLessonCompletion({ userId, languageId, unitId, lesso
   if (!alreadyCompleted && Array.isArray(vocabTable) && vocabTable.length > 0) {
     const rows = vocabTable
       .filter((entry) => entry?.subject && entry?.affirmative)
+      // Ne garde que du vrai vocabulaire isolé pour la révision — beaucoup de
+      // tableaux de leçons contiennent aussi des lignes de résumé/règle
+      // (conjugaisons groupées, plages de nombres, notes) qui n'ont aucun
+      // sens sorties de leur contexte, façon "Lundi-Dimanche" ou "Règle".
+      .filter((entry) => {
+        const subject = entry.subject.trim()
+        const affirmative = entry.affirmative.trim()
+        if (subject.includes('/')) return false // ex: "He/She/It" (groupe de pronoms)
+        if (/^\d+\s*-\s*\d+$/.test(subject)) return false // ex: "13-19" (plage de nombres)
+        if ((affirmative.match(/,/g) || []).length >= 2) return false // ex: liste de plusieurs éléments
+        if (/^(règle|ex\.?|astuce|notez|attention|rappel)$/i.test(subject)) return false // libellés méta, pas du vocabulaire
+        return true
+      })
       .map((entry) => ({
         user_id: userId,
         item_type: 'vocabulary',
