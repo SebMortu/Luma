@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useTheme, THEMES, TEXT_SCALES } from '../contexts/ThemeContext.jsx'
-import { getMascot } from '../lib/characters.js'
+import { getSelectableCharacters } from '../lib/characters.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
 
 const LEVELS = [
@@ -58,11 +58,12 @@ function Onboarding() {
   const [goal, setGoal] = useState(null)
   const [time, setTime] = useState(null)
   const [mascot, setMascot] = useState(null)
+  const [characters, setCharacters] = useState([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    getMascot().then(setMascot).catch(() => setMascot(null))
+    getSelectableCharacters().then(setCharacters).catch(() => setCharacters([]))
   }, [])
 
   const selectAndAdvance = (setter, value, nextStep) => {
@@ -143,6 +144,7 @@ function Onboarding() {
         <div className={`bar ${step >= 3 ? 'active' : ''}`} />
         <div className={`bar ${step >= 4 ? 'active' : ''}`} />
         <div className={`bar ${step >= 5 ? 'active' : ''}`} />
+        <div className={`bar ${step >= 6 ? 'active' : ''}`} />
       </div>
 
       {step === 1 && (
@@ -212,6 +214,32 @@ function Onboarding() {
           <div className="onboarding-back-row">
             <button className="onboarding-back" onClick={() => setStep(3)}>←</button>
           </div>
+          <h2>Choisis ton guide</h2>
+          <p className="onboarding-subtitle">Il t'accompagnera tout au long de ton apprentissage.</p>
+          <div className="character-picker-grid">
+            {characters.map((c) => (
+              <button
+                key={c.id}
+                className={`character-picker-card ${mascot?.id === c.id ? 'selected' : ''}`}
+                onClick={() => setMascot(c)}
+              >
+                <CharacterAvatar character={c} state={mascot?.id === c.id ? 'happy' : 'neutral'} size={64} />
+                <p className="character-picker-name">{c.name}</p>
+                <p className="character-picker-desc">{c.description}</p>
+              </button>
+            ))}
+          </div>
+          <button className="btn-primary" style={{ marginTop: '1.5rem' }} disabled={!mascot} onClick={() => setStep(5)}>
+            Continuer avec {mascot?.name || '...'}
+          </button>
+        </>
+      )}
+
+      {step === 5 && (
+        <>
+          <div className="onboarding-back-row">
+            <button className="onboarding-back" onClick={() => setStep(4)}>←</button>
+          </div>
           <h2>Personnalise l'affichage</h2>
           <p className="onboarding-subtitle">Tu pourras en changer à tout moment dans les réglages.</p>
           <div className="theme-options">
@@ -245,11 +273,11 @@ function Onboarding() {
             ))}
           </div>
 
-          <button className="btn-primary" style={{ marginTop: '1.5rem' }} onClick={() => setStep(5)}>Continuer</button>
+          <button className="btn-primary" style={{ marginTop: '1.5rem' }} onClick={() => setStep(6)}>Continuer</button>
         </>
       )}
 
-      {step === 5 && (
+      {step === 6 && (
         <div className="onboarding-tour">
           {tourIndex === 0 && mascot ? (
             <div className="onboarding-tour-slide">

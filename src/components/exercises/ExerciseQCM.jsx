@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import TranslateToggle from '../TranslateToggle.jsx'
 import SpeakButton from '../SpeakButton.jsx'
+import VocabIcon from '../VocabIcon.jsx'
 import { extractQuotedOrFull } from '../../lib/speech.js'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
 
@@ -18,27 +19,37 @@ function ExerciseQCM({ content, onAnswered }) {
   }
 
   return (
-    <div className="exercise">
+    <div className="exercise ex2-qcm">
+      {content.image && (
+        <div style={{ textAlign: 'center', marginBottom: '0.75rem' }}>
+          <VocabIcon value={content.image} size={96} />
+        </div>
+      )}
+      <p className="ex2-eyebrow">{content.eyebrow || 'Choisis la bonne réponse'}</p>
       <div className="exercise-question-row">
-        <p className="exercise-question">{content.question}</p>
-        <SpeakButton text={extractQuotedOrFull(content.question)} />
+        <p className="ex2-question">{content.question}</p>
+        <div className="ex2-listen-chip">
+          <SpeakButton text={extractQuotedOrFull(content.question)} />
+          <span>Écouter</span>
+        </div>
       </div>
       <TranslateToggle translation={content.question_fr} autoReveal={answered} />
-      <div className="exercise-options">
+      <div className="ex2-options">
         {content.options.map((option, index) => {
-          let className = 'exercise-option'
+          let state = ''
           if (answered) {
-            if (index === content.correct_index) className += ' correct'
-            else if (index === selected) className += ' incorrect'
+            if (index === content.correct_index) state = 'correct'
+            else if (index === selected) state = 'incorrect'
           }
           return (
             <button
               key={index}
-              className={className}
+              className={`ex2-option ${state}`}
               onClick={() => handleClick(index)}
               disabled={answered}
             >
-              <span>{option}</span>
+              <span className="ex2-option-key">{String.fromCharCode(65 + index)}</span>
+              <span className="ex2-option-text">{option}</span>
               <SpeakButton text={option} size="small" />
             </button>
           )
