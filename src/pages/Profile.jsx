@@ -8,7 +8,7 @@ import RingProgress from '../components/RingProgress.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
 
-const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+const DAY_LABELS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 const CECR_TITLES = {
   A0: 'Fondations · Premiers pas',
   A1: 'A1 · Débutant complet',
@@ -16,6 +16,14 @@ const CECR_TITLES = {
   B1: 'B1 · Intermédiaire',
   B2: 'B2 · Intermédiaire avancé',
   C1: 'C1 · Avancé',
+}
+const LEVEL_CHIP = {
+  A0: { bg: '#DCEFFB', fg: '#1E4A72', fill: '#3B82F6' },
+  A1: { bg: '#E4F3D2', fg: '#3E5410', fill: '#8DBF3A' },
+  A2: { bg: '#FFE9D6', fg: '#8A4A12', fill: '#F0973E' },
+  B1: { bg: '#FDE2E0', fg: '#8A2E24', fill: '#E0685A' },
+  B2: { bg: '#E7E1FB', fg: '#4B2E8A', fill: '#8A6FE0' },
+  C1: { bg: '#DCE1EC', fg: '#28324A', fill: '#4A5A82' },
 }
 
 function Profile() {
@@ -27,6 +35,9 @@ function Profile() {
   const [levelProgress, setLevelProgress] = useState([])
   const [bestToeicScore, setBestToeicScore] = useState(null)
   const [wordPuzzleHistory, setWordPuzzleHistory] = useState([])
+  const [activeDays, setActiveDays] = useState(new Set())
+  const [equippedFrame, setEquippedFrame] = useState(null)
+  const [ownedBadges, setOwnedBadges] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -61,6 +72,7 @@ function Profile() {
           level: g.level,
           pct: total > 0 ? Math.round((done / total) * 100) : 0,
           isLocked: g.units[0]?.isLocked,
+          done, total,
         }
       }))
 
@@ -69,6 +81,22 @@ function Profile() {
 
       const history = await loadWordPuzzleHistory(supabase, user.id)
       setWordPuzzleHistory(history)
+
+      const mondayThisWeek = new Date()
+      mondayThisWeek.setDate(mondayThisWeek.getDate() - ((mondayThisWeek.getDay() + 6) % 7))
+      const mondayStr = mondayThisWeek.toISOString().slice(0, 10)
+      const { data: activityRows } = await supabase
+        .from('user_daily_activity').select('activity_date')
+        .eq('user_id', user.id).gte('activity_date', mondayStr)
+      setActiveDays(new Set((activityRows || []).map((r) => r.activity_date)))
+
+      if (settingsData.equipped_frame_id) {
+        const { data: frame } = await supabase.from('shop_items').select('*').eq('id', settingsData.equipped_frame_id).maybeSingle()
+        setEquippedFrame(frame)
+      }
+      const { data: purchases } = await supabase
+        .from('user_shop_purchases').select('shop_items(*)').eq('user_id', user.id)
+      setOwnedBadges((purchases || []).map((p) => p.shop_items).filter((i) => i?.category === 'badge'))
 
       setLoading(false)
     }
@@ -80,6 +108,11 @@ function Profile() {
   const { xpIntoLevel, xpNeeded, currentLevel } = xpForNextLevel(settings.total_xp)
   const levelPct = Math.round((xpIntoLevel / xpNeeded) * 100)
   const todayIndex = (new Date().getDay() + 6) % 7
+  const mondayThisWeekStr = (() => {
+    const d = new Date()
+    d.setDate(d.getDate() - todayIndex)
+    return d.toISOString().slice(0, 10)
+  })()
   const todayStr = new Date().toISOString().slice(0, 10)
   const todayXp = settings.xp_today_date === todayStr ? settings.xp_gained_today : 0
   const goalThreshold = dailyXpThreshold(settings.daily_goal_minutes)
@@ -88,94 +121,105 @@ function Profile() {
 
   return (
     <AppLayout>
-      <div className="page">
-        <div className="dashboard-header">
-          <div className="dashboard-identity">
-            <div className="avatar">{initial}</div>
-            <div>
-              <p className="dashboard-name">{displayName}</p>
-              <p className="dashboard-level">Niveau {currentLevel}</p>
-            </div>
-          </div>
-          <button className="nav-item" style={{ width: 'auto' }} onClick={() => navigate('/settings')} aria-label="Réglages">
-            <span className="nav-icon">⚙️</span>
-          </button>
+      <div className="page p3-page">
+        <div className="p3-top">
+          <p className="p3-title">👤 Profil</p>
+          <span className="p3-settings" onClick={() => navigate('/settings')}>⚙️</span>
         </div>
 
-        <div className="streak-card">
-          <p className="streak-card-title">Série actuelle 🔥</p>
-          <p className="streak-card-value">{settings.current_streak} jour{settings.current_streak > 1 ? 's' : ''}</p>
-          <p className="progress-card-sub" style={{ marginBottom: 10 }}>Continue comme ça !</p>
-          <div className="streak-week">
-            {DAY_LABELS.map((label, i) => (
-              <div key={label} className="streak-day">
-                <div className={`streak-day-dot ${i <= todayIndex && i >= todayIndex - (settings.current_streak - 1) ? 'active' : ''}`}>
-                  {i <= todayIndex && i >= todayIndex - (settings.current_streak - 1) ? '✓' : ''}
+        <div className="p3-id-card">
+          <div className="p3-id-row">
+            <span className="p3-id-avatar" style={equippedFrame ? { border: equippedFrame.frame_css } : {}}>{initial}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="p3-id-name">{displayName}</div>
+              <div className="p3-id-sub">Niveau {currentLevel}</div>
+            </div>
+          </div>
+          <div className="p3-id-xp-row">
+            <span>Vers le niveau {currentLevel + 1}</span>
+            <span>{xpIntoLevel} / {xpNeeded} XP</span>
+          </div>
+          <div className="p3-id-track"><div className="p3-id-fill" style={{ width: `${levelPct}%` }} /></div>
+        </div>
+
+        <div className="p3-streak-card">
+          <div className="p3-streak-head">
+            <span>🔥 Série de {settings.current_streak} jour{settings.current_streak > 1 ? 's' : ''}</span>
+            <span className="p3-streak-record">record {settings.longest_streak}</span>
+          </div>
+          <div className="p3-streak-week">
+            {DAY_LABELS.map((label, i) => {
+              const dayDate = new Date(mondayThisWeekStr)
+              dayDate.setDate(dayDate.getDate() + i)
+              const dayStr = dayDate.toISOString().slice(0, 10)
+              const isActive = activeDays.has(dayStr)
+              return (
+                <div key={i} className="p3-streak-day">
+                  <div className={`p3-streak-mark ${isActive ? 'active' : ''}`}>{isActive ? '✓' : ''}</div>
+                  <span className="p3-streak-daylabel">{label}</span>
                 </div>
-                <span className="streak-day-label">{label}</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
-          <div className="goal-progress-mini">
-            <div className="progress-bar-track">
-              <div className="progress-bar-fill" style={{ width: `${Math.min(100, Math.round((todayXp / goalThreshold) * 100))}%` }} />
+        </div>
+
+        <div className="p3-stats-row">
+          <div className="p3-stat">
+            <div style={{ fontSize: '19px' }}>✅</div>
+            <div className="p3-stat-value">{completedCount}</div>
+            <div className="p3-stat-label">Leçons terminées</div>
+          </div>
+          <div className="p3-stat">
+            <div style={{ fontSize: '19px' }}>🎯</div>
+            <div className="p3-stat-value">{avgScore}%</div>
+            <div className="p3-stat-label">Score moyen</div>
+          </div>
+          <div className="p3-stat">
+            <div style={{ fontSize: '19px' }}>⏱️</div>
+            <div className="p3-stat-value">{formatDuration(settings.total_learning_seconds)}</div>
+            <div className="p3-stat-label">Temps total</div>
+          </div>
+        </div>
+
+        <p className="p3-section-title">Progression par niveau</p>
+        <div className="p3-level-card">
+          {levelProgress.map((lp) => {
+            const c = LEVEL_CHIP[lp.level] || LEVEL_CHIP.A1
+            return (
+              <Link key={lp.level} to={lp.isLocked ? '#' : `/level/${lp.level}`} className="p3-level-row">
+                <span className="p3-level-chip" style={{ background: c.bg, color: c.fg }}>{lp.level}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="p3-level-name">{CECR_TITLES[lp.level] || lp.level}</div>
+                  <div className="p3-level-track"><div className="p3-level-fill" style={{ width: `${lp.pct}%`, background: c.fill }} /></div>
+                </div>
+                <span className="p3-level-right">{lp.isLocked ? '🔒' : `${lp.done}/${lp.total}`}</span>
+              </Link>
+            )
+          })}
+        </div>
+
+        <Link to="/shop" className="p3-shop-link">
+          <span>🪙 Boutique</span>
+          <span style={{ fontWeight: 800 }}>{settings.lums_balance || 0} Lums ›</span>
+        </Link>
+
+        {ownedBadges.length > 0 && (
+          <>
+            <p className="p3-section-title">🏅 Badges</p>
+            <div className="p3-badge-row">
+              {ownedBadges.map((b) => (
+                <div key={b.id} className="p3-badge-item" title={b.name}>
+                  <span style={{ fontSize: '22px' }}>{b.emoji}</span>
+                  <span className="p3-badge-name">{b.name}</span>
+                </div>
+              ))}
             </div>
-            <p className="progress-card-sub">
-              {todayXp >= goalThreshold
-                ? `Objectif du jour atteint ✅ (${todayXp}/${goalThreshold} XP)`
-                : `Objectif du jour : ${todayXp}/${goalThreshold} XP`}
-            </p>
-          </div>
-        </div>
+          </>
+        )}
 
-        <div className="progress-card ring-progress-card">
-          <RingProgress percent={levelPct} size={90} stroke={7}>
-            <span className="ring-level-number">{currentLevel}</span>
-          </RingProgress>
-          <div>
-            <p className="progress-card-title">Vers le niveau {currentLevel + 1}</p>
-            <p className="mono" style={{ fontSize: 15, marginTop: 4 }}>{xpIntoLevel} / {xpNeeded} XP</p>
-          </div>
-        </div>
-
-        <div className="stats-row">
-          <div className="stat-box">
-            <p className="stat-icon">✅</p>
-            <p className="stat-value">{completedCount}</p>
-            <p className="stat-label">Leçons terminées</p>
-          </div>
-          <div className="stat-box">
-            <p className="stat-icon">🎯</p>
-            <p className="stat-value">{avgScore}%</p>
-            <p className="stat-label">Score moyen</p>
-          </div>
-          <div className="stat-box">
-            <p className="stat-icon">⏱️</p>
-            <p className="stat-value">{formatDuration(settings.total_learning_seconds)}</p>
-            <p className="stat-label">Temps d'apprentissage</p>
-          </div>
-        </div>
-
-        <p className="dashboard-section-title">Progression par niveau</p>
-        <div className="level-progress-list">
-          {levelProgress.map((lp) => (
-            <Link
-              key={lp.level}
-              to={lp.isLocked ? '#' : `/level/${lp.level}`}
-              className={`level-progress-row ${lp.isLocked ? 'locked' : ''}`}
-            >
-              <span className="level-progress-label">{CECR_TITLES[lp.level] || lp.level}</span>
-              <div className="level-progress-bar-track">
-                <div className="level-progress-bar-fill" style={{ width: `${lp.pct}%` }} />
-              </div>
-              <span className="level-progress-pct">{lp.isLocked ? '🔒' : `${lp.pct}%`}</span>
-            </Link>
-          ))}
-        </div>
-
-        <p className="dashboard-section-title">🏆 Trophées</p>
+        <p className="p3-section-title">🏆 Trophées</p>
         <div className="trophy-list">
-          <div className="trophy-card clickable" onClick={() => navigate('/toeic-test')} style={{ opacity: 1 }}>
+          <div className="trophy-card clickable" onClick={() => navigate('/toeic-test')}>
             <span className="trophy-icon">📝</span>
             <div>
               <p className="trophy-title">Meilleur score examen</p>
@@ -193,36 +237,20 @@ function Profile() {
               </p>
             </div>
           </div>
-          <div className="trophy-card">
-            <span className="trophy-icon">💬</span>
-            <div>
-              <p className="trophy-title">Record vocabulaire (60s)</p>
-              <p className="trophy-value">Pas encore disponible</p>
-            </div>
-          </div>
         </div>
-        <p className="setting-note">Ces modules (test type examen, verbes irréguliers) arrivent bientôt — les trophées s'activeront automatiquement une fois disponibles.</p>
 
         {wordPuzzleHistory.length > 0 && (
           <>
-            <p className="dashboard-section-title">🧩 Jeux de mots</p>
-            <div
-              className="unit-card clickable"
-              style={{ marginBottom: '1.5rem' }}
-              onClick={() => navigate('/word-games/history')}
-            >
-              <div className="unit-icon">🧩</div>
-              <div>
-                <p className="unit-title">
-                  {wordPuzzleHistory.length} grille{wordPuzzleHistory.length > 1 ? 's' : ''} résolue{wordPuzzleHistory.length > 1 ? 's' : ''}
-                </p>
-                <p className="unit-status">
-                  🥇 {wordPuzzleHistory.filter((h) => h.rank === 1).length}
-                  {' · '}🥈 {wordPuzzleHistory.filter((h) => h.rank === 2).length}
-                  {' · '}🥉 {wordPuzzleHistory.filter((h) => h.rank === 3).length}
-                  {' · Voir tout →'}
-                </p>
+            <p className="p3-section-title">🧩 Jeux de mots</p>
+            <div className="p3-level-row" style={{ background: 'var(--bg-surface,#fff)', borderRadius: '20px', padding: '14px 16px', cursor: 'pointer' }} onClick={() => navigate('/word-games/history')}>
+              <span style={{ fontSize: '22px' }}>🧩</span>
+              <div style={{ flex: 1 }}>
+                <div className="p3-level-name">{wordPuzzleHistory.length} grille{wordPuzzleHistory.length > 1 ? 's' : ''} résolue{wordPuzzleHistory.length > 1 ? 's' : ''}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  🥇 {wordPuzzleHistory.filter((h) => h.rank === 1).length} · 🥈 {wordPuzzleHistory.filter((h) => h.rank === 2).length} · 🥉 {wordPuzzleHistory.filter((h) => h.rank === 3).length}
+                </div>
               </div>
+              <span className="p3-level-right">→</span>
             </div>
           </>
         )}

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import SpeakButton from '../SpeakButton.jsx'
+import VocabIcon from '../VocabIcon.jsx'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
 
 function shuffle(array) {
@@ -42,8 +43,8 @@ function ExerciseMatching({ content, onAnswered }) {
           const isWrong = answered && answers[p.left] !== p.right
           return (
             <div key={p.left} className="matching-row">
-              <span className="matching-left">{p.left}</span>
-              <SpeakButton text={p.left} size="small" />
+              <span className="matching-left"><VocabIcon value={p.left} /></span>
+              <SpeakButton text={p.speak || p.left} size="small" />
               <select
                 className={`matching-select ${isCorrect ? 'correct' : ''} ${isWrong ? 'incorrect' : ''}`}
                 value={answers[p.left] || ''}
