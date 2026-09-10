@@ -4,6 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import RootRedirect from './pages/RootRedirect.jsx'
 import Login from './pages/Login.jsx'
+import ChooseUsername from './pages/ChooseUsername.jsx'
 import ResetPassword from './pages/ResetPassword.jsx'
 import Onboarding from './pages/Onboarding.jsx'
 import Dashboard from './pages/Dashboard.jsx'
@@ -19,8 +20,14 @@ import Verbs from './pages/Verbs.jsx'
 import GrammarLibrary from './pages/GrammarLibrary.jsx'
 import Learn from './pages/Learn.jsx'
 import Friends from './pages/Friends.jsx'
+import VocabThemesLibrary from './pages/VocabThemesLibrary.jsx'
+import VocabThemeLevels from './pages/VocabThemeLevels.jsx'
+import VocabTraining from './pages/VocabTraining.jsx'
+import VocabTrainingSession from './pages/VocabTrainingSession.jsx'
+import VocabThemeDetail from './pages/VocabThemeDetail.jsx'
 import Practice from './pages/Practice.jsx'
 import GrammarDetail from './pages/GrammarDetail.jsx'
+import GrammarPractice from './pages/GrammarPractice.jsx'
 import ToeicTest from './pages/ToeicTest.jsx'
 import ScenariosLibrary from './pages/ScenariosLibrary.jsx'
 import ScenarioList from './pages/ScenarioList.jsx'
@@ -40,6 +47,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/choose-username" element={<ProtectedRoute><ChooseUsername /></ProtectedRoute>} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<ProtectedRoute><RootRedirect /></ProtectedRoute>} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
@@ -57,7 +65,13 @@ function App() {
             <Route path="/learn" element={<ProtectedRoute><Learn /></ProtectedRoute>} />
             <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
             <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
+            <Route path="/vocab-themes" element={<ProtectedRoute><VocabThemesLibrary /></ProtectedRoute>} />
+            <Route path="/vocab-training" element={<ProtectedRoute><VocabTraining /></ProtectedRoute>} />
+            <Route path="/vocab-training/session" element={<ProtectedRoute><VocabTrainingSession /></ProtectedRoute>} />
+            <Route path="/vocab-themes/:slug" element={<ProtectedRoute><VocabThemeLevels /></ProtectedRoute>} />
+            <Route path="/vocab-themes/:slug/:levelPosition" element={<ProtectedRoute><VocabThemeDetail /></ProtectedRoute>} />
             <Route path="/grammar/:ficheId" element={<ProtectedRoute><GrammarDetail /></ProtectedRoute>} />
+            <Route path="/grammar/:ficheId/practice" element={<ProtectedRoute><GrammarPractice /></ProtectedRoute>} />
             <Route path="/toeic-test" element={<ProtectedRoute><ToeicTest /></ProtectedRoute>} />
             <Route path="/scenarios" element={<ProtectedRoute><ScenariosLibrary /></ProtectedRoute>} />
             <Route path="/scenarios/:themeId" element={<ProtectedRoute><ScenarioList /></ProtectedRoute>} />
