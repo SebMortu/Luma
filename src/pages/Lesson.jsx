@@ -5,9 +5,11 @@ import Confetti from '../components/Confetti.jsx'
 import ReportButton from '../components/ReportButton.jsx'
 import { estimateMinutesRemaining } from '../lib/level.js'
 import { recordLessonCompletion } from '../lib/progress.js'
-import { getGuideCharacter } from '../lib/characters.js'
+import { computeDiagnostic, CHECKPOINT_A0_COMPETENCIES } from '../lib/checkpointA0Config.js'
+
+const LEVEL_ORDER = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
+import { getMascot } from '../lib/characters.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
-import VocabIcon from '../components/VocabIcon.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import ExerciseQCM from '../components/exercises/ExerciseQCM.jsx'
 import ExerciseFillBlank from '../components/exercises/ExerciseFillBlank.jsx'
@@ -16,6 +18,9 @@ import ExerciseMatching from '../components/exercises/ExerciseMatching.jsx'
 import ExerciseReorder from '../components/exercises/ExerciseReorder.jsx'
 import ExerciseDictation from '../components/exercises/ExerciseDictation.jsx'
 import ExerciseSpeakingPractice from '../components/exercises/ExerciseSpeakingPractice.jsx'
+import ExerciseMultiSelect from '../components/exercises/ExerciseMultiSelect.jsx'
+import ExerciseBlockConstruction from '../components/exercises/ExerciseBlockConstruction.jsx'
+import ExerciseComprehension from '../components/exercises/ExerciseComprehension.jsx'
 
 const EXERCISE_COMPONENTS = {
   qcm: ExerciseQCM,
@@ -25,6 +30,9 @@ const EXERCISE_COMPONENTS = {
   reorder: ExerciseReorder,
   dictation: ExerciseDictation,
   speaking_practice: ExerciseSpeakingPractice,
+  multi_select: ExerciseMultiSelect,
+  block_construction: ExerciseBlockConstruction,
+  comprehension: ExerciseComprehension,
 }
 
 function LessonExplanation({ lesson }) {
@@ -41,7 +49,7 @@ function LessonExplanation({ lesson }) {
               <tr key={i}>
                 <td>{row.subject}</td>
                 <td>{row.affirmative}</td>
-                <td><VocabIcon value={row.negative} alt={row.subject} /></td>
+                <td>{row.negative}</td>
               </tr>
             ))}
           </tbody>
@@ -71,7 +79,7 @@ function Lesson() {
   const [mascot, setMascot] = useState(null)
 
   useEffect(() => {
-    getGuideCharacter(user.id).then(setMascot).catch(() => setMascot(null))
+    getMascot().then(setMascot).catch(() => setMascot(null))
   }, [])
 
   const [phase, setPhase] = useState('explanation')
@@ -82,14 +90,19 @@ function Lesson() {
 
   const [saving, setSaving] = useState(false)
   const [xpGained, setXpGained] = useState(null)
-  const [lumsGained, setLumsGained] = useState(null)
   const [newStreak, setNewStreak] = useState(null)
   const [freezeUsed, setFreezeUsed] = useState(false)
   const [freezeGained, setFreezeGained] = useState(false)
   const [alreadyCompleted, setAlreadyCompleted] = useState(false)
   const [goalInfo, setGoalInfo] = useState(null)
-  const [themeProgress, setThemeProgress] = useState(null)
   const startTimeRef = useRef(Date.now())
+
+  const isCheckpoint = unit?.unit_type === 'checkpoint'
+  // Stockage STRICTEMENT séparé de `results` -- ne participe jamais au
+  // score historique. Clé = position réelle en DB (exercises.position).
+  const checkpointAnswersRef = useRef({})
+  const positionByOriginalIdRef = useRef({})
+  const [diagnostic, setDiagnostic] = useState(null)
 
   useEffect(() => {
     startTimeRef.current = Date.now()
@@ -98,6 +111,12 @@ function Lesson() {
   useEffect(() => {
     async function load() {
       try {
+        // Réinitialisation systématique -- empêche une tentative de
+        // checkpoint précédente de contaminer une nouvelle session.
+        checkpointAnswersRef.current = {}
+        positionByOriginalIdRef.current = {}
+        setDiagnostic(null)
+
         const { data: lessonData, error: lessonErr } = await supabase
           .from('lessons').select('*').eq('id', lessonId).single()
         if (lessonErr) throw lessonErr
@@ -112,6 +131,9 @@ function Lesson() {
           .from('exercises').select('*').eq('lesson_id', lessonId).order('position')
         if (exercisesErr) throw exercisesErr
         setExercises(exercisesData)
+        const posMap = {}
+        exercisesData.forEach((e, i) => { posMap[e.id] = e.position ?? (i + 1) })
+        positionByOriginalIdRef.current = posMap
 
         // Reprend une session interrompue si elle existe (même leçon, exercices identiques)
         try {
@@ -134,6 +156,15 @@ function Lesson() {
   const handleAnswered = (exerciseId, correct) => {
     setResults((prev) => ({ ...prev, [exerciseId]: correct }))
     setHasAnsweredCurrent(true)
+
+    if (isCheckpoint) {
+      const currentEx = exercises[currentIndex]
+      const originalId = currentEx._originalId || currentEx.id
+      const position = positionByOriginalIdRef.current[originalId]
+      // Dernier résultat gagne (retry écrase la valeur précédente) --
+      // stockage totalement indépendant de `results` / du score.
+      checkpointAnswersRef.current[position] = correct
+    }
 
     // Adaptivité légère : un exercice raté revient plus tard dans la même
     // session (quelques questions plus loin), pour que l'utilisateur le
@@ -173,6 +204,11 @@ function Lesson() {
   const isFinished = phase === 'finished'
 
   useEffect(() => {
+    if (!isFinished || !isCheckpoint || diagnostic) return
+    setDiagnostic(computeDiagnostic(checkpointAnswersRef.current))
+  }, [isFinished])
+
+  useEffect(() => {
     if (!isFinished || xpGained !== null || saving) return
     async function save() {
       setSaving(true)
@@ -195,24 +231,6 @@ function Lesson() {
         setFreezeGained(result.freezeGained)
         setAlreadyCompleted(result.alreadyCompleted)
         setGoalInfo({ goalMetNow: result.goalMetNow, xpToday: result.xpToday, threshold: result.threshold })
-
-        // Lums 🪙 : base fixe + bonus selon le score (pas de gain en cas de
-        // révision d'une leçon déjà complétée, comme pour l'XP).
-        if (!result.alreadyCompleted) {
-          const lums = 3 + Math.round(score * 7)
-          setLumsGained(lums)
-          const { data: currentSettings } = await supabase.from('user_settings').select('lums_balance').eq('user_id', user.id).single()
-          await supabase.from('user_settings').update({ lums_balance: (currentSettings?.lums_balance || 0) + lums }).eq('user_id', user.id)
-        } else {
-          setLumsGained(0)
-        }
-
-        const { data: unitLessons } = await supabase.from('lessons').select('id').eq('unit_id', unit.id)
-        const { data: unitProgress } = await supabase
-          .from('user_progress').select('lesson_id, status')
-          .eq('user_id', user.id).eq('status', 'completed')
-          .in('lesson_id', (unitLessons || []).map((l) => l.id))
-        setThemeProgress({ done: unitProgress?.length || 0, total: unitLessons?.length || 0 })
       } catch (err) {
         setError(err.message)
       } finally {
@@ -310,71 +328,91 @@ function Lesson() {
     )
   }
 
-  const score = exercises.length > 0 ? correctCount / exercises.length : 0
-  const scoreMet80 = xpGained !== null && score >= 0.8
-  const themePct = themeProgress && themeProgress.total > 0 ? Math.round((themeProgress.done / themeProgress.total) * 100) : 0
-  const streakMsg = newStreak >= 2 ? `${newStreak}ᵉ jour d'affilée, ça devient une habitude !` : 'Bien joué, continue comme ça !'
-
   return (
-    <div className="page ex2-finish-page">
-      {scoreMet80 && !alreadyCompleted && <Confetti />}
-      {xpGained === null ? (
-        <p style={{ color: '#fff', textAlign: 'center', marginTop: '2rem' }}>Enregistrement...</p>
-      ) : (
-        <>
-          <div className="ex2-finish-hero">
-            <p className="ex2-finish-eyebrow">Leçon terminée</p>
-            <div className="ex2-finish-xp-badge">+{xpGained}</div>
-            <p className="ex2-finish-xp-label">XP gagnés</p>
-            {lumsGained > 0 && <p className="ex2-finish-lums">🪙 +{lumsGained} Lums</p>}
-            <p className="ex2-finish-lesson">{lesson.title} · {correctCount} bonne{correctCount > 1 ? 's' : ''} réponse{correctCount > 1 ? 's' : ''} sur {exercises.length}</p>
-
-            <div className="ex2-finish-mascot-row">
-              {mascot ? (
-                <CharacterAvatar character={mascot} state={scoreMet80 ? 'celebrating' : 'neutral'} size={52} />
-              ) : (
-                <span className="ex2-finish-mascot-fallback">🦊</span>
-              )}
-              <span className="ex2-finish-mascot-text">
-                {alreadyCompleted ? 'Révision enregistrée, continue de pratiquer !' : streakMsg}
-              </span>
-            </div>
-          </div>
-
-          <div className="ex2-finish-sheet">
-            {freezeUsed && <p className="streak-freeze-message">🧊 Tu avais manqué un jour, mais un gel de série a protégé ta série automatiquement !</p>}
-            {freezeGained && <p className="streak-freeze-message">🎉 Nouveau gel de série gagné (7 jours d'affilée) !</p>}
-
-            <div className="ex2-finish-stat-row">
-              <div className="ex2-finish-stat coral">
-                <div style={{ fontSize: '19px' }}>🔥</div>
-                <div className="ex2-finish-stat-value">{newStreak} jour{newStreak > 1 ? 's' : ''}</div>
-                <div className="ex2-finish-stat-label">Série {alreadyCompleted ? '' : '· +1 aujourd\'hui'}</div>
-              </div>
-              <div className="ex2-finish-stat lime">
-                <div style={{ fontSize: '19px' }}>🎯</div>
-                <div className="ex2-finish-stat-value">{goalInfo?.xpToday ?? 0} / {goalInfo?.threshold ?? 0}</div>
-                <div className="ex2-finish-stat-label">{goalInfo?.goalMetNow ? 'Objectif atteint' : 'Objectif du jour'}</div>
-              </div>
-            </div>
-
-            {themeProgress && themeProgress.total > 0 && (
-              <div className="ex2-finish-theme-card">
-                <div className="ex2-finish-theme-row">
-                  <span>{unit.title}</span>
-                  <span>{themeProgress.done} / {themeProgress.total}</span>
+    <div className="page" style={{ position: 'relative' }}>
+      {xpGained !== null && !alreadyCompleted && (correctCount / exercises.length) >= 0.8 && <Confetti />}
+      {mascot && (
+        <div className="lesson-mascot-row" style={{ justifyContent: 'center', marginBottom: '0.5rem' }}>
+          <CharacterAvatar
+            character={mascot}
+            state={xpGained !== null && (correctCount / exercises.length) >= 0.8 ? 'celebrating' : 'neutral'}
+            size={72}
+          />
+        </div>
+      )}
+      <h1>{lesson.title}</h1>
+      <div className="lesson-summary">
+        <p>Score : {correctCount} / {exercises.length}</p>
+        {saving && <p>Enregistrement...</p>}
+        {xpGained !== null && (
+          <>
+            {alreadyCompleted ? (
+              <p className="feedback correct">Révision enregistrée · Streak : {newStreak} 🔥</p>
+            ) : (
+              <p className="feedback correct"><span className="xp-pop">+{xpGained} XP</span> · Streak : {newStreak} <span className="streak-flame-pulse">🔥</span></p>
+            )}
+            {freezeUsed && (
+              <p className="streak-freeze-message">🧊 Tu avais manqué un jour, mais un gel de série a protégé ta série automatiquement !</p>
+            )}
+            {freezeGained && (
+              <p className="streak-freeze-message">🎉 Nouveau gel de série gagné (7 jours d'affilée) ! Il protégera ta série si jamais tu manques un jour.</p>
+            )}
+            {goalInfo && (
+              <div className="goal-progress-mini">
+                <div className="progress-bar-track">
+                  <div className="progress-bar-fill" style={{ width: `${Math.min(100, Math.round((goalInfo.xpToday / goalInfo.threshold) * 100))}%` }} />
                 </div>
-                <div className="d2-stat-track" style={{ marginTop: '9px', background: '#EDF1F7' }}>
-                  <div style={{ height: '100%', width: `${themePct}%`, background: 'linear-gradient(90deg,#A3E635,#3B82F6)', borderRadius: '5px' }} />
-                </div>
+                <p className="progress-card-sub">
+                  {goalInfo.goalMetNow
+                    ? `Objectif du jour atteint ✅ (${goalInfo.xpToday}/${goalInfo.threshold} XP)`
+                    : `Objectif du jour : ${goalInfo.xpToday}/${goalInfo.threshold} XP`}
+                </p>
               </div>
             )}
-
-            <button className="d2-cta" onClick={() => navigate(`/level/${unit.cecr_level}`)}>Leçon suivante</button>
-            <button className="ex2-finish-back" onClick={() => navigate(`/level/${unit.cecr_level}`)}>Revenir au parcours</button>
-          </div>
-        </>
-      )}
+            {isCheckpoint && diagnostic && (
+              <div className="checkpoint-diagnostic">
+                <h2>Points solides</h2>
+                <ul>
+                  {Object.entries(diagnostic)
+                    .filter(([, v]) => v === 'MAITRISE' || v === 'INDICE_POSITIF')
+                    .map(([comp]) => <li key={comp}>{CHECKPOINT_A0_COMPETENCIES[comp]?.label}</li>)}
+                </ul>
+                <h2>Points fragiles</h2>
+                <ul>
+                  {Object.entries(diagnostic)
+                    .filter(([, v]) => v === 'FRAGILE')
+                    .map(([comp]) => <li key={comp}>{CHECKPOINT_A0_COMPETENCIES[comp]?.label}</li>)}
+                </ul>
+                <h2>À revoir</h2>
+                <ul>
+                  {Object.entries(diagnostic)
+                    .filter(([, v]) => v === 'A_REVOIR' || v === 'NON_CONCLUANT')
+                    .map(([comp]) => <li key={comp}>{CHECKPOINT_A0_COMPETENCIES[comp]?.label}</li>)}
+                </ul>
+              </div>
+            )}
+            <button
+              className="btn-primary"
+              onClick={() => {
+                if (isCheckpoint) {
+                  const currentLevelIdx = LEVEL_ORDER.indexOf(unit.cecr_level)
+                  const nextLevel = LEVEL_ORDER[currentLevelIdx + 1]
+                  navigate(nextLevel ? `/level/${nextLevel}` : '/dashboard')
+                } else {
+                  navigate(`/level/${unit.cecr_level}`)
+                }
+              }}
+            >
+              {isCheckpoint
+                ? (() => {
+                    const nextLevel = LEVEL_ORDER[LEVEL_ORDER.indexOf(unit.cecr_level) + 1]
+                    return nextLevel ? `Continuer vers ${nextLevel}` : 'Retour au tableau de bord'
+                  })()
+                : `Retour au niveau ${unit.cecr_level}`}
+            </button>
+          </>
+        )}
+      </div>
     </div>
   )
 }

@@ -68,18 +68,55 @@ export async function computeUnitStates(userId, languageId, units, unlockedLevel
   // alors qu'elles ne l'ont jamais été.
   const unlockedIdx = unlockedLevel ? LEVEL_ORDER.indexOf(unlockedLevel) : -1
 
-  let previousUnitPassed = true // la première unité est toujours accessible
-
-  return units.map((unit) => {
+  // Pré-calcul de `passed` pour CHAQUE unité, indépendamment de l'ordre
+  // séquentiel. Nécessaire pour qu'un checkpoint puisse vérifier TOUS ses
+  // prérequis de même niveau, pas seulement l'unité qui le précède
+  // immédiatement dans l'ordre global de `position`.
+  const passedByUnitId = {}
+  units.forEach((unit) => {
     const lessons = lessonsByUnit[unit.id] || []
     const completions = lessons.map((l) => progressByLesson[l.id]).filter(Boolean)
     const allCompleted = lessons.length > 0 && completions.length === lessons.length
-    const passed = allCompleted && completions.every((c) => (c.best_score ?? 0) >= 0.8)
+    passedByUnitId[unit.id] = unit.unit_type === 'checkpoint'
+      ? allCompleted
+      : allCompleted && completions.every((c) => (c.best_score ?? 0) >= 0.8)
+  })
+
+  let previousUnitPassed = true // la première unité est toujours accessible
+
+  return units.map((unit, idx) => {
+    const lessons = lessonsByUnit[unit.id] || []
+    const completions = lessons.map((l) => progressByLesson[l.id]).filter(Boolean)
+    const allCompleted = lessons.length > 0 && completions.length === lessons.length
+    const passed = passedByUnitId[unit.id]
 
     const unitLevelIdx = LEVEL_ORDER.indexOf(unit.cecr_level)
-    const confirmedByPlacement = unlockedIdx >= 0 && unitLevelIdx <= unlockedIdx
 
-    const isLocked = !previousUnitPassed && !confirmedByPlacement
+    let confirmedByPlacement
+    let isLocked
+
+    if (unit.unit_type === 'checkpoint') {
+      // Un checkpoint de niveau N est accessible si :
+      //   A. l'utilisateur est placé STRICTEMENT au-dessus de N, OU
+      //   B. TOUTES les unités STANDARD de CE MÊME niveau qui le précèdent
+      //      dans l'ordre global sont passed -- pas seulement la dernière
+      //      positionnellement. 'legacy' et 'checkpoint' sont exclus des
+      //      prérequis : un ancien contenu (ex. "Fondations") ou un autre
+      //      checkpoint ne doivent jamais devenir des prérequis implicites.
+      const bypass = unlockedIdx > unitLevelIdx
+      const sameLevelStandardUnitsBefore = units
+        .slice(0, idx)
+        .filter((u) => u.unit_type === 'standard' && u.cecr_level === unit.cecr_level)
+      const allPrerequisitesPassed = sameLevelStandardUnitsBefore.every((u) => passedByUnitId[u.id])
+
+      confirmedByPlacement = bypass
+      isLocked = !allPrerequisitesPassed && !confirmedByPlacement
+    } else {
+      // Unité standard ou legacy : formule historique inchangée.
+      confirmedByPlacement = unlockedIdx >= 0 && unitLevelIdx <= unlockedIdx
+      isLocked = !previousUnitPassed && !confirmedByPlacement
+    }
+
     const status = isLocked
       ? 'locked'
       : allCompleted
@@ -221,19 +258,6 @@ export async function recordLessonCompletion({ userId, languageId, unitId, lesso
   if (!alreadyCompleted && Array.isArray(vocabTable) && vocabTable.length > 0) {
     const rows = vocabTable
       .filter((entry) => entry?.subject && entry?.affirmative)
-      // Ne garde que du vrai vocabulaire isolé pour la révision — beaucoup de
-      // tableaux de leçons contiennent aussi des lignes de résumé/règle
-      // (conjugaisons groupées, plages de nombres, notes) qui n'ont aucun
-      // sens sorties de leur contexte, façon "Lundi-Dimanche" ou "Règle".
-      .filter((entry) => {
-        const subject = entry.subject.trim()
-        const affirmative = entry.affirmative.trim()
-        if (subject.includes('/')) return false // ex: "He/She/It" (groupe de pronoms)
-        if (/^\d+\s*-\s*\d+$/.test(subject)) return false // ex: "13-19" (plage de nombres)
-        if ((affirmative.match(/,/g) || []).length >= 2) return false // ex: liste de plusieurs éléments
-        if (/^(règle|ex\.?|astuce|notez|attention|rappel)$/i.test(subject)) return false // libellés méta, pas du vocabulaire
-        return true
-      })
       .map((entry) => ({
         user_id: userId,
         item_type: 'vocabulary',
