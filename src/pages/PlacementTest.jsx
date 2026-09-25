@@ -2,21 +2,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
-import ExerciseQCM from '../components/exercises/ExerciseQCM.jsx'
-import ExerciseFillBlank from '../components/exercises/ExerciseFillBlank.jsx'
-import ExerciseTrueFalse from '../components/exercises/ExerciseTrueFalse.jsx'
-import ExerciseMatching from '../components/exercises/ExerciseMatching.jsx'
-import ExerciseReorder from '../components/exercises/ExerciseReorder.jsx'
-import ExerciseDictation from '../components/exercises/ExerciseDictation.jsx'
-
-const EXERCISE_COMPONENTS = {
-  qcm: ExerciseQCM,
-  fill_blank: ExerciseFillBlank,
-  true_false: ExerciseTrueFalse,
-  matching: ExerciseMatching,
-  reorder: ExerciseReorder,
-  dictation: ExerciseDictation,
-}
+import { EXERCISE_COMPONENTS, filterRenderableExercises } from '../components/exercises/registry.js'
+import { filterModernPathUnits, getFirstPathLessonId, isCheckpointUnit } from '../lib/pathUnits.js'
 
 const LEVEL_ORDER = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
 const MAX_QUESTIONS = 14
@@ -55,16 +42,20 @@ function PlacementTest() {
   const ensurePool = async (levelIdx) => {
     const lvl = LEVEL_ORDER[levelIdx]
     if (poolsRef.current[lvl]) return
-    const { data: units } = await supabase
-      .from('units').select('id').eq('language_id', languageId).eq('cecr_level', lvl).order('position')
+    const { data: allUnits } = await supabase
+      .from('units').select('id, unit_type').eq('language_id', languageId).eq('cecr_level', lvl).order('position')
+    // Parcours moderne uniquement : plus de questions legacy (Fondations).
+    // Checkpoint exclu : ce n'est pas une banque d'exercices ordinaire.
+    const units = filterModernPathUnits(allUnits).filter((u) => !isCheckpointUnit(u))
     const picked = []
-    for (const u of shuffle(units || []).slice(0, 4)) {
+    for (const u of shuffle(units).slice(0, 4)) {
       const { data: lessons } = await supabase.from('lessons').select('id').eq('unit_id', u.id)
       for (const lesson of shuffle(lessons || []).slice(0, 2)) {
         const { data: exercises } = await supabase
           .from('exercises').select('*').eq('lesson_id', lesson.id)
           .in('type', ['qcm', 'fill_blank', 'true_false'])
-        if (exercises && exercises.length > 0) picked.push(shuffle(exercises)[0])
+        const playable = filterRenderableExercises(exercises, `test de positionnement, leçon ${lesson.id}`)
+        if (playable.length > 0) picked.push(shuffle(playable)[0])
       }
     }
     poolsRef.current[lvl] = shuffle(picked)
@@ -160,12 +151,14 @@ function PlacementTest() {
   }
 
   const goToFirstLessonOfLevel = async () => {
-    const { data: firstUnit } = await supabase
-      .from('units').select('id').eq('language_id', languageId).eq('cecr_level', estimatedLevel)
-      .order('position').limit(1).single()
-    const { data: lesson } = await supabase
-      .from('lessons').select('id').eq('unit_id', firstUnit.id).order('position').limit(1).single()
-    navigate(lesson ? `/lesson/${lesson.id}` : '/dashboard', { replace: true })
+    // Première leçon du parcours moderne (jamais une unité legacy).
+    let firstLessonId = null
+    try {
+      firstLessonId = await getFirstPathLessonId(languageId, estimatedLevel)
+    } catch {
+      firstLessonId = null
+    }
+    navigate(firstLessonId ? `/lesson/${firstLessonId}` : '/dashboard', { replace: true })
   }
 
   if (loading || (!currentExercise && !finished)) {

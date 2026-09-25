@@ -6,22 +6,9 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import { awardProgress } from '../lib/progress.js'
 import { getGuideCharacter } from '../lib/characters.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
-import ExerciseQCM from '../components/exercises/ExerciseQCM.jsx'
-import ExerciseFillBlank from '../components/exercises/ExerciseFillBlank.jsx'
-import ExerciseTrueFalse from '../components/exercises/ExerciseTrueFalse.jsx'
-import ExerciseMatching from '../components/exercises/ExerciseMatching.jsx'
-import ExerciseReorder from '../components/exercises/ExerciseReorder.jsx'
-import ExerciseDictation from '../components/exercises/ExerciseDictation.jsx'
 import ReportButton from '../components/ReportButton.jsx'
-
-const EXERCISE_COMPONENTS = {
-  qcm: ExerciseQCM,
-  fill_blank: ExerciseFillBlank,
-  true_false: ExerciseTrueFalse,
-  matching: ExerciseMatching,
-  reorder: ExerciseReorder,
-  dictation: ExerciseDictation,
-}
+import { EXERCISE_COMPONENTS, filterRenderableExercises, isTestableExercise } from '../components/exercises/registry.js'
+import { canHaveUnitTest } from '../lib/pathUnits.js'
 
 const PASS_THRESHOLD = 0.8
 
@@ -61,14 +48,27 @@ function UnitTest() {
       const { data: unitData } = await supabase.from('units').select('*').eq('id', unitId).single()
       setUnit(unitData)
 
+      // GARDE-FOU : un Checkpoint ne se valide jamais par Test de sortie.
+      // Aucun exercice n'est chargé, aucune écriture n'est possible : on
+      // renvoie vers le parcours du niveau, où le Checkpoint s'affiche avec
+      // son vrai état (verrouillé ou à faire via sa leçon).
+      if (unitData && !canHaveUnitTest(unitData)) {
+        setLoading(false)
+        navigate(`/level/${unitData.cecr_level}`, { replace: true })
+        return
+      }
+
       const { data: lessonsData } = await supabase.from('lessons').select('*').eq('unit_id', unitId).order('position')
       setLessons(lessonsData || [])
 
       const picked = []
       for (const lesson of lessonsData || []) {
         const { data: exercises } = await supabase.from('exercises').select('*').eq('lesson_id', lesson.id).neq('type', 'speaking_practice').order('position')
-        if (exercises && exercises.length > 0) {
-          picked.push(...shuffle(exercises).slice(0, 2))
+        // Même source de renderers que Lesson : seuls les exercices réellement
+        // terminables sont tirés (plus jamais de « Type d'exercice inconnu »).
+        const testable = filterRenderableExercises(exercises, `test de sortie, leçon ${lesson.id}`).filter(isTestableExercise)
+        if (testable.length > 0) {
+          picked.push(...shuffle(testable).slice(0, 2))
         }
       }
       setTestExercises(shuffle(picked))
@@ -94,6 +94,9 @@ function UnitTest() {
   const correctCount = Object.values(results).filter(Boolean).length
 
   const finish = async () => {
+    // Double sécurité : même si un Test de sortie Checkpoint était lancé
+    // par un chemin imprévu, il n'écrit RIEN (ni progression, ni XP).
+    if (!canHaveUnitTest(unit)) return
     setSaving(true)
     setFinished(true)
     const score = correctCount / testExercises.length
@@ -139,6 +142,7 @@ function UnitTest() {
     setTestExercises((prev) => shuffle(prev))
   }
 
+  if (unit && !canHaveUnitTest(unit)) return <div className="page"><p>Le Checkpoint se termine uniquement via sa leçon. Redirection…</p></div>
   if (loading) return <div className="page"><p>Préparation du test...</p></div>
   if (testExercises.length === 0) return <div className="page"><p>Pas assez de contenu dans cette unité pour un test de sortie.</p></div>
 

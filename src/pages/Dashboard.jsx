@@ -9,16 +9,9 @@ import AppLayout from '../components/AppLayout.jsx'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import DailyReviewPrompt from '../components/DailyReviewPrompt.jsx'
 import DailyReviewPopup from '../components/DailyReviewPopup.jsx'
+import { CECR_TITLES } from '../lib/cecrLevels.js'
 
 const DAY_LABELS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
-const CECR_TITLES = {
-  A0: 'Fondations · Premiers pas',
-  A1: 'A1 · Débutant complet',
-  A2: 'A2 · Élémentaire',
-  B1: 'B1 · Intermédiaire',
-  B2: 'B2 · Intermédiaire avancé',
-  C1: 'C1 · Avancé',
-}
 // Dégradés distincts par niveau CECR, pour les cartes du parcours horizontal
 const LEVEL_GRADIENTS = {
   A0: 'linear-gradient(150deg,#DCEFFB,#C3E4FA)',

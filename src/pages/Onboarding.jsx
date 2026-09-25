@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useTheme, THEMES, TEXT_SCALES } from '../contexts/ThemeContext.jsx'
 import { getSelectableCharacters } from '../lib/characters.js'
+import { getFirstPathLessonId } from '../lib/pathUnits.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
 
 const LEVELS = [
@@ -86,29 +87,23 @@ function Onboarding() {
         return
       }
 
-      let firstLessonId = null
-
       if (targetIndex === 1) {
-        await supabase.from('user_settings').update({ unlocked_level: 'A0' }).eq('user_id', user.id)
-        const { data: firstUnitAtLevel } = await supabase
-          .from('units').select('id')
-          .eq('language_id', language.id).eq('cecr_level', level)
-          .order('position').limit(1).single()
-        if (firstUnitAtLevel) {
-          const { data: lesson } = await supabase
-            .from('lessons').select('id').eq('unit_id', firstUnitAtLevel.id).order('position').limit(1).single()
-          firstLessonId = lesson?.id || null
-        }
-      } else {
-        const { data: firstUnitAtLevel } = await supabase
-          .from('units').select('id')
-          .eq('language_id', language.id).eq('cecr_level', level)
-          .order('position').limit(1).single()
-        if (firstUnitAtLevel) {
-          const { data: lesson } = await supabase
-            .from('lessons').select('id').eq('unit_id', firstUnitAtLevel.id).order('position').limit(1).single()
-          firstLessonId = lesson?.id || null
-        }
+        // Choix « A1 · Quelques bases » = positionnement déclaratif en A1.
+        // Même sémantique que le test de positionnement : unlocked_level = niveau
+        // choisi (inclus). Avec 'A0', le Checkpoint A0 restait requis et A1
+        // s'affichait verrouillé alors que l'onboarding ouvrait A1 L1.
+        await supabase.from('user_settings').update({ unlocked_level: 'A1' }).eq('user_id', user.id)
+      }
+
+      // Première leçon du PARCOURS MODERNE du niveau choisi : pour A0,
+      // c'est U1 — plus jamais l'unité legacy « Fondations ».
+      // Réglages déjà enregistrés : un échec ici ne doit pas bloquer
+      // l'onboarding, on retombe sur le tableau de bord.
+      let firstLessonId = null
+      try {
+        firstLessonId = await getFirstPathLessonId(language.id, level)
+      } catch (lookupErr) {
+        console.warn('[Luma] Première leçon introuvable, redirection vers le tableau de bord', lookupErr)
       }
 
       navigate(firstLessonId ? `/lesson/${firstLessonId}` : '/dashboard', { replace: true })

@@ -1,121 +1,73 @@
 import { supabase } from './supabaseClient.js'
+import { filterModernPathUnits } from './pathUnits.js'
+
+const LEVEL_ORDER = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
+
+// ─────────────────────────────────────────────────────────────────────────
+// LOGIQUE DE PROGRESSION — SOURCE UNIQUE
+// computeUnitStates, getNextLesson et la protection d'accès de Lesson
+// s'appuient tous sur deriveUnitStates() et lessonCountsAsPassed() : une
+// seule définition de « leçon validée », « unité validée » et « unité
+// verrouillée ».
+// ─────────────────────────────────────────────────────────────────────────
+
+const PASS_SCORE = 0.8
 
 /**
- * Trouve la prochaine leçon à faire pour un utilisateur :
- * parcourt les unités dans l'ordre, et dans chaque unité les leçons dans l'ordre,
- * jusqu'à trouver la première leçon non terminée.
+ * Une leçon compte-t-elle comme validée pour PROGRESSER ?
+ * - Checkpoint : terminée suffit (non éliminatoire, score ignoré).
+ * - Standard   : terminée ET meilleur score >= 80 %.
  */
-export async function getNextLesson(userId, languageId) {
-  const { data: units, error: unitsErr } = await supabase
-    .from('units').select('id, position, title')
-    .eq('language_id', languageId)
-    .order('position')
-  if (unitsErr) throw unitsErr
-
-  const { data: progress, error: progressErr } = await supabase
-    .from('user_progress').select('lesson_id, status')
-    .eq('user_id', userId)
-    .eq('language_id', languageId)
-  if (progressErr) throw progressErr
-
-  const completedLessonIds = new Set(
-    progress.filter((p) => p.status === 'completed').map((p) => p.lesson_id)
-  )
-
-  for (const unit of units) {
-    const { data: lessons, error: lessonsErr } = await supabase
-      .from('lessons').select('id, position, title, unit_id')
-      .eq('unit_id', unit.id)
-      .order('position')
-    if (lessonsErr) throw lessonsErr
-
-    const nextLesson = lessons.find((l) => !completedLessonIds.has(l.id))
-    if (nextLesson) return { lesson: nextLesson, unit }
-  }
-
-  return null // tout le contenu disponible est terminé
+export function lessonCountsAsPassed(unit, progress) {
+  if (!progress || progress.status !== 'completed') return false
+  if (unit.unit_type === 'checkpoint') return true
+  return (progress.best_score ?? 0) >= PASS_SCORE
 }
 
 /**
- * Calcule, pour chaque unité, son statut d'avancement et si elle est déblocable.
- * Une unité est débloquée si l'unité précédente est "validée" :
- * toutes ses leçons terminées avec un score ≥ 80% chacune.
+ * Calcul pur (sans accès base) de l'état de chaque unité du parcours moderne.
+ * `units` doit être trié par position ; les unités legacy sont retirées.
+ *
+ * Défense en profondeur : une unité VERROUILLÉE ne compte jamais comme
+ * validée, même si toutes ses leçons sont « completed » en base (accès direct
+ * passé, ancienne écriture du test de passage…). Elle ne peut donc servir de
+ * prérequis ni à l'unité suivante, ni à un Checkpoint.
  */
-const LEVEL_ORDER = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
-
-export async function computeUnitStates(userId, languageId, units, unlockedLevel = null) {
-  const { data: allLessons, error: lessonsErr } = await supabase
-    .from('lessons').select('id, unit_id')
-    .in('unit_id', units.map((u) => u.id))
-  if (lessonsErr) throw lessonsErr
-
-  const { data: allProgress, error: progressErr } = await supabase
-    .from('user_progress').select('lesson_id, unit_id, status, best_score')
-    .eq('user_id', userId).eq('language_id', languageId)
-  if (progressErr) throw progressErr
-
-  const lessonsByUnit = {}
-  allLessons.forEach((l) => {
-    if (!lessonsByUnit[l.unit_id]) lessonsByUnit[l.unit_id] = []
-    lessonsByUnit[l.unit_id].push(l)
-  })
-
-  const progressByLesson = {}
-  allProgress.forEach((p) => { progressByLesson[p.lesson_id] = p })
-
-  // Déblocage confirmé par test de positionnement : indépendant de la
-  // progression réelle des leçons, pour ne jamais les afficher comme "faites"
-  // alors qu'elles ne l'ont jamais été.
+export function deriveUnitStates(inputUnits, lessonsByUnit, progressByLesson, unlockedLevel = null) {
+  const units = filterModernPathUnits(inputUnits)
+  // Déblocage par placement / test de passage / onboarding A1 : niveaux
+  // accessibles sans que leurs leçons soient affichées comme « faites ».
   const unlockedIdx = unlockedLevel ? LEVEL_ORDER.indexOf(unlockedLevel) : -1
-
-  // Pré-calcul de `passed` pour CHAQUE unité, indépendamment de l'ordre
-  // séquentiel. Nécessaire pour qu'un checkpoint puisse vérifier TOUS ses
-  // prérequis de même niveau, pas seulement l'unité qui le précède
-  // immédiatement dans l'ordre global de `position`.
-  const passedByUnitId = {}
-  units.forEach((unit) => {
-    const lessons = lessonsByUnit[unit.id] || []
-    const completions = lessons.map((l) => progressByLesson[l.id]).filter(Boolean)
-    const allCompleted = lessons.length > 0 && completions.length === lessons.length
-    passedByUnitId[unit.id] = unit.unit_type === 'checkpoint'
-      ? allCompleted
-      : allCompleted && completions.every((c) => (c.best_score ?? 0) >= 0.8)
-  })
-
+  const effectivePassedById = {}
   let previousUnitPassed = true // la première unité est toujours accessible
 
   return units.map((unit, idx) => {
     const lessons = lessonsByUnit[unit.id] || []
     const completions = lessons.map((l) => progressByLesson[l.id]).filter(Boolean)
     const allCompleted = lessons.length > 0 && completions.length === lessons.length
-    const passed = passedByUnitId[unit.id]
-
+    const rawPassed = lessons.length > 0 && lessons.every((l) => lessonCountsAsPassed(unit, progressByLesson[l.id]))
     const unitLevelIdx = LEVEL_ORDER.indexOf(unit.cecr_level)
 
     let confirmedByPlacement
     let isLocked
-
     if (unit.unit_type === 'checkpoint') {
-      // Un checkpoint de niveau N est accessible si :
-      //   A. l'utilisateur est placé STRICTEMENT au-dessus de N, OU
-      //   B. TOUTES les unités STANDARD de CE MÊME niveau qui le précèdent
-      //      dans l'ordre global sont passed -- pas seulement la dernière
-      //      positionnellement. 'legacy' et 'checkpoint' sont exclus des
-      //      prérequis : un ancien contenu (ex. "Fondations") ou un autre
-      //      checkpoint ne doivent jamais devenir des prérequis implicites.
+      // Checkpoint de niveau N : accessible si l'utilisateur est placé
+      // STRICTEMENT au-dessus de N, ou si TOUTES les unités standard de N
+      // qui le précèdent sont (effectivement) validées.
       const bypass = unlockedIdx > unitLevelIdx
-      const sameLevelStandardUnitsBefore = units
-        .slice(0, idx)
+      const prerequisites = units.slice(0, idx)
         .filter((u) => u.unit_type === 'standard' && u.cecr_level === unit.cecr_level)
-      const allPrerequisitesPassed = sameLevelStandardUnitsBefore.every((u) => passedByUnitId[u.id])
-
+      const allPrerequisitesPassed = prerequisites.every((u) => effectivePassedById[u.id])
       confirmedByPlacement = bypass
       isLocked = !allPrerequisitesPassed && !confirmedByPlacement
     } else {
-      // Unité standard ou legacy : formule historique inchangée.
       confirmedByPlacement = unlockedIdx >= 0 && unitLevelIdx <= unlockedIdx
       isLocked = !previousUnitPassed && !confirmedByPlacement
     }
+
+    const passed = rawPassed && !isLocked
+    effectivePassedById[unit.id] = passed
+    previousUnitPassed = passed
 
     const status = isLocked
       ? 'locked'
@@ -125,11 +77,94 @@ export async function computeUnitStates(userId, languageId, units, unlockedLevel
           ? 'in_progress'
           : 'not_started'
 
-    previousUnitPassed = passed
-
     return { unit, status, isLocked, passed, lessonCount: lessons.length, completedCount: completions.length }
   })
 }
+
+/** Charge leçons + progression de l'utilisateur pour un ensemble d'unités. */
+async function loadProgressionData(userId, languageId, units) {
+  const { data: allLessons, error: lessonsErr } = await supabase
+    .from('lessons').select('id, unit_id, position, title')
+    .in('unit_id', units.map((u) => u.id))
+  if (lessonsErr) throw lessonsErr
+
+  const { data: allProgress, error: progressErr } = await supabase
+    .from('user_progress').select('lesson_id, unit_id, status, best_score')
+    .eq('user_id', userId).eq('language_id', languageId)
+  if (progressErr) throw progressErr
+
+  const lessonsByUnit = {}
+  ;[...allLessons].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)).forEach((l) => {
+    if (!lessonsByUnit[l.unit_id]) lessonsByUnit[l.unit_id] = []
+    lessonsByUnit[l.unit_id].push(l)
+  })
+  const progressByLesson = {}
+  allProgress.forEach((p) => { progressByLesson[p.lesson_id] = p })
+  return { lessonsByUnit, progressByLesson }
+}
+
+/** Unités du parcours moderne d'une langue, triées, + unlocked_level de l'utilisateur. */
+async function loadPathContext(userId, languageId) {
+  const { data: allUnits, error: unitsErr } = await supabase
+    .from('units').select('*')
+    .eq('language_id', languageId)
+    .order('position')
+  if (unitsErr) throw unitsErr
+  const { data: settings } = await supabase
+    .from('user_settings').select('unlocked_level').eq('user_id', userId).maybeSingle()
+  return { units: filterModernPathUnits(allUnits), unlockedLevel: settings?.unlocked_level || null }
+}
+
+/**
+ * Calcule, pour chaque unité, son statut d'avancement et si elle est déblocable.
+ * Une unité standard est validée si toutes ses leçons sont terminées avec un
+ * score >= 80 % ; un Checkpoint est validé dès que sa leçon est terminée.
+ * (Signature inchangée : Dashboard, Profile, getLevelPath.)
+ */
+export async function computeUnitStates(userId, languageId, inputUnits, unlockedLevel = null) {
+  const units = filterModernPathUnits(inputUnits)
+  if (units.length === 0) return []
+  const { lessonsByUnit, progressByLesson } = await loadProgressionData(userId, languageId, units)
+  return deriveUnitStates(units, lessonsByUnit, progressByLesson, unlockedLevel)
+}
+
+/**
+ * Prochaine leçon à faire (« Continuer ») : première leçon, dans l'ordre du
+ * parcours, qui nécessite encore une action — même règle que le verrouillage.
+ * - Standard   : non terminée OU meilleur score < 80 % (à retravailler).
+ * - Checkpoint : non terminée (score ignoré).
+ * Les niveaux STRICTEMENT inférieurs à unlocked_level sont contournés et ne
+ * sont jamais imposés. Une unité verrouillée n'est jamais proposée.
+ */
+export async function getNextLesson(userId, languageId) {
+  const { units, unlockedLevel } = await loadPathContext(userId, languageId)
+  if (units.length === 0) return null
+  const { lessonsByUnit, progressByLesson } = await loadProgressionData(userId, languageId, units)
+  const states = deriveUnitStates(units, lessonsByUnit, progressByLesson, unlockedLevel)
+  const unlockedIdx = unlockedLevel ? LEVEL_ORDER.indexOf(unlockedLevel) : -1
+
+  for (const { unit, isLocked } of states) {
+    if (unlockedIdx >= 0 && LEVEL_ORDER.indexOf(unit.cecr_level) < unlockedIdx) continue
+    if (isLocked) continue
+    const lesson = (lessonsByUnit[unit.id] || []).find((l) => !lessonCountsAsPassed(unit, progressByLesson[l.id]))
+    if (lesson) return { lesson, unit }
+  }
+  return null // tout le contenu disponible est terminé
+}
+
+/**
+ * Protection d'accès direct (/lesson/:id) : l'unité est-elle verrouillée pour
+ * cet utilisateur, selon EXACTEMENT les mêmes règles que le parcours ?
+ * Retourne false pour une unité hors parcours moderne (legacy = accès historique).
+ */
+export async function isUnitLockedForUser(userId, languageId, unitId) {
+  const { units, unlockedLevel } = await loadPathContext(userId, languageId)
+  if (!units.some((u) => u.id === unitId)) return false
+  const { lessonsByUnit, progressByLesson } = await loadProgressionData(userId, languageId, units)
+  const state = deriveUnitStates(units, lessonsByUnit, progressByLesson, unlockedLevel).find((s) => s.unit.id === unitId)
+  return Boolean(state?.isLocked)
+}
+
 /**
  * XP nécessaire par jour pour valider le streak, selon l'objectif choisi.
  * Base : 6 XP par minute d'objectif (5min→30XP, 10min→60XP, 20min→120XP).

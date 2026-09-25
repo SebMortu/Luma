@@ -4,21 +4,8 @@ import { supabase } from '../lib/supabaseClient.js'
 import { estimateMinutesRemaining } from '../lib/level.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { awardProgress } from '../lib/progress.js'
-import ExerciseQCM from '../components/exercises/ExerciseQCM.jsx'
-import ExerciseFillBlank from '../components/exercises/ExerciseFillBlank.jsx'
-import ExerciseTrueFalse from '../components/exercises/ExerciseTrueFalse.jsx'
-import ExerciseMatching from '../components/exercises/ExerciseMatching.jsx'
-import ExerciseReorder from '../components/exercises/ExerciseReorder.jsx'
-import ExerciseDictation from '../components/exercises/ExerciseDictation.jsx'
-
-const EXERCISE_COMPONENTS = {
-  qcm: ExerciseQCM,
-  fill_blank: ExerciseFillBlank,
-  true_false: ExerciseTrueFalse,
-  matching: ExerciseMatching,
-  reorder: ExerciseReorder,
-  dictation: ExerciseDictation,
-}
+import { EXERCISE_COMPONENTS, filterRenderableExercises, isTestableExercise } from '../components/exercises/registry.js'
+import { filterModernPathUnits, isCheckpointUnit } from '../lib/pathUnits.js'
 
 const LEVEL_ORDER = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
 const PASS_THRESHOLD = 0.9
@@ -53,17 +40,24 @@ function LevelUpTest() {
   const [saving, setSaving] = useState(false)
   const [passed, setPassed] = useState(false)
   const [xpGained, setXpGained] = useState(null)
+  // 'unlocked' | 'already' | 'error' — résultat de l'écriture du déblocage
+  const [unlockStatus, setUnlockStatus] = useState(null)
 
   useEffect(() => {
     async function load() {
       const { data: settings } = await supabase.from('user_settings').select('active_language_id').eq('user_id', user.id).single()
       setLanguageId(settings.active_language_id)
 
-      const { data: unitsData } = await supabase
+      const { data: allUnitsData } = await supabase
         .from('units').select('*').eq('language_id', settings.active_language_id).eq('cecr_level', fromLevel).order('position')
-      setUnits(unitsData || [])
+      // Parcours moderne uniquement : pas de questions legacy (Fondations),
+      // et pas de leçons legacy marquées « terminées » en cas de réussite.
+      // Banque de questions = unités STANDARD du niveau. Le Checkpoint n'est
+      // pas une banque ordinaire : ses exercices servent à son diagnostic.
+      const unitsData = filterModernPathUnits(allUnitsData).filter((u) => !isCheckpointUnit(u))
+      setUnits(unitsData)
 
-      const unitIds = (unitsData || []).map((u) => u.id)
+      const unitIds = unitsData.map((u) => u.id)
       if (unitIds.length === 0) { setLoading(false); return }
 
       const { data: lessonsData } = await supabase.from('lessons').select('*').in('unit_id', unitIds)
@@ -72,8 +66,9 @@ function LevelUpTest() {
       const picked = []
       for (const lesson of lessonsData || []) {
         const { data: exercises } = await supabase.from('exercises').select('*').eq('lesson_id', lesson.id).neq('type', 'speaking_practice').order('position')
-        if (exercises && exercises.length > 0) {
-          picked.push(...shuffle(exercises).slice(0, QUESTIONS_PER_LESSON))
+        const testable = filterRenderableExercises(exercises, `test de passage, leçon ${lesson.id}`).filter(isTestableExercise)
+        if (testable.length > 0) {
+          picked.push(...shuffle(testable).slice(0, QUESTIONS_PER_LESSON))
         }
       }
       setTestExercises(shuffle(picked).slice(0, MAX_QUESTIONS))
@@ -98,40 +93,58 @@ function LevelUpTest() {
 
   const correctCount = Object.values(results).filter(Boolean).length
 
-  const finish = async () => {
+  // XP de déblocage : 2 par bonne réponse, versés UNIQUEMENT lors du premier
+  // déblocage réel du niveau (anti-farming). Réussite sans nouveau niveau
+  // débloqué (rejeu, utilisateur déjà plus haut) = 0 XP.
+  const XP_PER_CORRECT_ON_UNLOCK = 2
+
+  // Réussite = DÉBLOCAGE du niveau supérieur, pas complétion des leçons :
+  // user_progress n'est jamais modifié (leçons et Checkpoint restent non faits,
+  // aucun diagnostic simulé). unlocked_level n'est jamais abaissé.
+  const saveUnlock = async () => {
     setSaving(true)
+    try {
+      const { data: current, error: readErr } = await supabase
+        .from('user_settings').select('unlocked_level').eq('user_id', user.id).maybeSingle()
+      if (readErr) throw readErr
+      const currentIdx = current?.unlocked_level ? LEVEL_ORDER.indexOf(current.unlocked_level) : -1
+      const didUnlock = LEVEL_ORDER.indexOf(nextLevel) > currentIdx
+
+      if (!didUnlock) {
+        setUnlockStatus('already')
+        setXpGained(0)
+        return
+      }
+
+      const { error: updateErr } = await supabase
+        .from('user_settings').update({ unlocked_level: nextLevel }).eq('user_id', user.id)
+      if (updateErr) throw updateErr
+      setUnlockStatus('unlocked')
+
+      // XP seulement APRÈS l'écriture réussie du déblocage.
+      try {
+        const result = await awardProgress(user.id, { xpGained: correctCount * XP_PER_CORRECT_ON_UNLOCK })
+        setXpGained(result.xpGained)
+      } catch (xpErr) {
+        // Le niveau EST débloqué ; seul le versement d'XP a échoué.
+        console.warn('[Luma] XP de déblocage non enregistrée', xpErr)
+        setXpGained(null)
+      }
+    } catch (err) {
+      console.warn('[Luma] Déblocage de niveau non enregistré', err)
+      setUnlockStatus('error')
+      setXpGained(null)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const finish = async () => {
     setFinished(true)
     const score = correctCount / testExercises.length
     const didPass = score >= PASS_THRESHOLD
     setPassed(didPass)
-
-    if (didPass) {
-      let newlyCompleted = 0
-      for (const lesson of lessons) {
-        const { data: existing } = await supabase
-          .from('user_progress').select('status, best_score')
-          .eq('user_id', user.id).eq('language_id', languageId)
-          .eq('unit_id', lesson.unit_id).eq('lesson_id', lesson.id)
-          .maybeSingle()
-
-        if (existing?.status !== 'completed') newlyCompleted++
-        const bestScore = existing ? Math.max(existing.best_score ?? 0, score) : score
-
-        await supabase.from('user_progress').upsert({
-          user_id: user.id,
-          language_id: languageId,
-          unit_id: lesson.unit_id,
-          lesson_id: lesson.id,
-          status: 'completed',
-          best_score: bestScore,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,language_id,unit_id,lesson_id' })
-      }
-
-      const result = await awardProgress(user.id, { xpGained: newlyCompleted * 15 })
-      setXpGained(result.xpGained)
-    }
-    setSaving(false)
+    if (didPass) await saveUnlock()
   }
 
   const retry = () => {
@@ -141,6 +154,7 @@ function LevelUpTest() {
     setFinished(false)
     setPassed(false)
     setXpGained(null)
+    setUnlockStatus(null)
     setTestExercises((prev) => shuffle(prev))
   }
 
@@ -204,10 +218,22 @@ function LevelUpTest() {
       <div className="lesson-summary">
         <p className="verb-result">Score : {correctCount} / {testExercises.length} ({Math.round((correctCount / testExercises.length) * 100)}%)</p>
         {saving && <p>Enregistrement...</p>}
-        {!saving && passed && (
+        {!saving && passed && unlockStatus === 'unlocked' && (
           <>
             <p className="feedback correct">🎉 Niveau {nextLevel} débloqué ! {xpGained !== null && `+${xpGained} XP`}</p>
             <button className="btn-primary" onClick={() => navigate('/dashboard')}>Retour au tableau de bord</button>
+          </>
+        )}
+        {!saving && passed && unlockStatus === 'already' && (
+          <>
+            <p className="feedback correct">✅ Test réussi. Le niveau {nextLevel} était déjà débloqué : pas d'XP supplémentaire.</p>
+            <button className="btn-primary" onClick={() => navigate('/dashboard')}>Retour au tableau de bord</button>
+          </>
+        )}
+        {!saving && passed && unlockStatus === 'error' && (
+          <>
+            <p className="feedback incorrect">Erreur : le déblocage du niveau {nextLevel} n'a pas pu être enregistré. Ton test est réussi, réessaie l'enregistrement.</p>
+            <button className="btn-primary" onClick={saveUnlock}>Réessayer l'enregistrement</button>
           </>
         )}
         {!saving && !passed && (

@@ -4,36 +4,15 @@ import { supabase } from '../lib/supabaseClient.js'
 import Confetti from '../components/Confetti.jsx'
 import ReportButton from '../components/ReportButton.jsx'
 import { estimateMinutesRemaining } from '../lib/level.js'
-import { recordLessonCompletion } from '../lib/progress.js'
+import { recordLessonCompletion, isUnitLockedForUser } from '../lib/progress.js'
 import { computeDiagnostic, CHECKPOINT_A0_COMPETENCIES } from '../lib/checkpointA0Config.js'
 
 const LEVEL_ORDER = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
 import { getMascot } from '../lib/characters.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
-import ExerciseQCM from '../components/exercises/ExerciseQCM.jsx'
-import ExerciseFillBlank from '../components/exercises/ExerciseFillBlank.jsx'
-import ExerciseTrueFalse from '../components/exercises/ExerciseTrueFalse.jsx'
-import ExerciseMatching from '../components/exercises/ExerciseMatching.jsx'
-import ExerciseReorder from '../components/exercises/ExerciseReorder.jsx'
-import ExerciseDictation from '../components/exercises/ExerciseDictation.jsx'
-import ExerciseSpeakingPractice from '../components/exercises/ExerciseSpeakingPractice.jsx'
-import ExerciseMultiSelect from '../components/exercises/ExerciseMultiSelect.jsx'
-import ExerciseBlockConstruction from '../components/exercises/ExerciseBlockConstruction.jsx'
-import ExerciseComprehension from '../components/exercises/ExerciseComprehension.jsx'
-
-const EXERCISE_COMPONENTS = {
-  qcm: ExerciseQCM,
-  fill_blank: ExerciseFillBlank,
-  true_false: ExerciseTrueFalse,
-  matching: ExerciseMatching,
-  reorder: ExerciseReorder,
-  dictation: ExerciseDictation,
-  speaking_practice: ExerciseSpeakingPractice,
-  multi_select: ExerciseMultiSelect,
-  block_construction: ExerciseBlockConstruction,
-  comprehension: ExerciseComprehension,
-}
+import { EXERCISE_COMPONENTS, filterRenderableExercises } from '../components/exercises/registry.js'
+import { isModernPathUnit } from '../lib/pathUnits.js'
 
 function LessonExplanation({ lesson }) {
   return (
@@ -125,12 +104,24 @@ function Lesson() {
         const { data: unitData, error: unitErr } = await supabase
           .from('units').select('*').eq('id', lessonData.unit_id).single()
         if (unitErr) throw unitErr
+
+        // PROTECTION D'ACCÈS (générique, toute unité) : une leçon d'une unité
+        // verrouillée dans le parcours n'est ni chargée ni jouable, quel que
+        // soit le chemin (URL, ancien lien, « Continuer »). Mêmes règles que
+        // le parcours, bypass unlocked_level compris. Legacy = accès historique.
+        if (await isUnitLockedForUser(user.id, unitData.language_id, unitData.id)) {
+          navigate(`/level/${unitData.cecr_level}`, { replace: true })
+          return
+        }
         setUnit(unitData)
 
         const { data: exercisesData, error: exercisesErr } = await supabase
           .from('exercises').select('*').eq('lesson_id', lessonId).order('position')
         if (exercisesErr) throw exercisesErr
-        setExercises(exercisesData)
+        // Un exercice non terminable (type sans renderer ou contenu invalide)
+        // bloquerait la navigation : il est écarté et signalé en console.
+        const playable = filterRenderableExercises(exercisesData, `leçon ${lessonId}`)
+        setExercises(playable)
         const posMap = {}
         exercisesData.forEach((e, i) => { posMap[e.id] = e.position ?? (i + 1) })
         positionByOriginalIdRef.current = posMap
@@ -138,7 +129,7 @@ function Lesson() {
         // Reprend une session interrompue si elle existe (même leçon, exercices identiques)
         try {
           const saved = JSON.parse(localStorage.getItem(`luma-lesson-progress-${lessonId}`) || 'null')
-          if (saved && saved.phase === 'exercises' && saved.currentIndex < exercisesData.length) {
+          if (saved && saved.phase === 'exercises' && saved.currentIndex < playable.length) {
             setPhase('exercises')
             setCurrentIndex(saved.currentIndex)
             setResults(saved.results || {})
@@ -223,7 +214,9 @@ function Lesson() {
           score,
           secondsSpent,
           lessonTitle: lesson.title,
-          vocabTable: lesson.content?.table,
+          // Leçon legacy (ex. Fondations, accessible seulement par URL directe) :
+          // progression et XP inchangées, mais plus aucun nouvel item SRS.
+          vocabTable: isModernPathUnit(unit) ? lesson.content?.table : null,
         })
         setXpGained(result.xpGained)
         setNewStreak(result.newStreak)

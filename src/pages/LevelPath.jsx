@@ -4,15 +4,9 @@ import { supabase } from '../lib/supabaseClient.js'
 import { getLevelPath } from '../lib/levelPath.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
+import { CECR_TITLES } from '../lib/cecrLevels.js'
+import { canHaveUnitTest } from '../lib/pathUnits.js'
 
-const CECR_TITLES = {
-  A0: 'Fondations · Premiers pas',
-  A1: 'A1 · Débutant complet',
-  A2: 'A2 · Élémentaire',
-  B1: 'B1 · Intermédiaire',
-  B2: 'B2 · Intermédiaire avancé',
-  C1: 'C1 · Avancé',
-}
 const LEVEL_ORDER = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
 
 // Ciel dégradé par niveau — de l'aube naissante (Fondations) à la nuit
@@ -171,17 +165,21 @@ function LevelPath() {
                   })}
                 </div>
 
-                <button
-                  className="lp2-test-row"
-                  disabled={theme.nodes.some((n) => n.status === 'locked')}
-                  onClick={() => navigate(`/unit/${theme.unit.id}/test`)}
-                >
-                  <span className="lp2-test-icon">📝</span>
-                  <span>
-                    <span className="lp2-test-title">Test de sortie</span>
-                    <span className="lp2-test-sub">{theme.nodes.some((n) => n.status === 'locked') ? 'Verrouillé' : "Valide toute l'unité à 80%"}</span>
-                  </span>
-                </button>
+                {/* Pas de Test de sortie pour un Checkpoint : il se termine
+                    uniquement via sa leçon (diagnostic). Élément ABSENT du DOM. */}
+                {canHaveUnitTest(theme.unit) && (
+                  <button
+                    className="lp2-test-row"
+                    disabled={theme.nodes.some((n) => n.status === 'locked')}
+                    onClick={() => navigate(`/unit/${theme.unit.id}/test`)}
+                  >
+                    <span className="lp2-test-icon">📝</span>
+                    <span>
+                      <span className="lp2-test-title">Test de sortie</span>
+                      <span className="lp2-test-sub">{theme.nodes.some((n) => n.status === 'locked') ? 'Verrouillé' : "Valide toute l'unité à 80%"}</span>
+                    </span>
+                  </button>
+                )}
               </div>
             )
           })}

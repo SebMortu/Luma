@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
+import { canHaveUnitTest } from '../lib/pathUnits.js'
 
 function UnitDetail() {
   const { unitId } = useParams()
@@ -80,7 +81,7 @@ function UnitDetail() {
 
       {lessons.length === 0 && <p>Aucune leçon disponible pour cette unité pour l'instant.</p>}
 
-      {lessons.length > 0 && (
+      {lessons.length > 0 && canHaveUnitTest(unit) && (
         <button className="btn-primary" style={{ background: 'var(--accent-warm)', marginTop: '1rem' }} onClick={() => navigate(`/unit/${unitId}/test`)}>
           📝 Passer le test de sortie (80% requis)
         </button>
