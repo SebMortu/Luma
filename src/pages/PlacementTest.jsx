@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { EXERCISE_COMPONENTS, filterRenderableExercises } from '../components/exercises/registry.js'
-import { filterModernPathUnits, getFirstPathLessonId, isCheckpointUnit } from '../lib/pathUnits.js'
+import { getFirstPathLessonId, loadPathUnitsForLevel } from '../lib/pathUnits.js'
 
 const LEVEL_ORDER = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
 const MAX_QUESTIONS = 14
@@ -42,11 +42,10 @@ function PlacementTest() {
   const ensurePool = async (levelIdx) => {
     const lvl = LEVEL_ORDER[levelIdx]
     if (poolsRef.current[lvl]) return
-    const { data: allUnits } = await supabase
-      .from('units').select('id, unit_type').eq('language_id', languageId).eq('cecr_level', lvl).order('position')
-    // Parcours moderne uniquement : plus de questions legacy (Fondations).
-    // Checkpoint exclu : ce n'est pas une banque d'exercices ordinaire.
-    const units = filterModernPathUnits(allUnits).filter((u) => !isCheckpointUnit(u))
+    // Unités STANDARD visibles uniquement : ni legacy, ni brouillon,
+    // ni Checkpoint, ni bilan de thème (pas des banques d'exercices ordinaires).
+    const units = (await loadPathUnitsForLevel(languageId, lvl))
+      .filter((u) => (u.unit_type ?? 'standard') === 'standard')
     const picked = []
     for (const u of shuffle(units).slice(0, 4)) {
       const { data: lessons } = await supabase.from('lessons').select('id').eq('unit_id', u.id)

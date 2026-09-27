@@ -5,7 +5,7 @@ import { estimateMinutesRemaining } from '../lib/level.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { awardProgress } from '../lib/progress.js'
 import { EXERCISE_COMPONENTS, filterRenderableExercises, isTestableExercise } from '../components/exercises/registry.js'
-import { filterModernPathUnits, isCheckpointUnit } from '../lib/pathUnits.js'
+import { loadPathUnitsForLevel } from '../lib/pathUnits.js'
 
 const LEVEL_ORDER = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
 const PASS_THRESHOLD = 0.9
@@ -48,13 +48,10 @@ function LevelUpTest() {
       const { data: settings } = await supabase.from('user_settings').select('active_language_id').eq('user_id', user.id).single()
       setLanguageId(settings.active_language_id)
 
-      const { data: allUnitsData } = await supabase
-        .from('units').select('*').eq('language_id', settings.active_language_id).eq('cecr_level', fromLevel).order('position')
-      // Parcours moderne uniquement : pas de questions legacy (Fondations),
-      // et pas de leçons legacy marquées « terminées » en cas de réussite.
-      // Banque de questions = unités STANDARD du niveau. Le Checkpoint n'est
-      // pas une banque ordinaire : ses exercices servent à son diagnostic.
-      const unitsData = filterModernPathUnits(allUnitsData).filter((u) => !isCheckpointUnit(u))
+      // Banque de questions = unités STANDARD visibles du niveau : ni legacy,
+      // ni brouillon, ni Checkpoint (diagnostic), ni bilan de thème (scène).
+      const unitsData = (await loadPathUnitsForLevel(settings.active_language_id, fromLevel))
+        .filter((u) => (u.unit_type ?? 'standard') === 'standard')
       setUnits(unitsData)
 
       const unitIds = unitsData.map((u) => u.id)

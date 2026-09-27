@@ -1,7 +1,7 @@
 import { supabase } from './supabaseClient.js'
-import { filterModernPathUnits } from './pathUnits.js'
-
-const LEVEL_ORDER = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1']
+import {
+  filterModernPathUnits, sortCanonical, loadThemesById, isDraftUnit, LEVEL_ORDER,
+} from './pathUnits.js'
 
 // ─────────────────────────────────────────────────────────────────────────
 // LOGIQUE DE PROGRESSION — SOURCE UNIQUE
@@ -15,14 +15,21 @@ const PASS_SCORE = 0.8
 
 /**
  * Une leçon compte-t-elle comme validée pour PROGRESSER ?
- * - Checkpoint : terminée suffit (non éliminatoire, score ignoré).
- * - Standard   : terminée ET meilleur score >= 80 %.
+ * - Checkpoint     : terminée suffit (non éliminatoire, score ignoré).
+ * - Bilan de thème : terminée suffit (non éliminatoire, décision R0-3 ;
+ *                    le score reste stocké pour diagnostic/réactivation).
+ * - Standard       : terminée ET meilleur score >= 80 %.
  */
 export function lessonCountsAsPassed(unit, progress) {
   if (!progress || progress.status !== 'completed') return false
-  if (unit.unit_type === 'checkpoint') return true
+  if (unit.unit_type === 'checkpoint' || unit.unit_type === 'theme_review') return true
   return (progress.best_score ?? 0) >= PASS_SCORE
 }
+
+// Nœuds qui sont des PRÉREQUIS du Checkpoint de leur niveau.
+// (Valeurs explicites : identique au comportement historique pour les
+// données actuelles, où seules les unités 'standard' précédaient le Checkpoint.)
+const CHECKPOINT_PREREQUISITE_TYPES = ['standard', 'theme_review']
 
 /**
  * Calcul pur (sans accès base) de l'état de chaque unité du parcours moderne.
@@ -33,8 +40,10 @@ export function lessonCountsAsPassed(unit, progress) {
  * passé, ancienne écriture du test de passage…). Elle ne peut donc servir de
  * prérequis ni à l'unité suivante, ni à un Checkpoint.
  */
-export function deriveUnitStates(inputUnits, lessonsByUnit, progressByLesson, unlockedLevel = null) {
-  const units = filterModernPathUnits(inputUnits)
+export function deriveUnitStates(inputUnits, lessonsByUnit, progressByLesson, unlockedLevel = null, themesById = {}) {
+  // Nœuds visibles (ni legacy, ni brouillon), dans l'ORDRE CANONIQUE
+  // (niveau → Checkpoint en dernier → thème → position dans le thème → position).
+  const units = sortCanonical(filterModernPathUnits(inputUnits, themesById), themesById)
   // Déblocage par placement / test de passage / onboarding A1 : niveaux
   // accessibles sans que leurs leçons soient affichées comme « faites ».
   const unlockedIdx = unlockedLevel ? LEVEL_ORDER.indexOf(unlockedLevel) : -1
@@ -56,7 +65,7 @@ export function deriveUnitStates(inputUnits, lessonsByUnit, progressByLesson, un
       // qui le précèdent sont (effectivement) validées.
       const bypass = unlockedIdx > unitLevelIdx
       const prerequisites = units.slice(0, idx)
-        .filter((u) => u.unit_type === 'standard' && u.cecr_level === unit.cecr_level)
+        .filter((u) => CHECKPOINT_PREREQUISITE_TYPES.includes(u.unit_type) && u.cecr_level === unit.cecr_level)
       const allPrerequisitesPassed = prerequisites.every((u) => effectivePassedById[u.id])
       confirmedByPlacement = bypass
       isLocked = !allPrerequisitesPassed && !confirmedByPlacement
@@ -112,7 +121,13 @@ async function loadPathContext(userId, languageId) {
   if (unitsErr) throw unitsErr
   const { data: settings } = await supabase
     .from('user_settings').select('unlocked_level').eq('user_id', userId).maybeSingle()
-  return { units: filterModernPathUnits(allUnits), unlockedLevel: settings?.unlocked_level || null }
+  const themesById = await loadThemesById(languageId)
+  return {
+    allUnits: allUnits || [],
+    units: sortCanonical(filterModernPathUnits(allUnits, themesById), themesById),
+    themesById,
+    unlockedLevel: settings?.unlocked_level || null,
+  }
 }
 
 /**
@@ -122,10 +137,11 @@ async function loadPathContext(userId, languageId) {
  * (Signature inchangée : Dashboard, Profile, getLevelPath.)
  */
 export async function computeUnitStates(userId, languageId, inputUnits, unlockedLevel = null) {
-  const units = filterModernPathUnits(inputUnits)
+  const themesById = await loadThemesById(languageId)
+  const units = sortCanonical(filterModernPathUnits(inputUnits, themesById), themesById)
   if (units.length === 0) return []
   const { lessonsByUnit, progressByLesson } = await loadProgressionData(userId, languageId, units)
-  return deriveUnitStates(units, lessonsByUnit, progressByLesson, unlockedLevel)
+  return deriveUnitStates(units, lessonsByUnit, progressByLesson, unlockedLevel, themesById)
 }
 
 /**
@@ -137,10 +153,10 @@ export async function computeUnitStates(userId, languageId, inputUnits, unlocked
  * sont jamais imposés. Une unité verrouillée n'est jamais proposée.
  */
 export async function getNextLesson(userId, languageId) {
-  const { units, unlockedLevel } = await loadPathContext(userId, languageId)
+  const { units, unlockedLevel, themesById } = await loadPathContext(userId, languageId)
   if (units.length === 0) return null
   const { lessonsByUnit, progressByLesson } = await loadProgressionData(userId, languageId, units)
-  const states = deriveUnitStates(units, lessonsByUnit, progressByLesson, unlockedLevel)
+  const states = deriveUnitStates(units, lessonsByUnit, progressByLesson, unlockedLevel, themesById)
   const unlockedIdx = unlockedLevel ? LEVEL_ORDER.indexOf(unlockedLevel) : -1
 
   for (const { unit, isLocked } of states) {
@@ -153,16 +169,27 @@ export async function getNextLesson(userId, languageId) {
 }
 
 /**
- * Protection d'accès direct (/lesson/:id) : l'unité est-elle verrouillée pour
- * cet utilisateur, selon EXACTEMENT les mêmes règles que le parcours ?
- * Retourne false pour une unité hors parcours moderne (legacy = accès historique).
+ * Protection d'accès direct (/lesson/:id, /unit/:id…) — mêmes règles que le
+ * parcours, bypass unlocked_level compris.
+ *   { hidden: true }  → brouillon (unité ou thème) : invisible PARTOUT
+ *   { locked: true }  → unité du parcours actuellement verrouillée
+ *   ni l'un ni l'autre → accessible (legacy compris : accès historique)
  */
-export async function isUnitLockedForUser(userId, languageId, unitId) {
-  const { units, unlockedLevel } = await loadPathContext(userId, languageId)
-  if (!units.some((u) => u.id === unitId)) return false
+export async function getUnitAccess(userId, languageId, unitId) {
+  const { allUnits, units, unlockedLevel, themesById } = await loadPathContext(userId, languageId)
+  const raw = allUnits.find((u) => u.id === unitId)
+  if (raw && isDraftUnit(raw, themesById)) return { hidden: true, locked: false }
+  if (!units.some((u) => u.id === unitId)) return { hidden: false, locked: false }
   const { lessonsByUnit, progressByLesson } = await loadProgressionData(userId, languageId, units)
-  const state = deriveUnitStates(units, lessonsByUnit, progressByLesson, unlockedLevel).find((s) => s.unit.id === unitId)
-  return Boolean(state?.isLocked)
+  const state = deriveUnitStates(units, lessonsByUnit, progressByLesson, unlockedLevel, themesById)
+    .find((s) => s.unit.id === unitId)
+  return { hidden: false, locked: Boolean(state?.isLocked) }
+}
+
+/** Compatibilité (Vague 1.3) : verrouillée OU brouillon = accès refusé. */
+export async function isUnitLockedForUser(userId, languageId, unitId) {
+  const { hidden, locked } = await getUnitAccess(userId, languageId, unitId)
+  return hidden || locked
 }
 
 /**

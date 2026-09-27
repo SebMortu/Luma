@@ -8,7 +8,7 @@ import { getGuideCharacter } from '../lib/characters.js'
 import CharacterAvatar from '../components/CharacterAvatar.jsx'
 import ReportButton from '../components/ReportButton.jsx'
 import { EXERCISE_COMPONENTS, filterRenderableExercises, isTestableExercise } from '../components/exercises/registry.js'
-import { canHaveUnitTest } from '../lib/pathUnits.js'
+import { canHaveUnitTest, isUnitHidden } from '../lib/pathUnits.js'
 
 const PASS_THRESHOLD = 0.8
 
@@ -42,6 +42,7 @@ function UnitTest() {
     getGuideCharacter(user.id).then(setMascot).catch(() => setMascot(null))
   }, [])
   const [xpGained, setXpGained] = useState(null)
+  const [blocked, setBlocked] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -52,7 +53,10 @@ function UnitTest() {
       // Aucun exercice n'est chargé, aucune écriture n'est possible : on
       // renvoie vers le parcours du niveau, où le Checkpoint s'affiche avec
       // son vrai état (verrouillé ou à faire via sa leçon).
-      if (unitData && !canHaveUnitTest(unitData)) {
+      // Idem pour un bilan de thème (scène de transfert) et un brouillon
+      // (unité ou thème en draft : invisible partout).
+      if (unitData && (!canHaveUnitTest(unitData) || await isUnitHidden(unitData))) {
+        setBlocked(true)
         setLoading(false)
         navigate(`/level/${unitData.cecr_level}`, { replace: true })
         return
@@ -96,7 +100,7 @@ function UnitTest() {
   const finish = async () => {
     // Double sécurité : même si un Test de sortie Checkpoint était lancé
     // par un chemin imprévu, il n'écrit RIEN (ni progression, ni XP).
-    if (!canHaveUnitTest(unit)) return
+    if (!canHaveUnitTest(unit) || blocked) return
     setSaving(true)
     setFinished(true)
     const score = correctCount / testExercises.length
@@ -142,7 +146,7 @@ function UnitTest() {
     setTestExercises((prev) => shuffle(prev))
   }
 
-  if (unit && !canHaveUnitTest(unit)) return <div className="page"><p>Le Checkpoint se termine uniquement via sa leçon. Redirection…</p></div>
+  if (blocked || (unit && !canHaveUnitTest(unit))) return <div className="page"><p>Ce parcours ne propose pas de Test de sortie ici. Redirection…</p></div>
   if (loading) return <div className="page"><p>Préparation du test...</p></div>
   if (testExercises.length === 0) return <div className="page"><p>Pas assez de contenu dans cette unité pour un test de sortie.</p></div>
 

@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import AppLayout from '../components/AppLayout.jsx'
-import { canHaveUnitTest } from '../lib/pathUnits.js'
+import { canHaveUnitTest, isUnitHidden } from '../lib/pathUnits.js'
 
 function UnitDetail() {
   const { unitId } = useParams()
@@ -22,6 +22,11 @@ function UnitDetail() {
         const { data: unitData, error: unitErr } = await supabase
           .from('units').select('*').eq('id', unitId).single()
         if (unitErr) throw unitErr
+        // Brouillon (unité ou thème) : invisible, y compris par URL directe.
+        if (await isUnitHidden(unitData)) {
+          navigate(`/level/${unitData.cecr_level}`, { replace: true })
+          return
+        }
         setUnit(unitData)
 
         const { data: lessonsData, error: lessonsErr } = await supabase
