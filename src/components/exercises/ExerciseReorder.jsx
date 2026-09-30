@@ -1,22 +1,20 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import SpeakButton from '../SpeakButton.jsx'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
+import { shuffleAvoiding } from '../../lib/shuffle.js'
 
-function shuffle(array) {
-  const copy = [...array]
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-  }
-  return copy
-}
 
 function ExerciseReorder({ content, onAnswered }) {
   // Chaque mot reçoit un id unique pour gérer les doublons (ex: "I'm" répété)
-  const initialBank = useMemo(
-    () => shuffle(content.words.map((word, i) => ({ word, id: i }))),
-    [content]
-  )
+  // Mélangé une fois par tentative, et jamais déjà dans un ordre accepté
+  // (sinon une phrase de 3 mots est résolue d'avance 1 fois sur 6).
+  const [initialBank] = useState(() => {
+    const accepted = [content.words.join(' '), ...(content.alternate_orders || [])]
+    return shuffleAvoiding(
+      content.words.map((word, i) => ({ word, id: i })),
+      (cand) => accepted.includes(cand.map((w) => w.word).join(' '))
+    )
+  })
   const [bank, setBank] = useState(initialBank)
   const [selected, setSelected] = useState([])
   const [answered, setAnswered] = useState(false)

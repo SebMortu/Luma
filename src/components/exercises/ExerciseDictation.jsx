@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import TranslateToggle from '../TranslateToggle.jsx'
+import { shuffleAvoiding } from '../../lib/shuffle.js'
 import SpeakButton, { speak } from '../SpeakButton.jsx'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
 
@@ -14,14 +15,6 @@ function normalize(str) {
     .trim()
 }
 
-function shuffle(array) {
-  const copy = [...array]
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-  }
-  return copy
-}
 
 function ExerciseDictation({ content, onAnswered }) {
   const [value, setValue] = useState('')
@@ -56,7 +49,10 @@ function ExerciseDictation({ content, onAnswered }) {
   const handleCantListen = () => {
     if (answered) return
     const words = content.sentence.replace(/[.!?]$/, '').split(' ')
-    setBank(shuffle(words.map((w, i) => ({ id: `${w}-${i}`, word: w }))))
+    setBank(shuffleAvoiding(
+      words.map((w, i) => ({ id: `${w}-${i}`, word: w })),
+      (cand) => cand.map((x) => x.word).join(' ') === words.join(' ')
+    ))
     setPlaced([])
     setCantListen(true)
   }

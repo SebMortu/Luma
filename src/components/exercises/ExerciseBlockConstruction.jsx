@@ -1,22 +1,21 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import SpeakButton from '../SpeakButton.jsx'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
+import { shuffleAvoiding } from '../../lib/shuffle.js'
 
-function shuffle(array) {
-  const copy = [...array]
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-  }
-  return copy
-}
 
 function ExerciseBlockConstruction({ content, onAnswered }) {
-  const allBlocks = useMemo(() => {
+  // Mélangé une fois par tentative. Anti-fuite : les vrais blocs ne doivent
+  // jamais apparaître déjà dans l'ordre de la solution.
+  const [allBlocks] = useState(() => {
     const real = (content.available_blocks || []).map((block, i) => ({ block, id: `real-${i}`, isDistractor: false }))
     const distractors = (content.distractor_blocks || []).map((block, i) => ({ block, id: `distractor-${i}`, isDistractor: true }))
-    return shuffle([...real, ...distractors])
-  }, [content])
+    const solution = (content.correct_sequence || []).join('\u0000')
+    return shuffleAvoiding(
+      [...real, ...distractors],
+      (cand) => cand.filter((b) => !b.isDistractor).map((b) => b.block).join('\u0000') === solution
+    )
+  })
 
   const [bank, setBank] = useState(allBlocks)
   const [selected, setSelected] = useState([])

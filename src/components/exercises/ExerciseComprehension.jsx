@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import SpeakButton, { speak } from '../SpeakButton.jsx'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
+import { randomPermutation } from '../../lib/shuffle.js'
 
 function SupportPanel({ supportType, supportContent }) {
   const [playedOnce, setPlayedOnce] = useState(false)
@@ -49,6 +50,8 @@ function SubQuestion({ question, onAnswer }) {
   const [selected, setSelected] = useState(null)
   const [checked, setChecked] = useState(new Set())
   const [answered, setAnswered] = useState(false)
+  // Une permutation par sous-question (SubQuestion est remontée à chaque question).
+  const [order] = useState(() => randomPermutation((question.options || []).length))
 
   const submitSingle = (index) => {
     if (answered) return
@@ -110,7 +113,8 @@ function SubQuestion({ question, onAnswer }) {
       <div className="comprehension-question">
         <p className="exercise-question">{question.question}</p>
         <div className="exercise-options">
-          {question.options.map((opt, i) => {
+          {order.map((i) => {
+            const opt = question.options[i]
             const isChecked = checked.has(i)
             let cls = 'exercise-option multi-select-option'
             if (answered) {
@@ -136,7 +140,8 @@ function SubQuestion({ question, onAnswer }) {
     <div className="comprehension-question">
       <p className="exercise-question">{question.question}</p>
       <div className="exercise-options">
-        {question.options.map((opt, i) => {
+        {order.map((i) => {
+          const opt = question.options[i]
           let cls = 'exercise-option'
           if (answered) {
             if (i === question.correct_index) cls += ' correct'

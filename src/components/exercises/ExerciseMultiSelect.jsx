@@ -3,9 +3,11 @@ import TranslateToggle from '../TranslateToggle.jsx'
 import SpeakButton from '../SpeakButton.jsx'
 import { extractQuotedOrFull } from '../../lib/speech.js'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
+import { randomPermutation } from '../../lib/shuffle.js'
 
 function ExerciseMultiSelect({ content, onAnswered }) {
-  const [checked, setChecked] = useState(() => new Set())
+  const [checked, setChecked] = useState(() => new Set()) // index D'ORIGINE
+  const [order] = useState(() => randomPermutation(content.options.length))
   const [answered, setAnswered] = useState(false)
 
   const toggle = (index) => {
@@ -38,7 +40,8 @@ function ExerciseMultiSelect({ content, onAnswered }) {
       <p className="multi-select-hint">Plusieurs réponses sont possibles</p>
 
       <div className="exercise-options">
-        {content.options.map((option, index) => {
+        {order.map((index) => {
+          const option = content.options[index]
           const isChecked = checked.has(index)
           let className = 'exercise-option multi-select-option'
           if (answered) {

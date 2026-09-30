@@ -1,21 +1,19 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import SpeakButton from '../SpeakButton.jsx'
 import VocabIcon from '../VocabIcon.jsx'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
+import { shuffleAvoiding } from '../../lib/shuffle.js'
 
-function shuffle(array) {
-  const copy = [...array]
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-  }
-  return copy
-}
 
 function ExerciseMatching({ content, onAnswered }) {
   // Dédupliqué : si plusieurs paires partagent la même bonne réponse (ex. "are"
   // pour you/we/they), elle ne doit apparaître qu'une seule fois dans la liste.
-  const shuffledRights = useMemo(() => shuffle([...new Set(content.pairs.map((p) => p.right))]), [content])
+  // Mélangé une fois par tentative ; jamais dans l'ordre des lignes de gauche
+  // (sinon l'association serait révélée par la position).
+  const [shuffledRights] = useState(() => {
+    const rights = [...new Set(content.pairs.map((p) => p.right))]
+    return shuffleAvoiding(rights, (cand) => cand.every((r, i) => r === rights[i]))
+  })
   const [answers, setAnswers] = useState({})
   const [answered, setAnswered] = useState(false)
 

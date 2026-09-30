@@ -4,10 +4,13 @@ import SpeakButton from '../SpeakButton.jsx'
 import VocabIcon from '../VocabIcon.jsx'
 import { extractQuotedOrFull } from '../../lib/speech.js'
 import { playCorrect, playIncorrect } from '../../lib/sounds.js'
+import { randomPermutation } from '../../lib/shuffle.js'
 
 function ExerciseQCM({ content, onAnswered }) {
-  const [selected, setSelected] = useState(null)
+  const [selected, setSelected] = useState(null) // index D'ORIGINE
   const [answered, setAnswered] = useState(false)
+  // Ordre d'affichage tiré une fois par tentative (R0.2) : order[position] = index d'origine.
+  const [order] = useState(() => randomPermutation(content.options.length))
 
   const handleClick = (index) => {
     if (answered) return
@@ -35,7 +38,8 @@ function ExerciseQCM({ content, onAnswered }) {
       </div>
       <TranslateToggle translation={content.question_fr} autoReveal={answered} />
       <div className="ex2-options">
-        {content.options.map((option, index) => {
+        {order.map((index, displayPos) => {
+          const option = content.options[index]
           let state = ''
           if (answered) {
             if (index === content.correct_index) state = 'correct'
@@ -48,7 +52,7 @@ function ExerciseQCM({ content, onAnswered }) {
               onClick={() => handleClick(index)}
               disabled={answered}
             >
-              <span className="ex2-option-key">{String.fromCharCode(65 + index)}</span>
+              <span className="ex2-option-key">{String.fromCharCode(65 + displayPos)}</span>
               <span className="ex2-option-text">{option}</span>
               <SpeakButton text={option} size="small" />
             </button>
